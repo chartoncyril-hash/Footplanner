@@ -1,0 +1,70 @@
+import React from 'react';
+import { Zap, Crown, Flag, Shield, Eye, Settings, X, ChevronDown } from 'lucide-react';
+import { styles } from '../styles/styles';
+
+const ROLE_META = {
+  organizer: { label: 'Organisateur', icon: Crown, color: '#f59e0b' },
+  referee: { label: 'Arbitre', icon: Flag, color: '#22d3ee' },
+  coach: { label: 'Coach', icon: Shield, color: '#a78bfa' },
+  spectator: { label: 'Spectateur', icon: Eye, color: '#94a3b8' },
+};
+
+// ============================================================
+// TopBar — header sticky de l'app
+// - Logo + nom court du tournoi
+// - Badge de rôle (clic = ouvre RoleSwitcher)
+// - Roue crantée (organizer uniquement) qui toggle l'écran settings
+// ============================================================
+export function TopBar({ tournament, role, view, setView }) {
+  const canEditTournament = role === 'organizer';
+
+  return (
+    <header style={styles.topbar}>
+      <div style={styles.topbarLeft}>
+        <div style={styles.logoMark}>
+          <Zap size={14} strokeWidth={2.5} color="#0a0a0a" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={styles.brandName}>FOOTPLANNER</div>
+          <div style={styles.tournamentName}>{tournament?.name || 'Tournoi'}</div>
+        </div>
+      </div>
+      <div style={styles.topbarRight}>
+        <RoleBadge role={role} onClick={() => setView('roles')} />
+        {canEditTournament && (
+          <button
+            onClick={() => setView(view === 'settings' ? 'dashboard' : 'settings')}
+            style={{ ...styles.gearBtn, ...(view === 'settings' ? styles.gearBtnActive : {}) }}
+            aria-label={view === 'settings' ? 'Fermer les réglages' : 'Réglages du tournoi'}
+          >
+            {view === 'settings'
+              ? <X size={16} strokeWidth={2.2} />
+              : <Settings size={16} strokeWidth={2.2} />}
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function RoleBadge({ role, onClick }) {
+  const meta = ROLE_META[role] || ROLE_META.spectator;
+  const Icon = meta.icon;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        ...styles.roleBadge,
+        background: meta.color + '15',
+        borderColor: meta.color + '55',
+        color: meta.color,
+      }}
+    >
+      <Icon size={12} strokeWidth={2.2} />
+      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>
+        {meta.label.toUpperCase()}
+      </span>
+      <ChevronDown size={10} strokeWidth={2.5} />
+    </button>
+  );
+}
