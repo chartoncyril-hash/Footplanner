@@ -87,8 +87,9 @@ export function LandingPage() {
       </nav>
 
       {/* HERO */}
-      <section style={S.hero}>
-        <div style={S.container}>
+      <section style={{...S.hero, backgroundImage:"url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1600&q=80')", backgroundSize:'cover', backgroundPosition:'center', position:'relative'}}>
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg, rgba(6,10,18,0.92) 0%, rgba(6,10,18,0.75) 50%, rgba(6,10,18,0.92) 100%)'}}></div>
+        <div style={{...S.container, position:'relative', zIndex:1}}>
           <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.badge}><span style={S.badgeDot}></span>BETA OUVERTE — 100% gratuit</div>
@@ -153,34 +154,57 @@ export function LandingPage() {
       <section id="features" style={S.section}>
         <div style={S.container}>
           <div style={S.sectionHeader}>
-            <div style={S.sectionLabel}>Fonctionnalites</div>
-            <h2 style={S.h2}>Tout ce qu'il faut. Rien de superflu.</h2>
-            <p style={S.sectionSub}>FootPlanner gere l'ensemble de votre tournoi du tirage des poules au coup de sifflet final.</p>
+            <div style={S.sectionLabel}>Plateforme complète</div>
+            <h2 style={S.h2}>Gérez votre club de A à Z</h2>
+            <p style={S.sectionSub}>FootPlanner couvre tous les aspects de l'organisation de votre club et de vos tournois.</p>
           </div>
-          <div style={{...S.featGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'}}>
-            {[
-              {icon:'⚙️',c:'#a3e635',t:'Phases automatisees',d:'Poules, eliminatoires, finales... Generees automatiquement. Standard, Croise ou Champions League / Europa League.'},
-              {icon:'📱',c:'#a3e635',t:'Scores en direct',d:'Saisissez les scores depuis votre telephone. Classements et qualifications se mettent a jour instantanement.'},
-              {icon:'🖥️',c:'#f59e0b',t:'Affichage grand ecran',d:'Un ecran TV dans le hall ? FootPlanner affiche matchs en cours, classements et prochaines rencontres en mode regie.'},
-              {icon:'📋',c:'#818cf8',t:'Multi-categories',d:'Gerez U7, U9, U11, U13 et Seniors dans le meme tournoi. Chaque categorie a ses propres poules et classements.'},
-              {icon:'🏟️',c:'#34d399',t:'Gestion des terrains',d:'Attribuez les terrains aux matchs. En phase finale, choisissez quels terrains utiliser.'},
-              {icon:'🤝',c:'#fb7185',t:'Gestion des sponsors',d:'Ajoutez vos partenaires. Leurs logos defilent sur l\'ecran de presentation.'},
-            ].map(f => (
-              <div key={f.t} style={S.featCard}>
-                <div style={{...S.featIcon,background:`${f.c}15`,color:f.c}}>{f.icon}</div>
-                <h3 style={S.featTitle}>{f.t}</h3>
-                <p style={S.featDesc}>{f.d}</p>
-              </div>
-            ))}
+          <div style={{marginBottom:32}}>
+            <div style={{fontSize:11,fontWeight:700,color:'#a3e635',letterSpacing:2,textTransform:'uppercase',marginBottom:16}}>Disponible maintenant</div>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:16}}>
+              {[
+                {icon:'⚙️',c:'#a3e635',t:'Gestion de tournois',d:'Poules, calendriers, phases finales, scores en direct. Standard, Croisé ou Champions League.'},
+                {icon:'📝',c:'#a3e635',t:'Inscriptions en ligne',d:'Page publique brandée à vos couleurs. Les clubs s'inscrivent, vous validez et gérez les paiements.'},
+                {icon:'🏷️',c:'#a3e635',t:'Table de marque',d:'Accueil des équipes le jour J : présence, maillots, paiements, joueurs. Tout en un écran.'},
+                {icon:'🖥️',c:'#f59e0b',t:'Affichage grand écran',d:'Diffusez matchs en cours, classements et sponsors sur vos écrans TV en mode régie automatique.'},
+                {icon:'👥',c:'#818cf8',t:'Bibliothèque de clubs',d:'Sauvegardez vos clubs pour les réimporter en un clic. Fini la saisie répétitive.'},
+                {icon:'📄',c:'#34d399',t:'Documents & QR Code',d:'Affiche QR code pour spectateurs, planning PDF pour les terrains, résumé compact.'},
+              ].map(f => (
+                <div key={f.t} style={{...S.featCard,borderLeft:`3px solid ${f.c}`}}>
+                  <div style={{...S.featIcon,background:`${f.c}15`,color:f.c}}>{f.icon}</div>
+                  <h3 style={S.featTitle}>{f.t}</h3>
+                  <p style={S.featDesc}>{f.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:'#475569',letterSpacing:2,textTransform:'uppercase',marginBottom:16}}>Bientôt disponibles</div>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:12}}>
+              {[
+                {icon:'🍺',t:'Buvette & Finances',d:'Gérez vos ventes et recettes'},
+                {icon:'🙋',t:'Bénévoles & Staff',d:'Planifiez vos bénévoles'},
+                {icon:'💬',t:'Communication',d:'Annonces et messagerie club'},
+                {icon:'📊',t:'Stats & Rapports',d:'Bilans et historiques'},
+                {icon:'📋',t:'Plans de jeu',d:'Fiches tactiques par match'},
+                {icon:'📸',t:'Médias & Galerie',d:'Photos et partage'},
+                {icon:'🏆',t:'Classement saison',d:'Suivi saison complète'},
+                {icon:'📱',t:'App mobile',d:'iOS et Android'},
+              ].map(f => (
+                <div key={f.t} style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:16,opacity:0.7}}>
+                  <div style={{fontSize:24,marginBottom:8}}>{f.icon}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#64748b',marginBottom:4}}>{f.t}</div>
+                  <div style={{fontSize:11,color:'#334155'}}>{f.d}</div>
+                  <div style={{marginTop:8,fontSize:10,color:'#475569',fontWeight:700,background:'rgba(255,255,255,0.04)',borderRadius:4,padding:'2px 6px',display:'inline-block'}}>BIENTÔT</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
-
-      <div style={S.glowLine}></div>
-
       {/* BIGSCREEN */}
-      <section id="bigscreen" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-        <div style={S.container}>
+      <section id="bigscreen" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)',borderBottom:'1px solid rgba(255,255,255,0.06)',backgroundImage:"url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1600&q=80')",backgroundSize:'cover',backgroundPosition:'center',position:'relative'}}>
+        <div style={{position:'absolute',inset:0,background:'rgba(12,17,32,0.88)'}}></div>
+        <div style={{...S.container,position:'relative',zIndex:1}}>
           <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.sectionLabel}>Affichage live</div>
@@ -245,6 +269,45 @@ export function LandingPage() {
 
       <div style={S.glowLine}></div>
 
+      {/* BETA VISION */}
+      <section style={{padding:'80px 0',background:'linear-gradient(135deg,rgba(163,230,53,0.04) 0%,rgba(129,140,248,0.04) 100%)',borderTop:'1px solid rgba(163,230,53,0.1)',borderBottom:'1px solid rgba(163,230,53,0.1)'}}>
+        <div style={S.container}>
+          <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:isMobile?32:60,alignItems:'center'}}>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:'#a3e635',letterSpacing:2,textTransform:'uppercase',marginBottom:16}}>🚀 Version Beta</div>
+              <h2 style={{fontSize:isMobile?28:36,fontWeight:900,color:'#f1f5f9',lineHeight:1.2,marginBottom:20}}>Construisons l'outil de référence ensemble</h2>
+              <p style={{fontSize:15,color:'#94a3b8',lineHeight:1.8,marginBottom:16}}>FootPlanner est en version beta et compte sur ses utilisateurs pour grandir et évoluer jour après jour. Chaque retour, chaque suggestion nous aide à construire l'outil de référence des clubs de football.</p>
+              <p style={{fontSize:15,color:'#94a3b8',lineHeight:1.8,marginBottom:28}}>En rejoignant la beta, vous accédez à toutes les fonctionnalités gratuitement et participez activement à la construction d'un outil fait par et pour les clubs.</p>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                {['100% gratuit pendant toute la beta','Nouvelles fonctionnalités chaque semaine','Support direct et réactif par email','Votre avis compte vraiment — on vous écoute'].map(f => (
+                  <div key={f} style={{display:'flex',alignItems:'center',gap:10,fontSize:14,color:'#94a3b8'}}>
+                    <span style={{width:20,height:20,borderRadius:'50%',background:'rgba(163,230,53,0.15)',border:'1px solid rgba(163,230,53,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#a3e635',flexShrink:0}}>✓</span>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{background:'rgba(15,23,42,0.8)',border:'1px solid rgba(163,230,53,0.15)',borderRadius:24,padding:32}}>
+              <div style={{textAlign:'center',marginBottom:24}}>
+                <div style={{fontSize:48,marginBottom:8}}>⚽</div>
+                <h3 style={{fontSize:20,fontWeight:800,color:'#f1f5f9',marginBottom:8}}>Rejoignez la communauté</h3>
+                <p style={{fontSize:13,color:'#64748b'}}>Des clubs qui nous font déjà confiance pour gérer leurs tournois</p>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+                {[{v:'100%',l:'Gratuit en beta'},{v:'∞',l:'Tournois illimités'},{v:'0€',l:'Sans engagement'},{v:'24/7',l:'Accessible partout'}].map(s => (
+                  <div key={s.l} style={{textAlign:'center',padding:16,background:'rgba(163,230,53,0.05)',borderRadius:12,border:'1px solid rgba(163,230,53,0.1)'}}>
+                    <div style={{fontSize:24,fontWeight:900,color:'#a3e635'}}>{s.v}</div>
+                    <div style={{fontSize:11,color:'#64748b',marginTop:4}}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              <button style={{...S.btnCyan,width:'100%',padding:'14px',fontSize:15,borderRadius:12}} onClick={() => {setAuthMode('signup');scrollTo('auth');}}>
+                Rejoindre la beta gratuitement →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* AUTH SECTION */}
       <section id="auth" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={{...S.container,maxWidth:authMode === 'signup' ? 1200 : 1200}}>
