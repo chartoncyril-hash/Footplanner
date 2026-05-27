@@ -71,13 +71,13 @@ export function LandingPage() {
       <nav style={S.nav}>
         <div style={S.navInner}>
           <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <div style={{display:'flex',gap:16,alignItems:'center',['@media (max-width: 768px)']: {display:'none'}}}>
+          {!isMobile && (
+            <div style={{display:'flex',gap:16,alignItems:'center'}}>
               <a style={S.navLink} onClick={() => scrollTo('features')}>Fonctionnalites</a>
               <a style={S.navLink} onClick={() => scrollTo('bigscreen')}>Grand ecran</a>
               <a style={S.navLink} onClick={() => scrollTo('formats')}>Formats</a>
             </div>
-          </div>
+          )}
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <button style={{...S.btnGhost, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
             <button style={{...S.btnCyan, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Beta gratuite</button>
