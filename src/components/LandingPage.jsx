@@ -60,6 +60,7 @@ export function LandingPage() {
   };
 
   // Scroll to section
+  const [cookiesBanner, setCookiesBanner] = React.useState(() => !localStorage.getItem('fp_cookies_ok'));
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -333,7 +334,7 @@ export function LandingPage() {
                           {submitting ? 'Creation en cours...' : 'Creer mon compte gratuitement →'}
                         </button>
                         <div style={S.legal}>
-                          En vous inscrivant, vous acceptez nos <a href="#" style={{color:'#a3e635'}}>conditions</a> et notre <a href="#" style={{color:'#a3e635'}}>politique de confidentialite</a>.
+                          En vous inscrivant, vous acceptez nos <a href="/?page=cgu" style={{color:'#a3e635'}}>CGU</a> et notre <a href="/?page=privacy" style={{color:'#a3e635'}}>politique de confidentialite</a>.
                         </div>
                       </div>
                     )}
@@ -387,7 +388,8 @@ export function LandingPage() {
               <h4 style={S.footerTitle}>Legal</h4>
               <a href="#" style={S.footerLink}>Conditions d'utilisation</a>
               <a href="#" style={S.footerLink}>Confidentialite</a>
-              <a href="#" style={S.footerLink}>Mentions legales</a>
+              <a href="/?page=cgu" style={S.footerLink}>CGU</a>
+              <a href="/?page=privacy" style={S.footerLink}>Politique de confidentialite</a>
             </div>
           </div>
           <div style={S.footerBottom}>
@@ -396,6 +398,16 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+      {cookiesBanner && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, background: '#0f172a', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, maxWidth: 600 }}>
+            FootPlanner utilise des cookies techniques nécessaires au fonctionnement du service. En continuant, vous acceptez notre <a href="/?page=privacy" style={{ color: '#a3e635' }}>politique de confidentialité</a>.
+          </p>
+          <button onClick={() => { localStorage.setItem('fp_cookies_ok', '1'); setCookiesBanner(false); }} style={{ padding: '8px 20px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            J'accepte
+          </button>
+        </div>
+      )}
     </div>
   );
 }

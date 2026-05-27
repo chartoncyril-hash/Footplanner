@@ -41,6 +41,7 @@ import { AccountView } from './components/AccountView';
 import { LandingPage } from './components/LandingPage';
 import { RegistrationPage } from './components/RegistrationPage';
 import { PosterView } from './components/PosterView';
+import { PrivacyPage, CGUPage } from './components/LegalPage';
 import { RegistrationManager } from './components/RegistrationManager';
 import { CheckInView } from './components/CheckInView';
 import { HubDashboard } from './components/HubDashboard';
@@ -65,10 +66,14 @@ export default function App() {
   const isPresentationMode = urlParams?.get('presentation') === '1';
   const isRegistrationMode = urlParams?.get('register') === '1';
   const isPosterMode = urlParams?.get('poster') === '1';
+  const isPrivacyMode = urlParams?.get('page') === 'privacy';
+  const isCGUMode = urlParams?.get('page') === 'cgu';
   const registrationCode = urlParams?.get('t') || null;
 
   if (authLoading) return <LoadingScreen />;
   if (isPosterMode) return <PosterView />;
+  if (isPrivacyMode) return <PrivacyPage onBack={() => window.history.back()} />;
+  if (isCGUMode) return <CGUPage onBack={() => window.history.back()} />;
   if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
   if (!user && !isPresentationMode) return <LandingPage />;
   
