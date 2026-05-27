@@ -386,8 +386,6 @@ export function LandingPage() {
             </div>
             <div>
               <h4 style={S.footerTitle}>Legal</h4>
-              <a href="#" style={S.footerLink}>Conditions d'utilisation</a>
-              <a href="#" style={S.footerLink}>Confidentialite</a>
               <a href="/?page=cgu" style={S.footerLink}>CGU</a>
               <a href="/?page=privacy" style={S.footerLink}>Politique de confidentialite</a>
             </div>
