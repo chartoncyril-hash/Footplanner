@@ -6,6 +6,12 @@ import { useAuth } from '../hooks/useAuth';
 // ============================================================
 export function LandingPage() {
   const { signIn, signUp } = useAuth();
+  const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [authMode, setAuthMode] = useState(null); // null | 'signin' | 'signup'
   const [form, setForm] = useState({ club: '', firstName: '', lastName: '', email: '', phone: '', password: '', password2: '', tournoisPerYear: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -65,14 +71,16 @@ export function LandingPage() {
       <nav style={S.nav}>
         <div style={S.navInner}>
           <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
-          <div style={S.navLinks}>
-            <a style={S.navLink} onClick={() => scrollTo('features')}>Fonctionnalites</a>
-            <a style={S.navLink} onClick={() => scrollTo('bigscreen')}>Grand ecran</a>
-            <a style={S.navLink} onClick={() => scrollTo('formats')}>Formats</a>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <div style={{display:'flex',gap:16,alignItems:'center',['@media (max-width: 768px)']: {display:'none'}}}>
+              <a style={S.navLink} onClick={() => scrollTo('features')}>Fonctionnalites</a>
+              <a style={S.navLink} onClick={() => scrollTo('bigscreen')}>Grand ecran</a>
+              <a style={S.navLink} onClick={() => scrollTo('formats')}>Formats</a>
+            </div>
           </div>
-          <div style={{display:'flex',gap:12,alignItems:'center'}}>
-            <button style={S.btnGhost} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Se connecter</button>
-            <button style={S.btnCyan} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Rejoindre la beta</button>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <button style={{...S.btnGhost, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Beta gratuite</button>
           </div>
         </div>
       </nav>
@@ -80,7 +88,7 @@ export function LandingPage() {
       {/* HERO */}
       <section style={S.hero}>
         <div style={S.container}>
-          <div style={S.heroGrid}>
+          <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.badge}><span style={S.badgeDot}></span>BETA OUVERTE — 100% gratuit</div>
               <h1 style={S.h1}>Vos tournois,<br/>sans <span style={{color:'#a3e635'}}>prise de tete.</span></h1>
@@ -148,7 +156,7 @@ export function LandingPage() {
             <h2 style={S.h2}>Tout ce qu'il faut. Rien de superflu.</h2>
             <p style={S.sectionSub}>FootPlanner gere l'ensemble de votre tournoi du tirage des poules au coup de sifflet final.</p>
           </div>
-          <div style={S.featGrid}>
+          <div style={{...S.featGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)'}}>
             {[
               {icon:'⚙️',c:'#a3e635',t:'Phases automatisees',d:'Poules, eliminatoires, finales... Generees automatiquement. Standard, Croise ou Champions League / Europa League.'},
               {icon:'📱',c:'#a3e635',t:'Scores en direct',d:'Saisissez les scores depuis votre telephone. Classements et qualifications se mettent a jour instantanement.'},
@@ -172,7 +180,7 @@ export function LandingPage() {
       {/* BIGSCREEN */}
       <section id="bigscreen" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={S.container}>
-          <div style={S.heroGrid}>
+          <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.sectionLabel}>Affichage live</div>
               <h2 style={S.h2}>Votre tournoi sur <span style={{color:'#a3e635'}}>grand ecran.</span></h2>
@@ -216,7 +224,7 @@ export function LandingPage() {
             <h2 style={S.h2}>Adapte a votre tournoi.</h2>
             <p style={S.sectionSub}>Petits tournois locaux ou grandes competitions. De 4 a 32 equipes.</p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap:16}}>
             {[
               {i:'🏆',t:'Standard',d:'Croisement classique : 1er Poule A vs 2e Poule B.'},
               {i:'🔀',t:'Croise',d:'Chaque poule garde ses equipes en phase finale.'},
@@ -239,12 +247,12 @@ export function LandingPage() {
       {/* AUTH SECTION */}
       <section id="auth" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={{...S.container,maxWidth:authMode === 'signup' ? 1200 : 1200}}>
-          <div style={S.heroGrid}>
+          <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.sectionLabel}>Beta gratuite</div>
               <h2 style={S.h2}>Pret a simplifier vos <span style={{color:'#a3e635'}}>tournois ?</span></h2>
               <p style={{...S.sectionSub,marginBottom:32}}>Creez votre compte en 30 secondes. Aucune carte bancaire. Toutes les fonctionnalites sont accessibles gratuitement pendant la beta.</p>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+              <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)',gap:16}}>
                 {[{v:'100%',l:'Gratuit en beta'},{v:'∞',l:'Tournois illimites'},{v:'0',l:'Engagement requis'}].map(s => (
                   <div key={s.l} style={S.statCard}><div style={S.statVal}>{s.v}</div><div style={S.statLbl}>{s.l}</div></div>
                 ))}
@@ -285,7 +293,7 @@ export function LandingPage() {
                           <label style={S.label}>Nom du club *</label>
                           <input style={S.input} placeholder="Ex: US Feillens, FC Manziat..." value={form.club} onChange={e => update('club', e.target.value)} />
                         </div>
-                        <div style={S.formRow}>
+                        <div style={{...S.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr'}}>
                           <div style={S.formGroup}>
                             <label style={S.label}>Prenom *</label>
                             <input style={S.input} placeholder="Votre prenom" value={form.firstName} onChange={e => update('firstName', e.target.value)} />
@@ -357,7 +365,7 @@ export function LandingPage() {
       {/* FOOTER */}
       <footer style={S.footer}>
         <div style={S.container}>
-          <div style={S.footerGrid}>
+          <div style={{...S.footerGrid, gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr', gap: isMobile ? 24 : 40}}>
             <div>
               <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
               <p style={{fontSize:12,color:'#64748b',lineHeight:1.6,maxWidth:280,marginTop:8}}>La plateforme nouvelle generation pour organiser vos tournois de football.</p>
@@ -396,12 +404,12 @@ export function LandingPage() {
 // STYLES
 // ============================================================
 const S = {
-  page: { background: '#060a12', color: '#f1f5f9', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", minHeight: '100vh', overflowX: 'hidden' },
-  container: { maxWidth: 1200, margin: '0 auto', padding: '0 24px' },
+  page: { background: '#060a12', color: '#f1f5f9', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", minHeight: '100vh', overflowX: 'hidden', maxWidth: '100vw' },
+  container: { maxWidth: 1200, margin: '0 auto', padding: '0 16px', boxSizing: 'border-box', width: '100%' },
 
   // NAV
-  nav: { position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '16px 0', background: 'rgba(6,10,18,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
-  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  nav: { position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '16px 0', background: 'rgba(6,10,18,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
+  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   logo: { fontSize: 22, fontWeight: 900, letterSpacing: 1, cursor: 'pointer' },
   navLinks: { display: 'flex', gap: 32, fontSize: 14, fontWeight: 600, color: '#94a3b8' },
   navLink: { cursor: 'pointer', transition: 'color 0.2s' },
@@ -413,12 +421,12 @@ const S = {
   btnOutlineLg: { padding: '14px 32px', borderRadius: 10, fontWeight: 700, fontSize: 16, cursor: 'pointer', background: 'transparent', color: '#a3e635', border: '1.5px solid #a3e635', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" },
 
   // HERO
-  hero: { padding: '140px 0 80px', position: 'relative' },
+  hero: { padding: '100px 0 60px', position: 'relative', overflowX: 'hidden' },
   heroGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' },
   badge: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: '#a3e635', marginBottom: 24, letterSpacing: 0.5 },
   badgeDot: { width: 6, height: 6, background: '#a3e635', borderRadius: '50%', display: 'inline-block' },
   h1: { fontSize: 56, fontWeight: 900, lineHeight: 1.1, letterSpacing: -1, marginBottom: 20 },
-  heroSub: { fontSize: 18, color: '#94a3b8', lineHeight: 1.7, marginBottom: 32, maxWidth: 480 },
+  heroSub: { fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 32, maxWidth: '100%' },
   heroFeats: { display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 40 },
   heroFeat: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#94a3b8' },
   dot: { width: 6, height: 6, background: '#a3e635', borderRadius: '50%', display: 'inline-block' },
@@ -427,7 +435,7 @@ const S = {
   glowLine: { height: 1, background: 'linear-gradient(90deg, transparent, #a3e635, transparent)', opacity: 0.3 },
 
   // SECTION
-  section: { padding: '100px 0' },
+  section: { padding: '60px 0' },
   sectionHeader: { textAlign: 'center', marginBottom: 60 },
   sectionLabel: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#a3e635', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 },
   h2: { fontSize: 42, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 16 },
