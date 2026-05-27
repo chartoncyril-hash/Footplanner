@@ -138,7 +138,6 @@ export function TournamentWizard(props) {
         breakBetweenMatches: parseInt(data.pauseMin, 10),
         hasThirdPlace: data.hasKnockout && data.hasThirdPlace,
         hasKnockout: data.hasKnockout,
-        hasThirdPlace: data.hasKnockout && data.hasThirdPlace,
         hasConsolation: data.hasKnockout && data.knockoutFormat !== 'multicup' && data.hasConsolation,
         knockoutFields: data.hasKnockout ? data.knockoutFields : null,
         knockoutFormat: data.hasKnockout ? data.knockoutFormat : 'standard',

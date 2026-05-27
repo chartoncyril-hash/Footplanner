@@ -163,7 +163,7 @@ export function LandingPage() {
             <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:16}}>
               {[
                 {icon:'⚙️',c:'#a3e635',t:'Gestion de tournois',d:'Poules, calendriers, phases finales, scores en direct. Standard, Croisé ou Champions League.'},
-                {icon:'📝',c:'#a3e635',t:'Inscriptions en ligne',d:'Page publique brandée à vos couleurs. Les clubs s'inscrivent, vous validez et gérez les paiements.'},
+                {icon:'📝',c:'#a3e635',t:'Inscriptions en ligne',d:'Page publique brandée à vos couleurs. Les clubs s\'inscrivent, vous validez et gérez les paiements.'},
                 {icon:'🏷️',c:'#a3e635',t:'Table de marque',d:'Accueil des équipes le jour J : présence, maillots, paiements, joueurs. Tout en un écran.'},
                 {icon:'🖥️',c:'#f59e0b',t:'Affichage grand écran',d:'Diffusez matchs en cours, classements et sponsors sur vos écrans TV en mode régie automatique.'},
                 {icon:'👥',c:'#818cf8',t:'Bibliothèque de clubs',d:'Sauvegardez vos clubs pour les réimporter en un clic. Fini la saisie répétitive.'},
