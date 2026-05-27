@@ -265,9 +265,21 @@ export function LandingPage() {
                 </div>
 
                 {error && <div style={S.error}>{error}</div>}
-                {success && <div style={{...S.error,background:'rgba(34,211,238,0.1)',border:'1px solid rgba(34,211,238,0.3)',color:'#a3e635'}}>{success}</div>}
+                {success && (
+    <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
+      <div style={{ fontSize: 24, fontWeight: 900, color: '#f1f5f9', marginBottom: 12 }}>Bienvenue dans FootPlanner !</div>
+      <div style={{ fontSize: 15, color: '#94a3b8', lineHeight: 1.7, marginBottom: 24 }}>
+        Votre compte a été créé avec succès.<br/>
+        <strong style={{ color: '#a3e635' }}>Vérifiez votre email</strong> pour activer votre compte.
+      </div>
+      <div style={{ padding: '16px 20px', background: 'rgba(163,230,53,0.08)', border: '1px solid rgba(163,230,53,0.2)', borderRadius: 12, fontSize: 13, color: '#94a3b8' }}>
+        Un email de confirmation a été envoyé à <strong style={{ color: '#f1f5f9' }}>{form.email}</strong>
+      </div>
+    </div>
+  )}
 
-                    {(!authMode || authMode === 'signup') && (
+                    {(!authMode || authMode === 'signup') && !success && (
                       <div>
                         <div style={S.formGroup}>
                           <label style={S.label}>Nom du club *</label>
