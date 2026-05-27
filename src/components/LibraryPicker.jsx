@@ -56,7 +56,7 @@ export function LibraryPicker({
 
       <div style={styles.sheetBody}>
         <div style={styles.helpBox}>
-          <Sparkles size={12} color="#a78bfa" />
+          <Sparkles size={12} color="#818cf8" />
           <span>Importe rapidement des équipes déjà créées dans tes tournois précédents.</span>
         </div>
 

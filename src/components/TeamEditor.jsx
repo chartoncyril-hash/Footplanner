@@ -4,7 +4,7 @@ import { FieldText } from './form/Fields';
 import { styles } from '../styles/styles';
 
 const TEAM_COLORS = [
-  '#22d3ee', '#f59e0b', '#a78bfa', '#34d399', '#f472b6', '#60a5fa',
+  '#a3e635', '#f59e0b', '#818cf8', '#34d399', '#f472b6', '#60a5fa',
   '#fb7185', '#facc15', '#2dd4bf', '#fb923c', '#c084fc', '#4ade80',
 ];
 

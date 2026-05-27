@@ -169,12 +169,12 @@ function renderMatchTable(doc, autoTable, matches, teams, allMatches, standings,
     },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: {
-      0: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-      1: { cellWidth: 16, halign: 'center' },
+      0: { cellWidth: 16, halign: 'center', fontStyle: 'bold' },
+      1: { cellWidth: 24, halign: 'center' },
       2: { halign: 'right', fontStyle: 'bold' },
-      3: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+      3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
       4: { halign: 'left', fontStyle: 'bold' },
-      5: { cellWidth: 28, halign: 'left', textColor: COLOR_MUTED },
+      5: { cellWidth: 22, halign: 'left', textColor: COLOR_MUTED },
     },
     didParseCell: (data) => {
       if (data.section === 'body' && data.column.index === 3) {

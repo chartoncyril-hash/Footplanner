@@ -137,7 +137,7 @@ export function MatchDetail({
           </div>
           <div style={styles.bigScoreNumbers}>
             {canModifyNow && m.status !== 'scheduled' ? (
-              <ScoreEditor value={home} onChange={setHome} color="#22d3ee" />
+              <ScoreEditor value={home} onChange={setHome} color="#a3e635" />
             ) : (
               <span style={styles.bigScoreNum}>{m.scoreHome ?? '-'}</span>
             )}
@@ -212,7 +212,7 @@ export function MatchDetail({
               disabled={saving}
               style={{
                 ...styles.btnPrimary,
-                ...(savedFlash ? { background: 'linear-gradient(135deg, #34d399, #10b981)' } : {}),
+                ...(savedFlash ? { background: 'linear-gradient(135deg, #34d399, #34d399)' } : {}),
               }}
             >
               {savedFlash
@@ -278,7 +278,7 @@ function FpToggle({ team, value, onChange }) {
 function StatusPill({ status }) {
   const map = {
     scheduled: { label: 'PROGRAMMÉ', color: '#94a3b8', icon: Clock },
-    live: { label: 'EN DIRECT', color: '#22d3ee', icon: Activity, pulse: true },
+    live: { label: 'EN DIRECT', color: '#a3e635', icon: Activity, pulse: true },
     validated: { label: 'VALIDÉ', color: '#34d399', icon: ShieldCheck },
   };
   const s = map[status] || map.scheduled;

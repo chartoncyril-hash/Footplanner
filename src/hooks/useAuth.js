@@ -27,13 +27,27 @@ export function useAuth() {
     };
   }, []);
 
-  const signUp = useCallback(async ({ email, password, displayName }) => {
+  const signUp = useCallback(async ({ email, password, displayName, firstName, lastName, club, phone, tournoisPerYear }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: displayName || `${firstName || ''} ${lastName || ''}`.trim() } },
     });
     if (error) throw error;
+    // Remplir le profil enrichi
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email,
+        display_name: displayName || `${firstName || ''} ${lastName || ''}`.trim(),
+        first_name: firstName || '',
+        last_name: lastName || '',
+        club_name: club || '',
+        phone: phone || '',
+        tournaments_per_year: tournoisPerYear || '',
+        updated_at: new Date().toISOString(),
+      });
+    }
     return data.user;
   }, []);
 

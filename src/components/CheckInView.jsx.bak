@@ -1,0 +1,551 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { CheckCircle, Circle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import * as teamService from '../services/teamService';
+
+const JERSEY_COLORS = [
+  { label: 'Rouge', value: '#e63946' },
+  { label: 'Bleu', value: '#2196f3' },
+  { label: 'Vert', value: '#4caf50' },
+  { label: 'Jaune', value: '#f9c74f' },
+  { label: 'Orange', value: '#ff9800' },
+  { label: 'Violet', value: '#9c27b0' },
+  { label: 'Noir', value: '#1a1a2e' },
+  { label: 'Blanc', value: '#f1f5f9' },
+  { label: 'Rose', value: '#e91e8c' },
+  { label: 'Cyan', value: '#a3e635' },
+];
+
+function conflictingJerseys(teams) {
+  const colorMap = {};
+  teams.forEach(t => {
+    if (!t.jerseyColor) return;
+    if (!colorMap[t.jerseyColor]) colorMap[t.jerseyColor] = [];
+    colorMap[t.jerseyColor].push(t.id);
+  });
+  const conflicted = new Set();
+  Object.values(colorMap).forEach(ids => {
+    if (ids.length > 1) ids.forEach(id => conflicted.add(id));
+  });
+  return conflicted;
+}
+
+function TeamRow({ team, onToggleCheckIn, onUpdateField, conflict, registrations }) {
+  const [expanded, setExpanded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [localCoach, setLocalCoach] = useState(team.coachName || '');
+  const [localPhone, setLocalPhone] = useState(team.coachPhone || '');
+
+  const reg = registrations?.find(r =>
+    (r.team_name || r.teamName)?.toLowerCase() === team.name?.toLowerCase() &&
+    r.category === team.category &&
+    (r.status === 'paid' || r.status === 'payment_pending' || r.status === 'approved')
+  );
+  const paymentStatus = reg?.status ?? null;
+
+  const paymentBadge = () => {
+    if (!reg) return null;
+    if (paymentStatus === 'paid') return { label: 'Payé', color: 'var(--color-background-success)', text: 'var(--color-text-success)' };
+    if (paymentStatus === 'payment_pending') return { label: 'En attente', color: 'var(--color-background-warning)', text: 'var(--color-text-warning)' };
+    return { label: 'Impayé', color: 'var(--color-background-danger)', text: 'var(--color-text-danger)' };
+  };
+
+  const badge = paymentBadge();
+
+  async function saveCoach() {
+    setSaving(true);
+    await teamService.update(team.id, { coachName: localCoach, coachPhone: localPhone });
+    onUpdateField(team.id, { coachName: localCoach, coachPhone: localPhone });
+    setSaving(false);
+  }
+
+  async function markPaid() {
+    if (!reg) return;
+    await supabase.from('registrations').update({ status: 'paid', reviewed_at: new Date().toISOString() }).eq('id', reg.id);
+    setRegistrations && setRegistrations(prev => prev.map(r => r.id === reg.id ? {...r, status: 'paid'} : r));
+  }
+
+  async function handleJerseyColor(value) {
+    await teamService.update(team.id, { jerseyColor: value });
+    onUpdateField(team.id, { jerseyColor: value });
+  }
+
+  return (
+    <>
+      <tr style={{ background: conflict ? 'rgba(220,38,38,0.06)' : 'transparent', transition: 'background 0.2s' }}>
+        <td style={{ padding: '10px 12px' }}>
+          <button
+            onClick={() => onToggleCheckIn(team)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', minWidth: 28 }}
+          >
+            {team.checkedIn
+              ? <CheckCircle size={22} color="#34d399" />
+              : <Circle size={22} color="#475569" strokeWidth={1.5} />}
+          </button>
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--color-text-primary)' }}>{team.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>Poule {team.pool}</div>
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <span style={{
+            fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500,
+            background: team.level === 1 ? 'var(--color-background-info)' : 'var(--color-background-secondary)',
+            color: team.level === 1 ? 'var(--color-text-info)' : 'var(--color-text-secondary)'
+          }}>
+            Niveau {team.level || '—'}
+          </span>
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              width: 14, height: 14, borderRadius: '50%',
+              background: team.jerseyColor || 'var(--color-border-secondary)',
+              border: '0.5px solid var(--color-border-secondary)',
+              flexShrink: 0
+            }} />
+            <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              {team.jerseyColor
+                ? JERSEY_COLORS.find(c => c.value === team.jerseyColor)?.label || 'Autre'
+                : <span style={{ color: 'var(--color-text-tertiary)' }}>Non défini</span>}
+            </span>
+            {conflict && <AlertTriangle size={13} color="var(--color-text-danger)" />}
+          </div>
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          {badge
+            ? <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: badge.color, color: badge.text }}>{badge.label}</span>
+            : <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>—</span>}
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          {team.coachName
+            ? <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                {team.coachName}
+                {team.coachPhone && <><br />{team.coachPhone}</>}
+              </div>
+            : <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>—</span>}
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <span style={{
+            fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500,
+            background: team.checkedIn ? 'var(--color-background-success)' : 'var(--color-background-warning)',
+            color: team.checkedIn ? 'var(--color-text-success)' : 'var(--color-text-warning)'
+          }}>
+            {team.checkedIn ? 'Arrivée' : 'Attendue'}
+          </span>
+        </td>
+        <td style={{ padding: '10px 8px' }}>
+          <button
+            onClick={() => setExpanded(e => !e)}
+            style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', borderRadius: 6, cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', fontSize: 11 }}
+          >
+            {expanded ? <><ChevronUp size={13} /><span>Fermer</span></> : <><ChevronDown size={13} /><span>Détails</span></>}
+          </button>
+        </td>
+      </tr>
+      {expanded && (
+        <tr style={{ background: 'var(--color-background-secondary)' }}>
+          <td colSpan={8} style={{ padding: '12px 16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'flex-end' }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 6, fontWeight: 500 }}>NOM DU COACH</div>
+                <input
+                  value={localCoach}
+                  onChange={e => setLocalCoach(e.target.value)}
+                  placeholder="Nom du responsable"
+                  style={{ width: '100%', fontSize: 13, padding: '6px 10px', borderRadius: 8,
+                    border: '0.5px solid var(--color-border-secondary)',
+                    background: 'var(--color-background-primary)',
+                    color: 'var(--color-text-primary)', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 6, fontWeight: 500 }}>TÉLÉPHONE</div>
+                <input
+                  value={localPhone}
+                  onChange={e => setLocalPhone(e.target.value)}
+                  placeholder="06 xx xx xx xx"
+                  style={{ width: '100%', fontSize: 13, padding: '6px 10px', borderRadius: 8,
+                    border: '0.5px solid var(--color-border-secondary)',
+                    background: 'var(--color-background-primary)',
+                    color: 'var(--color-text-primary)', boxSizing: 'border-box' }}
+                />
+              </div>
+              <button
+                onClick={saveCoach}
+                disabled={saving}
+                style={{ fontSize: 12, padding: '6px 16px', borderRadius: 8,
+                  border: '0.5px solid var(--color-border-secondary)',
+                  background: 'var(--color-background-primary)',
+                  color: 'var(--color-text-primary)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                {saving ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+            </div>
+{reg && reg.status !== 'paid' && (
+              <div style={{ marginTop: 14, padding: '10px 12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700 }}>
+                  {reg.status === 'payment_pending' ? 'Paiement en attente' : 'Paiement du'}
+                </span>
+                <button onClick={markPaid} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(34,197,94,0.4)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', fontWeight: 700 }}>
+                  Marquer paye
+                </button>
+              </div>
+            )}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 500 }}>COULEUR DU MAILLOT</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {JERSEY_COLORS.map(c => (
+                  <button
+                    key={c.value}
+                    title={c.label}
+                    onClick={() => handleJerseyColor(c.value)}
+                    style={{
+                      width: 28, height: 28, borderRadius: '50%', background: c.value,
+                      border: 'none', cursor: 'pointer',
+                      outline: team.jerseyColor === c.value ? '2px solid var(--color-text-primary)' : '2px solid transparent',
+                      outlineOffset: 2
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+
+function RegistrationRow({ reg, team, arrived, fee, onMarkPaid, onToggleArrived }) {
+  const [expanded, setExpanded] = useState(false);
+  const statusConfig = {
+    pending:         { label: 'En attente',   color: '#f59e0b' },
+    approved:        { label: 'Validée',      color: '#a3e635' },
+    payment_pending: { label: 'Paiement dû',  color: '#f59e0b' },
+    paid:            { label: 'Payée',        color: '#22c55e' },
+    rejected:        { label: 'Refusée',      color: '#fb7185' },
+  };
+  const s = statusConfig[reg.status] || statusConfig.pending;
+  const nbTeams = reg.nb_players || 1;
+  const totalDue = fee;
+  return (
+    <>
+    <tr style={{ borderBottom: expanded ? 'none' : '0.5px solid var(--color-border-tertiary)' }}>
+      <td style={{ padding: '10px 12px' }}>
+        <button onClick={onToggleArrived} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+          {arrived
+            ? <CheckCircle size={22} color="#34d399" />
+            : <Circle size={22} color="#475569" strokeWidth={1.5} />}
+        </button>
+      </td>
+      <td style={{ padding: '10px 8px', fontWeight: 500, fontSize: 13, color: 'var(--color-text-primary)' }}>
+        {reg.contact_name}
+      </td>
+      <td style={{ padding: '10px 8px', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        {team ? team.category : reg.category || '—'}
+      </td>
+      <td style={{ padding: '10px 8px' }}>
+        {team ? (
+          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: team.level === 1 ? 'var(--color-background-info)' : 'var(--color-background-secondary)', color: team.level === 1 ? 'var(--color-text-info)' : 'var(--color-text-secondary)' }}>
+            Équipe {team.level}
+          </span>
+        ) : '—'}
+      </td>
+      <td style={{ padding: '10px 8px', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        {reg.contact_phone || '—'}
+      </td>
+      <td style={{ padding: '10px 8px' }}>
+        {(reg.status === 'payment_pending' || reg.status === 'approved') && totalDue > 0 && (
+          <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, marginBottom: 4 }}>{totalDue}€ dû</div>
+        )}
+        {(reg.status === 'payment_pending' || reg.status === 'approved') && (
+          <button onClick={onMarkPaid} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(34,197,94,0.4)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', fontWeight: 700 }}>
+            Marquer payé
+          </button>
+        )}
+        {reg.status === 'paid' && <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 700 }}>✓ Payé</span>}
+      </td>
+      <td style={{ padding: '10px 8px' }}>
+        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: arrived ? 'var(--color-background-success)' : 'var(--color-background-warning)', color: arrived ? 'var(--color-text-success)' : 'var(--color-text-warning)' }}>
+          {arrived ? 'Arrivée' : 'Attendue'}
+        </span>
+      </td>
+      <td style={{ padding: '10px 8px' }}>
+        <button onClick={() => setExpanded(e => !e)} style={{ background: 'var(--color-background-secondary)', border: '0.5px solid var(--color-border-secondary)', borderRadius: 6, cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', fontSize: 11 }}>
+          {expanded ? <><ChevronUp size={13} /><span>Fermer</span></> : <><ChevronDown size={13} /><span>Détails</span></>}
+        </button>
+      </td>
+    </tr>
+    {expanded && (
+      <tr style={{ background: 'var(--color-background-secondary)', borderBottom: '0.5px solid var(--color-border-tertiary)' }}>
+        <td colSpan={8} style={{ padding: '12px 16px' }}>
+          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 500 }}>CONTACT</div>
+          <div style={{ fontSize: 13, color: 'var(--color-text-primary)', marginBottom: 12 }}>
+            {reg.contact_name} · {reg.contact_email}
+            {reg.contact_phone && <> · {reg.contact_phone}</>}
+          </div>
+          {reg.message && (
+            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontStyle: 'italic' }}>"{reg.message}"</div>
+          )}
+        </td>
+      </tr>
+    )}
+  </>
+  );
+}
+
+function thStyle() {
+  return {
+    fontSize: 11, fontWeight: 500, color: 'var(--color-text-secondary)',
+    textAlign: 'left', padding: '8px 10px',
+    borderBottom: '0.5px solid var(--color-border-tertiary)',
+    textTransform: 'uppercase', letterSpacing: '0.04em'
+  };
+}
+
+function CategoryBlock({ category, teams, onToggleCheckIn, onUpdateField, registrations }) {
+  const conflicts = conflictingJerseys(teams);
+  const arrived = teams.filter(t => t.checkedIn).length;
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, padding: '0 4px' }}>
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>{category}</span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{arrived} / {teams.length} arrivées</span>
+        {teams.length - arrived > 0 && (
+          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500,
+            background: 'var(--color-background-warning)', color: 'var(--color-text-warning)' }}>
+            {teams.length - arrived} en attente
+          </span>
+        )}
+        {conflicts.size > 0 && (
+          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, fontWeight: 500,
+            background: 'var(--color-background-danger)', color: 'var(--color-text-danger)',
+            display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AlertTriangle size={11} /> Conflit maillots
+          </span>
+        )}
+      </div>
+      <div style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: 12, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr>
+              <th style={thStyle()}></th>
+              <th style={thStyle()}>Équipe</th>
+              <th style={thStyle()}>Niveau</th>
+              <th style={thStyle()}>Maillot</th>
+              <th style={thStyle()}>Paiement</th>
+              <th style={thStyle()}>Coach</th>
+              <th style={thStyle()}>Statut</th>
+              <th style={thStyle()}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {teams.map(team => (
+              <TeamRow
+                key={team.id}
+                team={team}
+                onToggleCheckIn={onToggleCheckIn}
+                onUpdateField={onUpdateField}
+                conflict={conflicts.has(team.id)}
+                registrations={registrations}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export function CheckInView({ teams: initialTeams, tournament }) {
+  const [registrations, setRegistrations] = useState([]);
+  useEffect(() => {
+    if (!tournament || !tournament.id) return;
+    supabase.from('registrations').select('*').eq('tournament_id', tournament.id)
+      .then(({ data }) => setRegistrations(data || []));
+  }, [tournament && tournament.id]);
+  const [teams, setTeams] = useState(initialTeams || []);
+
+  React.useEffect(() => {
+    if (initialTeams && initialTeams.length > 0) {
+      setTeams(initialTeams);
+    } else if (tournament && tournament.id) {
+      teamService.listByTournament(tournament.id).then(data => setTeams(data || []));
+    }
+  }, [initialTeams, tournament && tournament.id]);
+
+  const [activeCategory, setActiveCategory] = useState(null);
+  const categories = useMemo(() => {
+    const teamCats = teams.map(t => t.category).filter(Boolean);
+    const regCats = registrations.flatMap(r => {
+      const tl = r.teams_list || [];
+      return tl.length > 0 ? tl.map(t => t.category) : [r.category];
+    }).filter(Boolean);
+    const cats = [...new Set([...teamCats, ...regCats])];
+    return cats.sort();
+  }, [teams, registrations]);
+  // Set default category
+  React.useEffect(() => {
+    if (categories.length > 0 && !activeCategory) setActiveCategory(categories[0]);
+  }, [categories]);
+
+  const totalArrived = teams.filter(t => t.checkedIn).length;
+  const validRegs = registrations.filter(r => r.status !== 'rejected' && r.status !== 'pending');
+  const filteredRegs = validRegs.filter(r => {
+    if (!activeCategory) return true;
+    const tl = r.teams_list || [];
+    return tl.length > 0 ? tl.some(t => t.category === activeCategory) : r.category === activeCategory;
+  });
+  const totalRegTeams = filteredRegs.reduce((sum, r) => {
+    const tl = (r.teams_list || []).filter(t => !activeCategory || t.category === activeCategory);
+    return sum + (tl.length > 0 ? tl.length : 1);
+  }, 0);
+  const totalArrivedReg = filteredRegs.reduce((sum, r) => {
+    const tl = (r.teams_list || []).filter(t => !activeCategory || t.category === activeCategory);
+    const at = r.arrived_teams || [];
+    return sum + (tl.length > 0 ? tl.filter(t => at.includes(t.category + '_' + t.level)).length : (at.includes('default') ? 1 : 0));
+  }, 0);
+  const totalUnpaidFiltered = filteredRegs.filter(r => r.status === 'payment_pending').length;
+  const totalUnpaid = registrations?.filter(r => r.status === 'payment_pending').length ?? 0;
+
+  async function handleToggleCheckIn(team) {
+    const newVal = !team.checkedIn;
+    await teamService.update(team.id, { checkedIn: newVal });
+    setTeams(prev => prev.map(t => t.id === team.id ? { ...t, checkedIn: newVal } : t));
+  }
+
+  function handleUpdateField(id, patch) {
+    setTeams(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t));
+  }
+  async function handleToggleArrived(reg) {
+// handled inline in RegistrationRow via onToggleArrived prop
+  }
+
+  return (
+    <div style={{ padding: '24px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, color: 'var(--color-text-primary)', margin: 0 }}>
+          Table de marque — Accueil
+        </h2>
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{tournament?.name}</span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
+        {[
+          { label: 'Équipes arrivées', value: teams.length > 0 ? `${totalArrived} / ${teams.length}` : `${totalArrivedReg} / ${totalRegTeams}`, color: 'var(--color-text-success)' },
+          { label: 'Paiements en attente', value: totalUnpaidFiltered, color: totalUnpaidFiltered > 0 ? 'var(--color-text-warning)' : 'var(--color-text-primary)' },
+          { label: activeCategory || 'Toutes catégories', value: totalRegTeams + ' équipes', color: 'var(--color-text-primary)' },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'var(--color-background-secondary)', borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 500, color: s.color }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {categories.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              style={{ padding: '6px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', fontFamily: 'inherit',
+                background: activeCategory === cat ? 'var(--color-background-info)' : 'var(--color-background-secondary)',
+                color: activeCategory === cat ? 'var(--color-text-info)' : 'var(--color-text-secondary)' }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+      {teams.length > 0 && categories.filter(cat => !activeCategory || cat === activeCategory).map(cat => (
+        <CategoryBlock
+          key={cat}
+          category={cat}
+          teams={teams.filter(t => t.category === cat).sort((a, b) => (a.level || 9) - (b.level || 9))}
+          onToggleCheckIn={handleToggleCheckIn}
+          onUpdateField={handleUpdateField}
+          registrations={registrations}
+        />
+      ))}
+
+      {teams.length === 0 && registrations.length > 0 && (() => {
+        const fee = tournament?.registrationFee || tournament?.registration_fee || 0;
+        // Éclater chaque inscription en lignes par équipe
+        const rows = [];
+        registrations.filter(r => r.status !== 'rejected' && r.status !== 'pending').forEach(reg => {
+          // Filtrer par catégorie active
+          const regCats = (reg.teams_list || []).map(t => t.category);
+          const matchesCat = !activeCategory || regCats.includes(activeCategory) || reg.category === activeCategory;
+          if (!matchesCat) return;
+          const teamsList = reg.teams_list || [];
+          if (teamsList.length > 0) {
+            teamsList.forEach((t, i) => {
+              const key = t.category + '_' + t.level;
+              const arrivedTeams = reg.arrived_teams || [];
+              rows.push({ reg, team: t, key, arrived: arrivedTeams.includes(key) });
+            });
+          } else {
+            rows.push({ reg, team: null, key: 'default', arrived: !!(reg.arrived_teams || []).includes('default') });
+          }
+        });
+        const totalRows = rows.length;
+        const arrivedRows = rows.filter(r => r.arrived).length;
+        return (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: '0 4px' }}>
+              <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Aucune équipe configurée — affichage des inscriptions</span>
+              <span style={{ fontSize: 12, color: 'var(--color-text-success)', fontWeight: 600 }}>{arrivedRows} / {totalRows} arrivées</span>
+            </div>
+            <div style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: 12, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle()}></th>
+                    <th style={thStyle()}>Club</th>
+                    <th style={thStyle()}>Catégorie</th>
+                    <th style={thStyle()}>Niveau</th>
+                    <th style={thStyle()}>Contact</th>
+                    <th style={thStyle()}>Paiement</th>
+                    <th style={thStyle()}>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(({ reg, team, key, arrived }, i) => (
+                    <RegistrationRow
+                      key={reg.id + '_' + key}
+                      reg={reg}
+                      team={team}
+                      rowKey={key}
+                      arrived={arrived}
+                      fee={fee}
+                      onToggleArrived={async () => {
+                        const current = reg.arrived_teams || [];
+                        const newArr = arrived ? current.filter(k => k !== key) : [...current, key];
+                        await supabase.from('registrations').update({ arrived_teams: newArr }).eq('id', reg.id);
+                        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, arrived_teams: newArr } : r));
+                      }}
+                      onMarkPaid={async () => {
+                        await supabase.from('registrations').update({ status: 'paid', reviewed_at: new Date().toISOString() }).eq('id', reg.id);
+                        setRegistrations(prev => prev.map(r => r.id === reg.id ? { ...r, status: 'paid' } : r));
+                      }}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
+
+            {teams.length === 0 && registrations.length === 0 && (
+        <div style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', padding: '48px 0', fontSize: 14 }}>
+          Aucune inscription pour ce tournoi.
+        </div>
+      )}
+    </div>
+  );
+}

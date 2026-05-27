@@ -32,7 +32,7 @@ export function Standings({
         />
         <div style={styles.noRankingCard}>
           <div style={{ ...styles.confirmIcon, background: 'rgba(167,139,250,0.15)', borderColor: 'rgba(167,139,250,0.4)', marginBottom: 12 }}>
-            <Sparkles size={20} color="#a78bfa" />
+            <Sparkles size={20} color="#818cf8" />
           </div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#f1f5f9', textAlign: 'center' }}>
             Pas de classement pour les {tournament.category}
@@ -122,7 +122,7 @@ function PoolsStandings({ pools, activePool, standings, tournament, setActivePoo
           <div style={styles.statCol}>N</div>
           <div style={styles.statCol}>P</div>
           <div style={styles.statCol}>+/-</div>
-          <div style={{ ...styles.statCol, width: 38, fontWeight: 800, color: '#22d3ee' }}>PTS</div>
+          <div style={{ ...styles.statCol, width: 38, fontWeight: 800, color: '#a3e635' }}>PTS</div>
         </div>
         {standings[activePool]?.map((t, i) => {
           const qualified = showQualLine && i < knockoutLineRank;
@@ -131,10 +131,10 @@ function PoolsStandings({ pools, activePool, standings, tournament, setActivePoo
               key={t.id}
               style={{
                 ...styles.standingsRow,
-                borderLeft: `3px solid ${qualified ? '#22d3ee' : 'transparent'}`,
+                borderLeft: `3px solid ${qualified ? '#a3e635' : 'transparent'}`,
               }}
             >
-              <div style={{ width: 24, fontWeight: 800, color: qualified ? '#22d3ee' : '#64748b' }}>
+              <div style={{ width: 24, fontWeight: 800, color: qualified ? '#a3e635' : '#64748b' }}>
                 {i + 1}
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -158,7 +158,7 @@ function PoolsStandings({ pools, activePool, standings, tournament, setActivePoo
               >
                 {t.goalDiff > 0 ? '+' : ''}{t.goalDiff}
               </div>
-              <div style={{ ...styles.statCol, width: 38, fontWeight: 800, fontSize: 15, color: '#22d3ee' }}>
+              <div style={{ ...styles.statCol, width: 38, fontWeight: 800, fontSize: 15, color: '#a3e635' }}>
                 {t.points}
               </div>
             </div>

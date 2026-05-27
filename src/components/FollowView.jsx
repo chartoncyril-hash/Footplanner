@@ -77,7 +77,7 @@ export function FollowView({ tournament, teams, role }) {
 
       {pools.map(p => (
         <section key={p} style={styles.section}>
-          <SectionHeader icon={Shield} title={`Poule ${p}`} accent="#a78bfa" badge={grouped[p].length} />
+          <SectionHeader icon={Shield} title={`Poule ${p}`} accent="#818cf8" badge={grouped[p].length} />
           <div style={styles.cardStack}>
             {grouped[p].map(t => {
               const followed = followedIds.includes(t.id);

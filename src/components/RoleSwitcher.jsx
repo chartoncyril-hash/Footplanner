@@ -5,8 +5,8 @@ import { styles } from '../styles/styles';
 
 const ROLES = {
   organizer: { label: 'Organisateur', icon: Crown, color: '#f59e0b', desc: 'Configurer le tournoi, équipes, scores, planning.' },
-  referee: { label: 'Arbitre', icon: Flag, color: '#22d3ee', desc: 'Saisir et valider les scores des matchs.' },
-  coach: { label: 'Coach', icon: Shield, color: '#a78bfa', desc: 'Suivre les équipes en lecture seule.' },
+  referee: { label: 'Arbitre', icon: Flag, color: '#a3e635', desc: 'Saisir et valider les scores des matchs.' },
+  coach: { label: 'Coach', icon: Shield, color: '#818cf8', desc: 'Suivre les équipes en lecture seule.' },
   spectator: { label: 'Spectateur', icon: Eye, color: '#94a3b8', desc: 'Consulter scores, classements, suivre des équipes.' },
 };
 
@@ -62,7 +62,7 @@ export function RoleSwitcher({
         title="Rôle actif"
         subtitle="Choisis ton point de vue dans l'app"
         icon={UserCheck}
-        accent="#22d3ee"
+        accent="#a3e635"
       />
 
       <div style={styles.cardStack}>
@@ -118,7 +118,7 @@ export function RoleSwitcher({
           ) : (
             <div style={styles.staffAccessBox}>
               <div style={styles.staffAccessTitle}>
-                <ShieldCheck size={13} color="#22d3ee" /> CODE ARBITRE
+                <ShieldCheck size={13} color="#a3e635" /> CODE ARBITRE
               </div>
               <div style={styles.staffAccessDesc}>
                 Saisis le code communiqué par l'organisateur pour pouvoir saisir les scores.

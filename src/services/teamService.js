@@ -19,6 +19,10 @@ function fromDb(row) {
     pool: row.pool,
     isHost: row.is_host,
     level: row.level,
+    checkedIn: row.checked_in ?? false,
+    coachName: row.coach_name ?? null,
+    coachPhone: row.coach_phone ?? null,
+    jerseyColor: row.jersey_color ?? null,
   };
 }
 
@@ -34,6 +38,10 @@ function toDb(t) {
   if (t.pool !== undefined) out.pool = t.pool;
   if (t.isHost !== undefined) out.is_host = t.isHost;
   if (t.level !== undefined) out.level = t.level;
+  if (t.checkedIn !== undefined) out.checked_in = t.checkedIn;
+  if (t.coachName !== undefined) out.coach_name = t.coachName;
+  if (t.coachPhone !== undefined) out.coach_phone = t.coachPhone;
+  if (t.jerseyColor !== undefined) out.jersey_color = t.jerseyColor;
   return out;
 }
 

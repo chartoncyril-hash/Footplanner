@@ -12,12 +12,12 @@ export function ConfirmDialog({ title, message, confirmLabel, danger, onConfirm,
       <div style={styles.confirmCard} onClick={(e) => e.stopPropagation()}>
         <div style={{
           ...styles.confirmIcon,
-          background: (danger ? '#f87171' : '#22d3ee') + '15',
-          borderColor: (danger ? '#f87171' : '#22d3ee') + '40',
+          background: (danger ? '#f87171' : '#a3e635') + '15',
+          borderColor: (danger ? '#f87171' : '#a3e635') + '40',
         }}>
           {danger
             ? <AlertCircle size={20} color="#f87171" />
-            : <Sparkles size={20} color="#22d3ee" />}
+            : <Sparkles size={20} color="#a3e635" />}
         </div>
         <div style={styles.confirmTitle}>{title}</div>
         <div style={styles.confirmMessage}>{message}</div>

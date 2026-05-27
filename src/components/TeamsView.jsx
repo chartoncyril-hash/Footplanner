@@ -87,7 +87,7 @@ export function TeamsView({
         title="Équipes"
         subtitle={`${visibleTeams.length} équipes engagées`}
         icon={Users}
-        accent="#a78bfa"
+        accent="#818cf8"
       />
 
       {isDesktop ? (
@@ -107,17 +107,9 @@ export function TeamsView({
 
       {canManage && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <button
-            onClick={() => setEditing('new')}
-            style={{ ...styles.btnAddTeam, flex: 1, marginBottom: 0 }}
-          >
-            <Plus size={16} /> NOUVELLE
+          <button onClick={() => setShowLibrary(true)} style={{ ...styles.btnAddTeam, flex: 1, marginBottom: 0 }}>
+            <Users size={14} /> AJOUTER DEPUIS LA BIBLIOTHÈQUE {teamsLibrary && teamsLibrary.length > 0 ? '(' + teamsLibrary.length + ')' : ''}
           </button>
-          {teamsLibrary && teamsLibrary.length > 0 && (
-            <button onClick={() => setShowLibrary(true)} style={styles.btnLibrary || styles.btnSecondary}>
-              <Users size={14} /> BIBLIOTHÈQUE ({teamsLibrary.length})
-            </button>
-          )}
         </div>
       )}
 
@@ -134,7 +126,7 @@ export function TeamsView({
 
       {pools.map(p => (
         <section key={p} style={styles.section}>
-          <SectionHeader icon={Users} title={`Poule ${p}`} accent="#a78bfa" badge={grouped[p].length} />
+          <SectionHeader icon={Users} title={`Poule ${p}`} accent="#818cf8" badge={grouped[p].length} />
           <div style={styles.cardStack}>
             {grouped[p].map(t => (
               <button

@@ -284,7 +284,7 @@ import { styles } from '../styles/styles';
               flex: 1,
               background: 'rgba(167,139,250,0.08)',
               borderColor: 'rgba(167,139,250,0.3)',
-              color: '#a78bfa',
+              color: '#818cf8',
             }}
           >
             <CheckSquare size={14} /> SÉLECTIONNER
@@ -315,7 +315,7 @@ import { styles } from '../styles/styles';
             marginBottom: 10,
             background: 'rgba(167,139,250,0.08)',
             borderColor: 'rgba(167,139,250,0.3)',
-            color: '#a78bfa',
+            color: '#818cf8',
             opacity: exporting ? 0.5 : 1,
           }}
         >
@@ -420,7 +420,7 @@ import { styles } from '../styles/styles';
               padding: '6px 10px',
               background: 'transparent',
               borderColor: 'rgba(167,139,250,0.4)',
-              color: '#a78bfa',
+              color: '#818cf8',
               fontSize: 9,
             }}
           >
@@ -431,7 +431,7 @@ import { styles } from '../styles/styles';
               flex: 1,
               fontSize: 12,
               fontWeight: 800,
-              color: '#a78bfa',
+              color: '#818cf8',
               textAlign: 'center',
             }}
           >
@@ -499,7 +499,7 @@ function PdfExportMenu({ tournament, pools, hasKnockout, exporting, onExport, on
 
       <div style={styles.sheetBody}>
         <div style={{ ...styles.helpBox, marginBottom: 16 }}>
-          <FileText size={12} color="#a78bfa" />
+          <FileText size={12} color="#818cf8" />
           <span>
             Génère un PDF prêt à imprimer pour affichage sur les terrains. Format A4, lisible à distance.
           </span>
@@ -508,7 +508,7 @@ function PdfExportMenu({ tournament, pools, hasKnockout, exporting, onExport, on
         {/* Planning complet (par poule, multi-pages) */}
         <PdfChoice
           icon={FileText}
-          color="#22d3ee"
+          color="#a3e635"
           title="Planning complet"
           desc={`${pools.length} poule${pools.length > 1 ? 's' : ''}${hasKnockout ? ' + phase finale' : ''}, une page par poule. Idéal pour distribuer aux équipes.`}
           onClick={() => onExport('full')}
@@ -518,7 +518,7 @@ function PdfExportMenu({ tournament, pools, hasKnockout, exporting, onExport, on
         {/* Résumé compact 1 page */}
         <PdfChoice
           icon={FileText}
-          color="#a78bfa"
+          color="#818cf8"
           title="Résumé compact"
           desc="Tous les matchs sur une seule page, triés par heure. Pratique pour la table de marque."
           onClick={() => onExport('summary')}
@@ -612,7 +612,7 @@ function ScheduleMatchRow({ match, teams, matches, standings, onEdit, onTap, sel
   return (
     <div style={{
       ...styles.matchListCard,
-      ...(selectionMode && isSelected ? { borderColor: '#a78bfa', background: 'rgba(167,139,250,0.08)' } : {}),
+      ...(selectionMode && isSelected ? { borderColor: '#818cf8', background: 'rgba(167,139,250,0.08)' } : {}),
       ...(selectionMode && isProtected ? { opacity: 0.5 } : {}),
     }}>
       {selectionMode && (
@@ -630,7 +630,7 @@ function ScheduleMatchRow({ match, teams, matches, standings, onEdit, onTap, sel
           title={isProtected ? 'Match déjà joué — non supprimable' : ''}
         >
           {isSelected
-            ? <CheckSquare size={18} color="#a78bfa" />
+            ? <CheckSquare size={18} color="#818cf8" />
             : <Square size={18} color={isProtected ? '#475569' : '#94a3b8'} />}
         </button>
       )}
@@ -654,7 +654,7 @@ function ScheduleMatchRow({ match, teams, matches, standings, onEdit, onTap, sel
           {match.status === 'validated'
             ? <span style={{ color: '#34d399', fontWeight: 800 }}>{match.scoreHome} - {match.scoreAway}</span>
             : match.status === 'live'
-              ? <span style={{ color: '#22d3ee', fontWeight: 800 }}>{match.scoreHome ?? 0} - {match.scoreAway ?? 0}</span>
+              ? <span style={{ color: '#a3e635', fontWeight: 800 }}>{match.scoreHome ?? 0} - {match.scoreAway ?? 0}</span>
               : <span style={{ color: '#475569' }}>vs</span>}
         </div>
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>

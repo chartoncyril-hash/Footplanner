@@ -113,8 +113,8 @@ export function OnboardingFlow({
                   style={{
                     ...styles.onbDot,
                     background: step === s
-                      ? '#22d3ee'
-                      : (onboardingSteps.indexOf(step) > onboardingSteps.indexOf(s) ? '#22d3ee44' : '#1e293b'),
+                      ? '#a3e635'
+                      : (onboardingSteps.indexOf(step) > onboardingSteps.indexOf(s) ? '#a3e63544' : '#1e293b'),
                   }}
                 />
               ))}
@@ -170,8 +170,8 @@ export function OnboardingFlow({
                 <div
                   style={{
                     ...styles.legalCheckbox,
-                    background: legalAccepted ? '#22d3ee' : 'transparent',
-                    borderColor: legalAccepted ? '#22d3ee' : '#475569',
+                    background: legalAccepted ? '#a3e635' : 'transparent',
+                    borderColor: legalAccepted ? '#a3e635' : '#475569',
                   }}
                 >
                   {legalAccepted && <Check size={12} color="#0a0a0a" strokeWidth={3} />}
@@ -196,8 +196,8 @@ export function OnboardingFlow({
               </div>
 
               <div style={styles.permCard}>
-                <div style={{ ...styles.permIcon, background: '#22d3ee15', borderColor: '#22d3ee44' }}>
-                  <Activity size={18} color="#22d3ee" />
+                <div style={{ ...styles.permIcon, background: '#a3e63515', borderColor: '#a3e63544' }}>
+                  <Activity size={18} color="#a3e635" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={styles.permTitle}>Notifications</div>
@@ -221,8 +221,8 @@ export function OnboardingFlow({
                     style={{
                       ...styles.permBtn,
                       background: notifGranted === true ? 'rgba(34,211,238,0.15)' : 'transparent',
-                      color: notifGranted === true ? '#22d3ee' : '#64748b',
-                      borderColor: notifGranted === true ? '#22d3ee55' : 'rgba(255,255,255,0.08)',
+                      color: notifGranted === true ? '#a3e635' : '#64748b',
+                      borderColor: notifGranted === true ? '#a3e63555' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     Autoriser
@@ -231,8 +231,8 @@ export function OnboardingFlow({
               </div>
 
               <div style={styles.permCard}>
-                <div style={{ ...styles.permIcon, background: '#a78bfa15', borderColor: '#a78bfa44' }}>
-                  <CircleDot size={18} color="#a78bfa" />
+                <div style={{ ...styles.permIcon, background: '#818cf815', borderColor: '#818cf844' }}>
+                  <CircleDot size={18} color="#818cf8" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={styles.permTitle}>Caméra</div>
@@ -256,8 +256,8 @@ export function OnboardingFlow({
                     style={{
                       ...styles.permBtn,
                       background: cameraGranted === true ? 'rgba(167,139,250,0.15)' : 'transparent',
-                      color: cameraGranted === true ? '#a78bfa' : '#64748b',
-                      borderColor: cameraGranted === true ? '#a78bfa55' : 'rgba(255,255,255,0.08)',
+                      color: cameraGranted === true ? '#818cf8' : '#64748b',
+                      borderColor: cameraGranted === true ? '#818cf855' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     Autoriser
@@ -288,9 +288,9 @@ export function OnboardingFlow({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                       <div
                         style={{
-                          color: t.status === 'archived' ? '#94a3b8' : '#22d3ee',
-                          borderColor: (t.status === 'archived' ? '#94a3b8' : '#22d3ee') + '55',
-                          background: (t.status === 'archived' ? '#94a3b8' : '#22d3ee') + '15',
+                          color: t.status === 'archived' ? '#94a3b8' : '#a3e635',
+                          borderColor: (t.status === 'archived' ? '#94a3b8' : '#a3e635') + '55',
+                          background: (t.status === 'archived' ? '#94a3b8' : '#a3e635') + '15',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 3,

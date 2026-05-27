@@ -3,7 +3,7 @@ import { Users, Briefcase, Edit3, Trash2, X, Save, Crown, Plus } from 'lucide-re
 import { Crest } from './Crest';
 
 const COLORS = [
-  '#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#fb7185',
+  '#a3e635', '#818cf8', '#34d399', '#f59e0b', '#fb7185',
   '#facc15', '#f472b6', '#60a5fa', '#4ade80', '#fb923c',
 ];
 
@@ -13,6 +13,7 @@ export function LibraryView(props) {
   const onRemoveTeam = props.onRemoveFromLibrary;
   const onUpdateTeam = props.onUpdateLibraryTeam;
   const onRemoveSponsor = props.onRemoveSponsor;
+  const onAddToLibrary = props.onAddToLibrary;
 
   const [tab, setTab] = useState('teams');
   const [editingId, setEditingId] = useState(null);
@@ -58,16 +59,19 @@ export function LibraryView(props) {
   };
 
   const saveEdit = async () => {
-    if (!onUpdateTeam) {
-      cancelEdit();
+    if (editingId === 'new') {
+      if (!onAddToLibrary || !draft.name?.trim()) { cancelEdit(); return; }
+      try {
+        await onAddToLibrary({ name: draft.name.trim(), short: draft.short || '', color: draft.color || '#a3e635', isHost: false });
+        cancelEdit();
+      } catch (e) { console.error('Add failed', e); }
       return;
     }
+    if (!onUpdateTeam) { cancelEdit(); return; }
     try {
       await onUpdateTeam(editingId, draft);
       cancelEdit();
-    } catch (e) {
-      console.error('Update failed', e);
-    }
+    } catch (e) { console.error('Update failed', e); }
   };
 
   const handleRemoveTeam = (team) => {
@@ -110,7 +114,7 @@ export function LibraryView(props) {
             background: tab === 'teams' ? 'rgba(167,139,250,0.15)' : 'transparent',
             border: tab === 'teams' ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.05)',
             borderRadius: 8,
-            color: tab === 'teams' ? '#a78bfa' : '#64748b',
+            color: tab === 'teams' ? '#818cf8' : '#64748b',
             fontSize: 12,
             fontWeight: 800,
             letterSpacing: 1,
@@ -121,7 +125,7 @@ export function LibraryView(props) {
             gap: 8,
           }}
         >
-          <Users size={13} /> EQUIPES ({teamsLibrary.length})
+          <Users size={13} /> CLUBS ({teamsLibrary.length})
         </button>
         <button
           onClick={() => setTab('sponsors')}
@@ -131,7 +135,7 @@ export function LibraryView(props) {
             background: tab === 'sponsors' ? 'rgba(34,211,238,0.15)' : 'transparent',
             border: tab === 'sponsors' ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.05)',
             borderRadius: 8,
-            color: tab === 'sponsors' ? '#22d3ee' : '#64748b',
+            color: tab === 'sponsors' ? '#a3e635' : '#64748b',
             fontSize: 12,
             fontWeight: 800,
             letterSpacing: 1,
@@ -148,6 +152,34 @@ export function LibraryView(props) {
 
       {tab === 'teams' && (
         <div>
+          <button
+            onClick={() => setEditingId('new')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', marginBottom: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 10, color: '#818cf8', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <span style={{ fontSize: 18 }}>+</span> NOUVEAU CLUB
+          </button>
+          {editingId === 'new' && (
+            <div style={{ padding: '16px', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 10, marginBottom: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input type="text" value={draft.name || ''} onChange={e => setDraft({...draft, name: e.target.value})} placeholder="Nom du club *" style={inputStyle} />
+                <input type="text" value={draft.short || ''} onChange={e => setDraft({...draft, short: e.target.value})} placeholder="Abréviation (4 car. max)" maxLength={4} style={inputStyle} />
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {COLORS.map(col => (
+                    <button key={col} onClick={() => setDraft({...draft, color: col})} style={{ width: 24, height: 24, borderRadius: '50%', background: col, border: 'none', cursor: 'pointer', outline: draft.color === col ? '2px solid white' : 'none', outlineOffset: 2 }} />
+                  ))}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: draft.logo ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.04)', border: '1px solid ' + (draft.logo ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.1)'), borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 700, color: draft.logo ? '#a3e635' : '#94a3b8' }}>
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                    {draft.logo ? <img src={draft.logo} alt="" style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'cover' }} /> : <Plus size={11} />}
+                    {draft.logo ? 'Changer' : 'Logo'}
+                  </label>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={saveEdit} style={{ flex: 1, padding: '8px', background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.4)', borderRadius: 8, color: '#818cf8', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>Créer</button>
+                  <button onClick={cancelEdit} style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#64748b', cursor: 'pointer', fontSize: 13 }}>Annuler</button>
+                </div>
+              </div>
+            </div>
+          )}
           {teamsLibrary.length === 0 && (
             <div style={{
               padding: 24,
@@ -158,7 +190,7 @@ export function LibraryView(props) {
               color: '#64748b',
               fontSize: 13,
             }}>
-              Ta bibliotheque est vide. Les equipes que tu crees sont ajoutees automatiquement.
+              Ta bibliotheque est vide. Les clubs que tu crees sont ajoutes automatiquement.
             </div>
           )}
           {teamsLibrary.map(team => (
@@ -219,7 +251,7 @@ export function LibraryView(props) {
                         cursor: 'pointer',
                         fontSize: 10,
                         fontWeight: 700,
-                        color: draft.logo ? '#22d3ee' : '#94a3b8',
+                        color: draft.logo ? '#a3e635' : '#94a3b8',
                       }}>
                         <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
                         {draft.logo
@@ -306,7 +338,7 @@ export function LibraryView(props) {
                   background: 'rgba(34,211,238,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <Briefcase size={14} color="#22d3ee" />
+                  <Briefcase size={14} color="#a3e635" />
                 </div>
               )}
               <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>
@@ -348,7 +380,7 @@ const btnSaveStyle = {
   background: 'rgba(34,211,238,0.15)',
   border: '1px solid rgba(34,211,238,0.4)',
   borderRadius: 6,
-  color: '#22d3ee',
+  color: '#a3e635',
   cursor: 'pointer',
   display: 'flex',
 };

@@ -80,7 +80,7 @@ export const styles = {
   logo: { display: 'flex', alignItems: 'center', gap: 10 },
   logoMark: {
     width: 32, height: 32, borderRadius: 8,
-    background: 'linear-gradient(135deg, #22d3ee, #67e8f9)',
+    background: 'linear-gradient(135deg, #a3e635, #67e8f9)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 0 24px rgba(34,211,238,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
   },
@@ -88,7 +88,7 @@ export const styles = {
   logoSub: { fontSize: 8, fontWeight: 600, letterSpacing: 2, color: '#64748b', textTransform: 'uppercase', marginTop: 2 },
   liveDot: {
     display: 'flex', alignItems: 'center', gap: 5,
-    fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: '#22d3ee',
+    fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: '#a3e635',
     padding: '4px 8px',
     background: 'rgba(34,211,238,0.08)',
     border: '1px solid rgba(34,211,238,0.3)',
@@ -96,13 +96,14 @@ export const styles = {
   },
   dot: {
     width: 6, height: 6, borderRadius: '50%',
-    background: '#22d3ee',
+    background: '#a3e635',
     animation: 'pulse 1.5s ease-in-out infinite',
   },
   pulseDot: {
-    position: 'absolute', top: 4, right: 4,
-    width: 6, height: 6, borderRadius: '50%',
+    position: 'absolute', top: 6, right: 6,
+    width: 8, height: 8, borderRadius: '50%',
     animation: 'pulse 1.5s ease-in-out infinite',
+    boxShadow: '0 0 0 2px rgba(15,23,42,0.8)',
   },
   roleBadge: {
     display: 'flex', alignItems: 'center', gap: 5,
@@ -125,7 +126,7 @@ export const styles = {
   heroGrid: { position: 'relative', zIndex: 2 },
   heroLabel: {
     display: 'inline-flex', alignItems: 'center', gap: 4,
-    fontSize: 9, fontWeight: 800, letterSpacing: 2, color: '#22d3ee',
+    fontSize: 9, fontWeight: 800, letterSpacing: 2, color: '#a3e635',
     padding: '3px 8px',
     background: 'rgba(34,211,238,0.1)',
     border: '1px solid rgba(34,211,238,0.3)',
@@ -146,7 +147,7 @@ export const styles = {
   progressTrack: { height: 6, background: 'rgba(15,23,42,0.8)', borderRadius: 3, overflow: 'hidden' },
   progressFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #22d3ee, #67e8f9)',
+    background: 'linear-gradient(90deg, #a3e635, #67e8f9)',
     borderRadius: 3,
     transition: 'width 0.6s ease',
     boxShadow: '0 0 12px rgba(34,211,238,0.5)',
@@ -217,7 +218,7 @@ export const styles = {
   },
   liveBadge: {
     display: 'inline-flex', alignItems: 'center',
-    fontSize: 9, fontWeight: 800, letterSpacing: 1, color: '#22d3ee',
+    fontSize: 9, fontWeight: 800, letterSpacing: 1, color: '#a3e635',
     padding: '2px 6px',
     background: 'rgba(34,211,238,0.12)',
     border: '1px solid rgba(34,211,238,0.4)',
@@ -275,7 +276,7 @@ export const styles = {
     border: '1px solid rgba(255,255,255,0.05)',
   },
   scoreLive: {
-    fontSize: 22, fontWeight: 800, color: '#22d3ee',
+    fontSize: 22, fontWeight: 800, color: '#a3e635',
     fontFamily: "'JetBrains Mono', monospace",
     textShadow: '0 0 12px rgba(34,211,238,0.4)',
   },
@@ -297,7 +298,7 @@ export const styles = {
   btnValidate: {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     padding: '10px 12px',
-    background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+    background: 'linear-gradient(135deg, #a3e635, #84cc16)',
     color: '#0a0a0a',
     border: 'none', borderRadius: 8,
     fontSize: 11, fontWeight: 800, letterSpacing: 1,
@@ -331,11 +332,11 @@ export const styles = {
     background: 'transparent', border: 'none',
     color: '#64748b',
   },
-  navBtnActive: { color: '#22d3ee' },
+  navBtnActive: { color: '#a3e635' },
   navIndicator: {
     position: 'absolute', bottom: 0, left: '30%', right: '30%',
-    height: 2, background: '#22d3ee', borderRadius: '2px 2px 0 0',
-    boxShadow: '0 0 12px #22d3ee',
+    height: 2, background: '#a3e635', borderRadius: '2px 2px 0 0',
+    boxShadow: '0 0 12px #a3e635',
   },
   pageHeader: {
     display: 'flex', alignItems: 'center', gap: 12,
@@ -404,7 +405,7 @@ export const styles = {
     width: 18, height: 18, borderRadius: 4,
     background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 9, fontWeight: 800, color: '#22d3ee',
+    fontSize: 9, fontWeight: 800, color: '#a3e635',
     fontFamily: "'JetBrains Mono', monospace",
     flexShrink: 0,
   },
@@ -421,7 +422,7 @@ export const styles = {
   filterChipActive: {
     background: 'rgba(34,211,238,0.1)',
     borderColor: 'rgba(34,211,238,0.4)',
-    color: '#22d3ee',
+    color: '#a3e635',
   },
   emptyState: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
@@ -520,7 +521,7 @@ export const styles = {
   btnPrimary: {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     width: '100%', padding: '14px',
-    background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+    background: 'linear-gradient(135deg, #a3e635, #84cc16)',
     color: '#0a0a0a', border: 'none', borderRadius: 10,
     fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
     boxShadow: '0 0 30px rgba(34,211,238,0.3)',
@@ -569,7 +570,7 @@ export const styles = {
     background: 'rgba(167,139,250,0.08)',
     border: '1.5px dashed rgba(167,139,250,0.4)',
     borderRadius: 12,
-    color: '#a78bfa',
+    color: '#818cf8',
     fontSize: 11, fontWeight: 800, letterSpacing: 1.5,
     marginBottom: 16,
   },
@@ -668,7 +669,7 @@ export const styles = {
   },
   sheetSave: {
     padding: '9px 14px',
-    background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+    background: 'linear-gradient(135deg, #a3e635, #84cc16)',
     color: '#0a0a0a',
     border: 'none', borderRadius: 8,
     fontSize: 11, fontWeight: 800, letterSpacing: 1.2,
@@ -723,7 +724,7 @@ export const styles = {
     background: 'rgba(167,139,250,0.06)',
     border: '1px solid rgba(167,139,250,0.2)',
     borderRadius: 8,
-    fontSize: 10, color: '#a78bfa', fontWeight: 500, lineHeight: 1.4,
+    fontSize: 10, color: '#818cf8', fontWeight: 500, lineHeight: 1.4,
   },
   lockedBox: {
     display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -918,7 +919,7 @@ export const styles = {
     width: 18, height: 18, borderRadius: '50%',
     background: 'rgba(34,211,238,0.2)',
     border: 'none',
-    color: '#22d3ee',
+    color: '#a3e635',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     marginLeft: 2,
   },
@@ -969,7 +970,7 @@ export const styles = {
   },
   archiveBadge: {
     display: 'inline-flex', alignItems: 'center', gap: 4,
-    fontSize: 9, fontWeight: 800, letterSpacing: 1, color: '#a78bfa',
+    fontSize: 9, fontWeight: 800, letterSpacing: 1, color: '#818cf8',
     padding: '3px 7px',
     background: 'rgba(167,139,250,0.1)',
     border: '1px solid rgba(167,139,250,0.3)',
@@ -1116,7 +1117,7 @@ export const styles = {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '11px 14px',
     background: 'rgba(167,139,250,0.1)',
-    color: '#a78bfa',
+    color: '#818cf8',
     border: '1px solid rgba(167,139,250,0.3)',
     borderRadius: 8,
     fontSize: 11, fontWeight: 800, letterSpacing: 1,
@@ -1155,7 +1156,7 @@ export const styles = {
   },
   staffAccessTitle: {
     display: 'flex', alignItems: 'center', gap: 6,
-    fontSize: 11, fontWeight: 800, letterSpacing: 1.5, color: '#22d3ee',
+    fontSize: 11, fontWeight: 800, letterSpacing: 1.5, color: '#a3e635',
   },
   staffAccessDesc: {
     fontSize: 11, color: '#94a3b8', lineHeight: 1.4,
@@ -1222,24 +1223,24 @@ export const styles = {
   },
   onbScannerCorner1: {
     position: 'absolute', top: 8, left: 8, width: 24, height: 24,
-    borderTop: '3px solid #22d3ee', borderLeft: '3px solid #22d3ee', borderRadius: '4px 0 0 0',
+    borderTop: '3px solid #a3e635', borderLeft: '3px solid #a3e635', borderRadius: '4px 0 0 0',
   },
   onbScannerCorner2: {
     position: 'absolute', top: 8, right: 8, width: 24, height: 24,
-    borderTop: '3px solid #22d3ee', borderRight: '3px solid #22d3ee', borderRadius: '0 4px 0 0',
+    borderTop: '3px solid #a3e635', borderRight: '3px solid #a3e635', borderRadius: '0 4px 0 0',
   },
   onbScannerCorner3: {
     position: 'absolute', bottom: 8, left: 8, width: 24, height: 24,
-    borderBottom: '3px solid #22d3ee', borderLeft: '3px solid #22d3ee', borderRadius: '0 0 0 4px',
+    borderBottom: '3px solid #a3e635', borderLeft: '3px solid #a3e635', borderRadius: '0 0 0 4px',
   },
   onbScannerCorner4: {
     position: 'absolute', bottom: 8, right: 8, width: 24, height: 24,
-    borderBottom: '3px solid #22d3ee', borderRight: '3px solid #22d3ee', borderRadius: '0 0 4px 0',
+    borderBottom: '3px solid #a3e635', borderRight: '3px solid #a3e635', borderRadius: '0 0 4px 0',
   },
   onbScannerLine: {
     position: 'absolute', left: 16, right: 16,
-    height: 2, background: 'linear-gradient(90deg, transparent, #22d3ee, transparent)',
-    boxShadow: '0 0 12px #22d3ee',
+    height: 2, background: 'linear-gradient(90deg, transparent, #a3e635, transparent)',
+    boxShadow: '0 0 12px #a3e635',
     animation: 'scanLine 1.5s ease-in-out infinite',
   },
   legalScroll: {
@@ -1416,7 +1417,7 @@ export const styles = {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '11px 14px',
     background: 'rgba(167,139,250,0.1)',
-    color: '#a78bfa',
+    color: '#818cf8',
     border: '1px solid rgba(167,139,250,0.3)',
     borderRadius: 8,
     fontSize: 11, fontWeight: 800, letterSpacing: 1,
@@ -1600,7 +1601,7 @@ export const styles = {
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   },
   bracketScore: {
-    fontSize: 13, fontWeight: 800, color: '#22d3ee',
+    fontSize: 13, fontWeight: 800, color: '#a3e635',
     fontFamily: "'JetBrains Mono', monospace",
     minWidth: 18, textAlign: 'right',
   },
@@ -1645,7 +1646,7 @@ export const styles = {
     minWidth: 44,
   },
   durationActiveBadge: {
-    fontSize: 8, fontWeight: 800, letterSpacing: 1, color: '#22d3ee',
+    fontSize: 8, fontWeight: 800, letterSpacing: 1, color: '#a3e635',
     padding: '2px 5px',
     background: 'rgba(34,211,238,0.12)',
     border: '1px solid rgba(34,211,238,0.3)',
@@ -1691,11 +1692,11 @@ livePill: {
   background: 'rgba(34,211,238,0.15)',
   border: '1px solid rgba(34,211,238,0.4)',
   borderRadius: 4,
-  color: '#22d3ee',
+  color: '#a3e635',
 },
 livePulse: {
   width: 6, height: 6, borderRadius: '50%',
-  background: '#22d3ee',
+  background: '#a3e635',
   animation: 'pulse 1.5s ease-in-out infinite',
   flexShrink: 0,
 },
@@ -1716,7 +1717,7 @@ liveTeamName: {
   fontFamily: "'JetBrains Mono', monospace",
 },
 liveScoreNum: {
-  fontSize: 22, fontWeight: 800, color: '#22d3ee',
+  fontSize: 22, fontWeight: 800, color: '#a3e635',
   fontFamily: "'JetBrains Mono', monospace",
 },
 upcomingCard: {

@@ -69,7 +69,7 @@ export function MatchList({
         title="Tous les matchs"
         subtitle={`${matches.length} matchs au programme`}
         icon={Whistle}
-        accent="#22d3ee"
+        accent="#a3e635"
       />
 
       <div style={styles.searchWrap}>
@@ -105,7 +105,7 @@ export function MatchList({
         {selectedTeam && (
           <div style={styles.selectedTeamPill}>
             <Crest team={selectedTeam} size="xs" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#22d3ee' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#a3e635' }}>
               Filtré sur {selectedTeam.name}
             </span>
             <button onClick={clearSearch} style={styles.pillClear}>

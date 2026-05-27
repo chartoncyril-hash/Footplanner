@@ -4,8 +4,8 @@ import { styles } from '../styles/styles';
 
 const ROLE_META = {
   organizer: { label: 'Organisateur', icon: Crown, color: '#f59e0b' },
-  referee: { label: 'Arbitre', icon: Flag, color: '#22d3ee' },
-  coach: { label: 'Coach', icon: Shield, color: '#a78bfa' },
+  referee: { label: 'Arbitre', icon: Flag, color: '#a3e635' },
+  coach: { label: 'Coach', icon: Shield, color: '#818cf8' },
   spectator: { label: 'Spectateur', icon: Eye, color: '#94a3b8' },
 };
 
@@ -15,17 +15,15 @@ const ROLE_META = {
 // - Badge de rôle (clic = ouvre RoleSwitcher)
 // - Roue crantée (organizer uniquement) qui toggle l'écran settings
 // ============================================================
-export function TopBar({ tournament, role, view, setView }) {
+export function TopBar({ tournament, role, view, setView, profile }) {
   const canEditTournament = role === 'organizer';
 
   return (
     <header style={styles.topbar}>
       <div style={styles.topbarLeft}>
-        <div style={styles.logoMark}>
-          <Zap size={14} strokeWidth={2.5} color="#0a0a0a" />
-        </div>
+        {profile?.club_logo_url ? <img src={profile.club_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} /> : <div style={styles.logoMark}><Zap size={14} strokeWidth={2.5} color="#0a0a0a" /></div>}
         <div style={{ minWidth: 0 }}>
-          <div style={styles.brandName}>FOOTPLANNER</div>
+          <div style={{ ...styles.brandName, color: profile?.club_color || "#a3e635" }}>{profile?.club_name || "FOOTPLANNER"}</div>
           <div style={styles.tournamentName}>{tournament?.name || 'Tournoi'}</div>
         </div>
       </div>

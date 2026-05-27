@@ -95,7 +95,7 @@ export function ArchivesView({
         title="Archives"
         subtitle={loading ? 'Chargement…' : `${list.length} tournoi${list.length > 1 ? 's' : ''} archivé${list.length > 1 ? 's' : ''}`}
         icon={Trophy}
-        accent="#a78bfa"
+        accent="#818cf8"
       />
 
       {error && (
@@ -269,7 +269,7 @@ function ArchiveDetail({ tournament, onBack, onRestore, onRemove }) {
         <>
           {pools.map(pool => (
             <section key={pool} style={styles.section}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: '#a78bfa', marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: '#818cf8', marginBottom: 8 }}>
                 CLASSEMENT POULE {pool}
               </div>
               <div style={styles.standingsCard}>
@@ -277,7 +277,7 @@ function ArchiveDetail({ tournament, onBack, onRestore, onRemove }) {
                   <div style={{ width: 24 }}>#</div>
                   <div style={{ flex: 1 }}>ÉQUIPE</div>
                   <div style={styles.statCol}>J</div>
-                  <div style={{ ...styles.statCol, width: 38, fontWeight: 800, color: '#22d3ee' }}>PTS</div>
+                  <div style={{ ...styles.statCol, width: 38, fontWeight: 800, color: '#a3e635' }}>PTS</div>
                 </div>
                 {standings[pool].map((t, i) => (
                   <div key={t.id} style={styles.standingsRow}>
@@ -289,7 +289,7 @@ function ArchiveDetail({ tournament, onBack, onRestore, onRemove }) {
                       <span style={styles.teamNameSmall}>{t.name}</span>
                     </div>
                     <div style={styles.statCol}>{t.played}</div>
-                    <div style={{ ...styles.statCol, width: 38, fontWeight: 800, fontSize: 15, color: '#22d3ee' }}>
+                    <div style={{ ...styles.statCol, width: 38, fontWeight: 800, fontSize: 15, color: '#a3e635' }}>
                       {t.points}
                     </div>
                   </div>

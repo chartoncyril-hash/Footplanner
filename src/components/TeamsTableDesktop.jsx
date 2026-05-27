@@ -4,7 +4,7 @@ import { Plus, Trash2, Crown, Star, X } from 'lucide-react';
 import { Crest } from './Crest';
 
 const COLORS = [
-  '#22d3ee', '#a78bfa', '#34d399', '#f59e0b', '#fb7185',
+  '#a3e635', '#818cf8', '#34d399', '#f59e0b', '#fb7185',
   '#facc15', '#f472b6', '#60a5fa', '#4ade80', '#fb923c',
 ];
 
@@ -214,7 +214,7 @@ export function TeamsTableDesktop(props) {
             background: 'rgba(34,211,238,0.1)',
             border: '1px solid rgba(34,211,238,0.3)',
             borderRadius: 7,
-            color: '#22d3ee',
+            color: '#a3e635',
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 0.5,
@@ -353,7 +353,7 @@ export function TeamsTableDesktop(props) {
 
           <tr style={{ background: 'rgba(34,211,238,0.04)' }}>
             <td style={cellStyle} colSpan={8}>
-                  {adding ? (
+                  {adding && (
                     <>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <input
@@ -369,7 +369,7 @@ export function TeamsTableDesktop(props) {
                     onClick={() => handleQuickAdd(newName)}
                     style={{
                       padding: '6px 14px',
-                      background: '#22d3ee',
+                      background: '#a3e635',
                       border: 'none',
                       borderRadius: 6,
                       color: '#0a0e1a',
@@ -434,7 +434,7 @@ export function TeamsTableDesktop(props) {
                               <div style={{
                                 width: 18, height: 18,
                                 borderRadius: 4,
-                                background: s.team.color || '#22d3ee',
+                                background: s.team.color || '#a3e635',
                                 flexShrink: 0,
                               }} />
                               <span style={{ flex: 1, fontWeight: 700 }}>{s.team.name}</span>
@@ -442,7 +442,7 @@ export function TeamsTableDesktop(props) {
                                 fontSize: 9,
                                 fontWeight: 800,
                                 letterSpacing: 0.5,
-                                color: s.source === 'library' ? '#a78bfa' : '#facc15',
+                                color: s.source === 'library' ? '#818cf8' : '#facc15',
                                 padding: '2px 6px',
                                 background: s.source === 'library' ? 'rgba(167,139,250,0.1)' : 'rgba(250,204,21,0.1)',
                                 borderRadius: 4,
@@ -454,29 +454,11 @@ export function TeamsTableDesktop(props) {
                         </div>
                       )}
                       </>
-              ) : (
-                <button
-                  onClick={() => setAdding(true)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: 'transparent',
-                    border: '1px dashed rgba(34,211,238,0.3)',
-                    borderRadius: 7,
-                    color: '#22d3ee',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <Plus size={12} /> NOUVELLE EQUIPE
-                </button>
               )}
             </td>
+          </tr>
+          <tr>
+            <td colSpan={8} style={{ padding: 0 }}></td>
           </tr>
         </tbody>
       </table>

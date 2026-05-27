@@ -11,17 +11,15 @@ import { styles } from '../styles/styles';
 
 export function StatTile({ label, value, color, pulse }) {
   return (
-    <div style={styles.statTile}>
-      <div style={{ ...styles.statValue, color }}>
-        {value}
-        {pulse && value > 0 && <span style={{ ...styles.pulseDot, background: color }} />}
-      </div>
+    <div style={{ ...styles.statTile, position: 'relative' }}>
+      {pulse && value > 0 && <span style={{ ...styles.pulseDot, background: color }} />}
+      <div style={{ ...styles.statValue, color }}>{value}</div>
       <div style={styles.statLabel}>{label}</div>
     </div>
   );
 }
 
-export function SectionHeader({ icon: Icon, title, accent = '#22d3ee', badge }) {
+export function SectionHeader({ icon: Icon, title, accent = '#a3e635', badge }) {
   return (
     <div style={styles.sectionHeader}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -48,7 +46,7 @@ export function QuickAction({ icon: Icon, label, onClick, color }) {
   );
 }
 
-export function PageHeader({ title, subtitle, icon: Icon, accent = '#22d3ee' }) {
+export function PageHeader({ title, subtitle, icon: Icon, accent = '#a3e635' }) {
   return (
     <div style={styles.pageHeader}>
       <div style={{ ...styles.pageHeaderIcon, background: accent + '15', borderColor: accent + '40' }}>
@@ -110,7 +108,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
     background: 'rgba(34,211,238,0.12)',
     border: '1px solid rgba(34,211,238,0.35)',
     borderRadius: 7,
-    color: '#22d3ee',
+    color: '#a3e635',
     fontSize: 18, fontWeight: 800,
     cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -175,7 +173,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
             disabled={saving}
             style={{
               flex: 1, padding: '10px 12px',
-              background: saving ? 'rgba(34,211,238,0.3)' : '#22d3ee',
+              background: saving ? 'rgba(34,211,238,0.3)' : '#a3e635',
               border: 'none', borderRadius: 7,
               color: '#0a0e1a',
               fontSize: 11, fontWeight: 800, letterSpacing: 1,
@@ -249,7 +247,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap }) {
 
   let stateColor = '#94a3b8';
   let stateLabel = (match.time || '').slice(0, 5) || '—';
-  if (isLive) { stateColor = '#22d3ee'; stateLabel = 'EN DIRECT'; }
+  if (isLive) { stateColor = '#a3e635'; stateLabel = 'EN DIRECT'; }
   else if (isDone) { stateColor = '#34d399'; stateLabel = 'TERMINÉ'; }
 
   return (

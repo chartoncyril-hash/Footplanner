@@ -22,6 +22,9 @@ function fromDb(row) {
     date: row.date,
     location: row.location,
     startTime: row.start_time,
+    endTime: row.end_time,
+    endDate: row.end_date,
+    breaks: Array.isArray(row.breaks) ? row.breaks : [],
     matchDuration: row.match_duration,
     breakBetweenMatches: row.break_between_matches,
     knockoutFromTopN: row.knockout_from_top_n,
@@ -37,6 +40,10 @@ function fromDb(row) {
     bonuses: row.bonuses || {},
     tiebreakers: row.tiebreakers || ['points', 'goalDiff', 'goalsFor', 'headToHead'],
     status: row.status,
+    registrationOpen: row.registration_open,
+    registrationFee: row.registration_fee || 0,
+    registrationPaymentInfo: row.registration_payment_info || '',
+    registrationConfig: row.registration_config || {},
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -56,6 +63,9 @@ function toDb(t) {
   if (t.date !== undefined) out.date = t.date;
   if (t.location !== undefined) out.location = t.location;
   if (t.startTime !== undefined) out.start_time = t.startTime;
+  if (t.endTime !== undefined) out.end_time = t.endTime;
+  if (t.endDate !== undefined) out.end_date = t.endDate;
+  if (t.breaks !== undefined) out.breaks = t.breaks;
   if (t.matchDuration !== undefined) out.match_duration = t.matchDuration;
   if (t.breakBetweenMatches !== undefined) out.break_between_matches = t.breakBetweenMatches;
   if (t.knockoutFromTopN !== undefined) out.knockout_from_top_n = t.knockoutFromTopN;
@@ -71,6 +81,10 @@ function toDb(t) {
   if (t.bonuses !== undefined) out.bonuses = t.bonuses;
   if (t.tiebreakers !== undefined) out.tiebreakers = t.tiebreakers;
   if (t.status !== undefined) out.status = t.status;
+  if (t.registrationOpen !== undefined) out.registration_open = t.registrationOpen;
+  if (t.registrationFee !== undefined) out.registration_fee = t.registrationFee;
+  if (t.registrationPaymentInfo !== undefined) out.registration_payment_info = t.registrationPaymentInfo;
+  if (t.registrationConfig !== undefined) out.registration_config = t.registrationConfig;
   if (t.archivedAt !== undefined) out.archived_at = t.archivedAt;
   return out;
 }
@@ -132,12 +146,10 @@ export async function getByAccessCode(code) {
   const normalized = (code || '').trim().toUpperCase();
   if (!normalized) return null;
   const { data, error } = await supabase
-    .from('tournaments')
-    .select('*')
-    .eq('access_code', normalized)
-    .maybeSingle();
+    .rpc('get_tournament_by_code', { p_code: normalized });
   if (error) throw error;
-  return fromDb(data);
+  const row = Array.isArray(data) ? data[0] : data;
+  return fromDb(row);
 }
 
 // ----- Écritures -----

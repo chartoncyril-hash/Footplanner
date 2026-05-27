@@ -82,7 +82,7 @@ export function CategoryManager(props) {
             border: '1px solid rgba(167,139,250,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Layers size={18} color="#a78bfa" />
+            <Layers size={18} color="#818cf8" />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#f1f5f9', letterSpacing: 1 }}>
@@ -164,7 +164,7 @@ export function CategoryManager(props) {
                   <button
                     onClick={() => handleRename(idx, editValue)}
                     style={{
-                      padding: '4px 10px', background: '#22d3ee',
+                      padding: '4px 10px', background: '#a3e635',
                       border: 'none', borderRadius: 6,
                       color: '#0a0e1a', fontSize: 10,
                       fontWeight: 800, cursor: 'pointer',
@@ -184,7 +184,7 @@ export function CategoryManager(props) {
                 <React.Fragment>
                   <span style={{
                     flex: 1, fontSize: 13, fontWeight: 800,
-                    color: '#a78bfa', letterSpacing: 1,
+                    color: '#818cf8', letterSpacing: 1,
                   }}>{cat}</span>
                   <button
                     onClick={() => { setEditingIdx(idx); setEditValue(cat); }}
@@ -227,7 +227,7 @@ export function CategoryManager(props) {
                     padding: '5px 10px',
                     background: 'rgba(34,211,238,0.1)',
                     border: '1px solid rgba(34,211,238,0.3)',
-                    borderRadius: 6, color: '#22d3ee',
+                    borderRadius: 6, color: '#a3e635',
                     fontSize: 11, fontWeight: 700,
                     cursor: 'pointer', display: 'flex',
                     alignItems: 'center', gap: 4,
@@ -266,7 +266,7 @@ export function CategoryManager(props) {
               <button
                 onClick={() => handleAdd(newCatName)}
                 style={{
-                  padding: '8px 14px', background: '#22d3ee',
+                  padding: '8px 14px', background: '#a3e635',
                   border: 'none', borderRadius: 7,
                   color: '#0a0e1a', fontSize: 11,
                   fontWeight: 800, cursor: 'pointer',
@@ -289,7 +289,7 @@ export function CategoryManager(props) {
                 width: '100%', padding: '10px',
                 background: 'rgba(34,211,238,0.08)',
                 border: '1px dashed rgba(34,211,238,0.3)',
-                borderRadius: 8, color: '#22d3ee',
+                borderRadius: 8, color: '#a3e635',
                 fontSize: 11, fontWeight: 700,
                 letterSpacing: 1, cursor: 'pointer',
                 display: 'flex', alignItems: 'center',

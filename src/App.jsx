@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
 import {
   useMyTournaments,
@@ -36,6 +37,14 @@ import { TournamentWizard } from './components/TournamentWizard';
 import { LibraryView } from './components/LibraryView';
 import { FormatView } from './components/FormatView';
 import { PresentationView } from './components/PresentationView';
+import { AccountView } from './components/AccountView';
+import { LandingPage } from './components/LandingPage';
+import { RegistrationPage } from './components/RegistrationPage';
+import { PosterView } from './components/PosterView';
+import { RegistrationManager } from './components/RegistrationManager';
+import { CheckInView } from './components/CheckInView';
+import { HubDashboard } from './components/HubDashboard';
+import { useProfile } from './hooks/useProfile';
 import { useIsDesktop } from './hooks/useIsDesktop';
 
 // ============================================================
@@ -50,7 +59,29 @@ import { useIsDesktop } from './hooks/useIsDesktop';
 
 export default function App() {
   const { user, loading: authLoading, signOut } = useAuth();
+  
+  // Lecture des query params pour le mode régie
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const isPresentationMode = urlParams?.get('presentation') === '1';
+  const isRegistrationMode = urlParams?.get('register') === '1';
+  const isPosterMode = urlParams?.get('poster') === '1';
+  const registrationCode = urlParams?.get('t') || null;
+
+  if (authLoading) return <LoadingScreen />;
+  if (isPosterMode) return <PosterView />;
+  if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
+  if (!user && !isPresentationMode) return <LandingPage />;
+  
+  // key={user.id} force React à tout recréer quand l'utilisateur change
+  return <AuthenticatedApp key={user?.id || 'anon'} user={user} signOut={signOut} isPresentationMode={isPresentationMode} />;
+}
+
+function AuthenticatedApp({ user, signOut, isPresentationMode }) {
   const isDesktop = useIsDesktop();
+  const { profile } = useProfile(user);
+  const [hubMode, setHubMode] = useState(true);
+  const [hubView, setHubView] = useState('home');
+  const [pendingRegistrations, setPendingRegistrations] = useState(0);
 
   // Sélection du tournoi actif (côté UI uniquement — n'affecte pas la BDD)
   // - Pour un organisateur : le dernier tournoi 'live' qu'il a créé
@@ -79,7 +110,6 @@ export default function App() {
   const [paramsOpen, setParamsOpen] = useState(false);
   // Lecture des query params pour le mode régie (fenêtre détachée)
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const isPresentationMode = urlParams?.get('presentation') === '1';
   const presentationTournamentId = urlParams?.get('t') || null;
   const presentationCategory = urlParams?.get('cat') || null;
   
@@ -96,11 +126,22 @@ export default function App() {
           submitScore, shiftSchedule, generateSchedule } = useMatches(tournament?.id);
   const standings = useStandings(teams, matches, tournament);
 
+  // Compteur inscriptions en attente
+  useEffect(() => {
+    if (!tournament?.id) { setPendingRegistrations(0); return; }
+    supabase
+      .from('registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('tournament_id', tournament.id)
+      .eq('status', 'pending')
+      .then(({ count }) => setPendingRegistrations(count || 0));
+  }, [tournament?.id]);
+
   // Liste des tournois de l'organisateur connecté
-  const { list: myTournaments, create: createTournament, archive: archiveTournament } = useMyTournaments();
+  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments();
 
   // Bibliothèque persistante
-  const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam } = useTeamLibrary();
+  const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam, add: addToLibrary } = useTeamLibrary();
 
   // Équipes suivies par l'utilisateur connecté (badge nav + filtre notifs)
   const { followedIds: followedTeamIds, toggle: toggleFollow } = useFollowedTeams(tournament?.id);
@@ -293,27 +334,64 @@ export default function App() {
 
   // ----- Rendu -----
 
-  if (authLoading) return <LoadingScreen />;
-
   // Pas connecté = écran d'auth
   // Choix : on impose la connexion à tout le monde (multi-tenant strict).
   // Pour permettre aux spectateurs de visualiser sans compte, on pourrait
   // ajouter ici un bouton "accéder en tant que spectateur" qui demande
   // juste un code de tournoi sans authentification — à condition d'élargir
   // les policies RLS de lecture (déjà 'true' dans le SQL fourni).
-  if (!user) {
-    return <AuthScreen />;
-  }
 
   // Spectateur sans tournoi sélectionné = onboarding code
+  if (myTLoading) return <LoadingScreen />;
+
+  // Niveau COMPTE : Hub Dashboard
+  if (hubMode && !isPresentationMode) {
+    return (
+      <HubDashboard
+        profile={profile}
+        myTournaments={myTournaments}
+        onEnterModule={(moduleId, tournamentId) => {
+          if (moduleId === 'tournaments') {
+            if (tournamentId) {
+              setActiveTournamentId(tournamentId);
+              setRole('organizer');
+            }
+            setHubMode(false);
+          } else if (moduleId === 'inscriptions') {
+            setHubView('inscriptions');
+          } else if (moduleId === 'scoreboard') {
+            setHubView('scoreboard');
+          }
+        }}
+        onCreateTournament={() => {
+          setHubMode(false);
+          startNewTournament();
+        }}
+        onGoToAccount={() => setHubView('account')}
+        hubView={hubView}
+        onHubViewBack={() => setHubView('home')}
+        onUpdateTournamentInList={updateTournamentInList}
+        signOut={signOut}
+      />
+    );
+  }
   if (!tournament && !tLoading) {
     return (
-      <OnboardingFlow
-        onAccessCodeSubmit={handleAccessCodeSubmit}
-        onCreateTournament={startNewTournament}
-        myTournaments={myTournaments}
-        onPickTournament={(id) => { setActiveTournamentId(id); setRole('organizer'); }}
-      />
+      <>
+        <OnboardingFlow
+          onAccessCodeSubmit={handleAccessCodeSubmit}
+          onCreateTournament={startNewTournament}
+          myTournaments={myTournaments}
+          onPickTournament={(id) => { setActiveTournamentId(id); setRole('organizer'); setView('dashboard'); }}
+          signOut={signOut}
+        />
+        {wizardOpen && (
+          <TournamentWizard
+            onClose={() => setWizardOpen(false)}
+            onCreate={handleWizardCreate}
+          />
+        )}
+      </>
     );
   }
 
@@ -357,8 +435,13 @@ export default function App() {
   const showSidebar = isDesktop && tournament && role === 'organizer' && !isPresentationMode;
   const SIDEBAR_W = 240;
 
+  // Mode régie : rendu pur sans layout
+  if (isPresentationMode && tournament) {
+    return <PresentationView {...ctx} />;
+  }
+  
   return (
-    <div className="app" style={{
+    <div key={user?.id || 'anon'} className="app" style={{
       minHeight: '100vh',
       background: '#050810',
       color: '#f1f5f9',
@@ -378,12 +461,16 @@ export default function App() {
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
           myTournaments={myTournaments}
-          onPickTournament={(id) => setActiveTournamentId(id)}
+          onPickTournament={(id) => { setActiveTournamentId(id); setView('dashboard'); }}
           onCreateTournament={startNewTournament}
       onOpenCategoryManager={() => setCategoryManagerOpen(true)}
           onOpenParams={() => setParamsOpen(true)}
           signOut={signOut}
           role={role}
+          onDeleteTournament={removeTournament}
+          onGoToHub={() => setHubMode(true)}
+          profile={profile}
+          pendingRegistrations={pendingRegistrations}
         />
       )}
       {categoryManagerOpen && (
@@ -406,13 +493,13 @@ export default function App() {
           existingTournament={tournament}
         />
       )}
-      <TopBar {...ctx} />
+      <TopBar {...ctx} profile={profile} />
       <AnnouncementBar tournamentId={tournament.id} />
 
       <main className="main">
         {view === 'dashboard' && <Dashboard {...ctx} />}
         {view === 'standings' && <Standings {...ctx} />}
-        {view === 'library' && <LibraryView teamsLibrary={teamsLibrary} sponsors={[]} onRemoveFromLibrary={removeFromLibrary} onUpdateLibraryTeam={updateLibraryTeam} />}
+        {view === 'library' && <LibraryView teamsLibrary={teamsLibrary} sponsors={[]} onRemoveFromLibrary={removeFromLibrary} onUpdateLibraryTeam={updateLibraryTeam} onAddToLibrary={addToLibrary} />}
         {view === 'format' && <FormatView {...ctx} />}
         {view === 'matches' && <MatchList {...ctx} />}
         {view === 'match' && selectedMatch && <MatchDetail {...ctx} />}
@@ -422,6 +509,10 @@ export default function App() {
         {view === 'roles' && <RoleSwitcher {...ctx} />}
         {view === 'follow' && <FollowView {...ctx} />}
         {view === 'presentation' && <PresentationView {...ctx} />}
+        {view === 'account' && <AccountView signOut={signOut} />}
+        {view === 'registrations' && <RegistrationManager tournament={tournament} onUpdateTournament={updateTournament} />}
+        {view === 'checkin' && <CheckInView teams={teams} tournament={tournament} />}
+        {view === 'poster' && <PosterView tournament={tournament} profile={profile} onBack={() => setView('dashboard')} />}
         {view === 'archives' && <ArchivesView {...ctx} setActiveTournament={(id) => { setActiveTournamentId(id); setView('dashboard'); }} />}
       </main>
 

@@ -130,7 +130,7 @@ export function SettingsView({
       )}
 
       {/* === IDENTITÉ === */}
-      <SettingCard title="IDENTITÉ DU TOURNOI" icon={Trophy} color="#22d3ee">
+      <SettingCard title="IDENTITÉ DU TOURNOI" icon={Trophy} color="#a3e635">
         <FieldText
           label="Nom"
           value={tournament.name || ''}
@@ -159,7 +159,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === CATÉGORIES === */}
-      <SettingCard title="CATÉGORIES DU TOURNOI" icon={Calendar} color="#a78bfa">
+      <SettingCard title="CATÉGORIES DU TOURNOI" icon={Calendar} color="#818cf8">
         {Array.isArray(tournament.categories) && tournament.categories.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
             {tournament.categories.map(cat => (
@@ -170,7 +170,7 @@ export function SettingsView({
                   background: 'rgba(167,139,250,0.15)',
                   border: '1px solid rgba(167,139,250,0.4)',
                   borderRadius: 6,
-                  color: '#a78bfa',
+                  color: '#818cf8',
                   fontSize: 12,
                   fontWeight: 800,
                   letterSpacing: 0.5,
@@ -212,7 +212,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === DURÉES PAR CATÉGORIE === */}
-      <SettingCard title="DURÉE DES MATCHS" icon={Calendar} color="#22d3ee">
+      <SettingCard title="DURÉE DES MATCHS" icon={Calendar} color="#a3e635">
         <CategoryDurations
           durations={tournament.categoryDurations || {}}
           categories={tournament.categories || []}
@@ -235,8 +235,8 @@ export function SettingsView({
       </SettingCard>
 
       {/* === LANCEMENT DES MATCHS === */}
-      <SettingCard title="LANCEMENT DES MATCHS" icon={Play} color="#22d3ee">
-        <div style={{ ...styles.bonusRow, borderColor: tournament.autoKickoff !== false ? '#22d3ee55' : '#1e293b' }}>
+      <SettingCard title="LANCEMENT DES MATCHS" icon={Play} color="#a3e635">
+        <div style={{ ...styles.bonusRow, borderColor: tournament.autoKickoff !== false ? '#a3e63555' : '#1e293b' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={styles.bonusLabel}>Coup d'envoi automatique</div>
             <div style={styles.bonusDesc}>
@@ -245,7 +245,7 @@ export function SettingsView({
           </div>
           <button
             onClick={() => safeUpdate({ autoKickoff: tournament.autoKickoff === false })}
-            style={{ ...styles.switch, background: tournament.autoKickoff !== false ? '#22d3ee' : '#334155' }}
+            style={{ ...styles.switch, background: tournament.autoKickoff !== false ? '#a3e635' : '#334155' }}
           >
             <div style={{ ...styles.switchKnob, transform: tournament.autoKickoff !== false ? 'translateX(16px)' : 'translateX(0)' }} />
           </button>
@@ -280,7 +280,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === BARÈME === */}
-      <SettingCard title="BARÈME DE POINTS" icon={Award} color="#a78bfa">
+      <SettingCard title="BARÈME DE POINTS" icon={Award} color="#818cf8">
         <div style={styles.scoringRow}>
           <ScoringInput
             label="VICTOIRE"
@@ -324,17 +324,17 @@ export function SettingsView({
       </SettingCard>
 
       {/* === CODES D'ACCÈS === */}
-      <SettingCard title="CODE D'ACCÈS SPECTATEUR" icon={Hash} color="#22d3ee">
+      <SettingCard title="CODE D'ACCÈS SPECTATEUR" icon={Hash} color="#a3e635">
         <CodeDisplay
           code={tournament.accessCode}
-          color="#22d3ee"
+          color="#a3e635"
           copied={copied === 'access'}
           onCopy={() => copy(tournament.accessCode, 'access')}
           onRegenerate={regenAccessCode}
           regenerating={regenerating}
         />
         <div style={styles.helpBox}>
-          <Sparkles size={12} color="#22d3ee" />
+          <Sparkles size={12} color="#a3e635" />
           <span>Communique ce code aux spectateurs ou affiche-le sous forme de QR sur place.</span>
         </div>
       </SettingCard>
@@ -355,7 +355,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === ANNONCES === */}
-      <SettingCard title="ANNONCES À DIFFUSER" icon={Sparkles} color="#22d3ee">
+      <SettingCard title="ANNONCES À DIFFUSER" icon={Sparkles} color="#a3e635">
         <AnnouncementsManager
           announcements={annHook.list}
           onAdd={annHook.create}
@@ -364,7 +364,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === SPONSORS === */}
-      <SettingCard title="SPONSORS DU TOURNOI" icon={Award} color="#a78bfa">
+      <SettingCard title="SPONSORS DU TOURNOI" icon={Award} color="#818cf8">
         <SponsorsManager
           sponsors={spHook.list}
           library={spHook.library}

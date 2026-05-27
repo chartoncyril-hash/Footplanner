@@ -35,7 +35,42 @@ export function FormatView(props) {
   const allPools = ['A', 'B', 'C', 'D', 'E', 'F'];
   const existingPools = Object.keys(teamsByPool).filter(p => p !== 'Sans poule');
   const visiblePools = [...new Set([...existingPools, ...extraPools])].sort();
-
+  
+  // ---- Répartition automatique par serpentin ----
+  const [snaking, setSnaking] = React.useState(false);
+  const handleSnakeDraft = async (nbPools) => {
+    if (!updateTeam || snaking) return;
+    // Équipes sans poule ou toutes les équipes selon le choix
+    const toAssign = [...teams].sort((a, b) => {
+      const la = a.level || 2;
+      const lb = b.level || 2;
+      if (la !== lb) return la - lb; // level croissant (1 = fort en premier)
+      return a.name.localeCompare(b.name); // alphabétique à level égal
+    });
+    if (toAssign.length === 0) return;
+    setSnaking(true);
+    try {
+      const poolLetters = ['A','B','C','D','E','F'].slice(0, nbPools);
+      // Serpentin : aller A→B→C→D puis retour D→C→B→A
+      const assignments = [];
+      let direction = 1;
+      let poolIdx = 0;
+      for (let i = 0; i < toAssign.length; i++) {
+        assignments.push({ team: toAssign[i], pool: poolLetters[poolIdx] });
+        poolIdx += direction;
+        if (poolIdx >= nbPools) { poolIdx = nbPools - 1; direction = -1; }
+        if (poolIdx < 0) { poolIdx = 0; direction = 1; }
+      }
+      // Mettre à jour en BDD
+      for (const { team, pool } of assignments) {
+        await updateTeam(team.id, { pool });
+      }
+    } catch (e) {
+      console.error('Serpentin error', e);
+    } finally {
+      setSnaking(false);
+    }
+  };
   const handleDragStart = (e, team) => {
     setDraggedTeam(team);
     e.dataTransfer.effectAllowed = 'move';
@@ -128,12 +163,12 @@ export function FormatView(props) {
             gap: 8,
             marginBottom: 12,
           }}>
-            <Layers size={14} color="#a78bfa" />
+            <Layers size={14} color="#818cf8" />
             <div style={{
               fontSize: 11,
               fontWeight: 800,
               letterSpacing: 1.5,
-              color: '#a78bfa',
+              color: '#818cf8',
             }}>
               PHASE DE POULES ({pools.length})
             </div>
@@ -183,7 +218,7 @@ export function FormatView(props) {
                   <div style={{
                     fontSize: 12,
                     fontWeight: 800,
-                    color: '#a78bfa',
+                    color: '#818cf8',
                     letterSpacing: 1,
                   }}>
                     POULE {pool}
@@ -218,7 +253,7 @@ export function FormatView(props) {
                       <div style={{
                         width: 10, height: 10,
                         borderRadius: 3,
-                        background: team.color || '#22d3ee',
+                        background: team.color || '#a3e635',
                         flexShrink: 0,
                       }} />
                       <span style={{ flex: 1 }}>{team.name}</span>
@@ -228,7 +263,7 @@ export function FormatView(props) {
                           fontWeight: 800,
                           padding: '2px 5px',
                           background: 'rgba(34,211,238,0.1)',
-                          color: '#22d3ee',
+                          color: '#a3e635',
                           borderRadius: 3,
                           letterSpacing: 0.5,
                         }}>
@@ -241,6 +276,54 @@ export function FormatView(props) {
               </div>
             ))
           )}
+          {/* Bouton répartition auto serpentin */}
+          {teams.length > 0 && updateTeam && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <select
+                id="snakeNbPools"
+                defaultValue={visiblePools.length || 2}
+                style={{
+                  padding: '8px 10px',
+                  background: 'rgba(34,211,238,0.06)',
+                  border: '1px solid rgba(34,211,238,0.2)',
+                  borderRadius: 8,
+                  color: '#a3e635',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {[2,3,4,5,6].map(n => (
+                  <option key={n} value={n}>{n} poules</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  const sel = document.getElementById('snakeNbPools');
+                  handleSnakeDraft(parseInt(sel.value, 10));
+                }}
+                disabled={snaking}
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  background: snaking ? 'rgba(34,211,238,0.03)' : 'rgba(34,211,238,0.08)',
+                  border: '1px dashed rgba(34,211,238,0.3)',
+                  borderRadius: 10,
+                  color: snaking ? '#64748b' : '#a3e635',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  cursor: snaking ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                {snaking ? 'Répartition en cours...' : '⚡ Répartition auto (serpentin)'}
+              </button>
+            </div>
+          )}
           {/* Bouton + Nouvelle poule (visible si moins de 6 poules ET au moins 1 équipe) */}
           {visiblePools.length < 6 && pools.length > 0 && updateTeam && (
             <button
@@ -252,7 +335,7 @@ export function FormatView(props) {
                 background: 'rgba(167,139,250,0.06)',
                 border: '1px dashed rgba(167,139,250,0.3)',
                 borderRadius: 10,
-                color: '#a78bfa',
+                color: '#818cf8',
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: 0.5,

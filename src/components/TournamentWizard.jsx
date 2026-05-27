@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { checkFeasibility } from '../utils/feasibility';
 import { ChevronLeft, ChevronRight, Check, Calendar, MapPin, Users, GitBranch, Layers, Trophy, X } from 'lucide-react';
 import { STANDARD_CATEGORIES } from '../utils/categoryHelpers';
 
@@ -37,6 +38,12 @@ export function TournamentWizard(props) {
         qualifiedPerPool: t.knockoutFromTopN || 2,
         categories: Array.isArray(t.categories) ? t.categories : [],
         customCategory: '',
+        endDate: t.endDate || '',
+        startTime: t.startTime || '09:00',
+        endTime: t.endTime || '18:00',
+        breaks: Array.isArray(t.breaks) ? t.breaks : [],
+        nbTeams: '',
+        nbPools: '',
       };
     }
     return {
@@ -54,6 +61,12 @@ export function TournamentWizard(props) {
       qualifiedPerPool: 2,
       categories: [],
       customCategory: '',
+      endDate: '',
+      startTime: '09:00',
+      endTime: '18:00',
+      breaks: [],
+      nbTeams: '',
+      nbPools: '',
     };
   });
   const [submitting, setSubmitting] = useState(false);
@@ -64,7 +77,7 @@ export function TournamentWizard(props) {
   const update = (patch) => setData(prev => ({ ...prev, ...patch }));
 
   const canGoNext = () => {
-    if (currentStep.id === 'basics') return !!(data.name.trim() && data.date);
+    if (currentStep.id === 'basics') return !!(data.name.trim() && data.date && data.startTime && data.endTime && data.endTime > data.startTime);
     if (currentStep.id === 'format') return data.fields >= 1 && data.matchDurationMin >= 5;
     if (currentStep.id === 'categories') return data.categories.length > 0;
     return true;
@@ -131,6 +144,10 @@ export function TournamentWizard(props) {
         knockoutFormat: data.hasKnockout ? data.knockoutFormat : 'standard',
         knockoutFromTopN: data.hasKnockout ? data.qualifiedPerPool : 0,
         categories: data.categories,
+        endDate: data.endDate || null,
+        startTime: data.startTime || '09:00',
+        endTime: data.endTime || '18:00',
+        breaks: data.breaks || [],
       };
 
       if (isEditing && onUpdate) {
@@ -173,7 +190,7 @@ export function TournamentWizard(props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 10,
-            background: 'linear-gradient(135deg, #22d3ee, #67e8f9)',
+            background: 'linear-gradient(135deg, #a3e635, #67e8f9)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 0 20px rgba(34,211,238,0.4)',
           }}>
@@ -207,7 +224,7 @@ export function TournamentWizard(props) {
               key={s.id}
               style={{
                 flex: 1, height: 3,
-                background: i <= stepIdx ? '#22d3ee' : 'rgba(255,255,255,0.08)',
+                background: i <= stepIdx ? '#a3e635' : 'rgba(255,255,255,0.08)',
                 borderRadius: 2,
                 transition: 'background 0.3s',
               }}
@@ -238,16 +255,106 @@ export function TournamentWizard(props) {
                 />
               </Field>
               <Field label="Lieu (optionnel)">
-                <input
-                  type="text"
-                  value={data.location}
-                  onChange={(e) => update({ location: e.target.value })}
-                  placeholder="Stade des Marais, Bourg-en-Bresse..."
-                  style={inputStyle}
-                />
-              </Field>
-            </div>
-          )}
+                    <input
+                      type="text"
+                      value={data.location}
+                      onChange={(e) => update({ location: e.target.value })}
+                      placeholder="Stade des Marais, Bourg-en-Bresse..."
+                      style={inputStyle}
+                    />
+                  </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Nb equipes prevues (estimation)">
+                  <input
+                    type="number"
+                    min="2"
+                    max="128"
+                    value={data.nbTeams}
+                    onChange={(e) => update({ nbTeams: e.target.value })}
+                    placeholder="Ex: 16"
+                    style={inputStyle}
+                  />
+                </Field>
+                <Field label="Nb de poules prevues (estimation)">
+                  <input
+                    type="number"
+                    min="1"
+                    max="16"
+                    value={data.nbPools}
+                    onChange={(e) => update({ nbPools: e.target.value })}
+                    placeholder="Ex: 4"
+                    style={inputStyle}
+                  />
+                </Field>
+              </div>
+                  <Field label="Date de fin (si multi-jours)">
+                    <input
+                      type="date"
+                      value={data.endDate}
+                      min={data.date}
+                      onChange={(e) => update({ endDate: e.target.value })}
+                      style={inputStyle}
+                    />
+                  </Field>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <Field label="Heure de debut *">
+                      <input
+                        type="time"
+                        value={data.startTime}
+                        onChange={(e) => update({ startTime: e.target.value })}
+                        style={inputStyle}
+                      />
+                    </Field>
+                    <Field label="Heure de fin *">
+                      <input
+                        type="time"
+                        value={data.endTime}
+                        onChange={(e) => update({ endTime: e.target.value })}
+                        style={inputStyle}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Pauses (ex: repas)">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {data.breaks.map((b, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <input
+                            type="time"
+                            value={b.from}
+                            onChange={(e) => {
+                              const newBreaks = [...data.breaks];
+                              newBreaks[i] = { ...newBreaks[i], from: e.target.value };
+                              update({ breaks: newBreaks });
+                            }}
+                            style={{ ...inputStyle, flex: 1 }}
+                          />
+                          <span style={{ color: '#64748b', fontSize: 12 }}>→</span>
+                          <input
+                            type="time"
+                            value={b.to}
+                            onChange={(e) => {
+                              const newBreaks = [...data.breaks];
+                              newBreaks[i] = { ...newBreaks[i], to: e.target.value };
+                              update({ breaks: newBreaks });
+                            }}
+                            style={{ ...inputStyle, flex: 1 }}
+                          />
+                          <button
+                            onClick={() => update({ breaks: data.breaks.filter((_, j) => j !== i) })}
+                            style={{ background: 'none', border: 'none', color: '#fb7185', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}
+                          >×</button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => update({ breaks: [...data.breaks, { from: '12:00', to: '13:30' }] })}
+                        style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 8, color: '#94a3b8', cursor: 'pointer', fontSize: 12, fontWeight: 600, textAlign: 'left' }}
+                      >
+                        + Ajouter une pause
+                      </button>
+                    </div>
+                  </Field>
+                </div>
+              )}
 
           {currentStep.id === 'format' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -359,7 +466,7 @@ export function TournamentWizard(props) {
                             background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
                             border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.1)',
                             borderRadius: 7,
-                            color: isActive ? '#22d3ee' : '#64748b',
+                            color: isActive ? '#a3e635' : '#64748b',
                             fontSize: 11,
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -393,7 +500,7 @@ export function TournamentWizard(props) {
                             background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
                             border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
                             borderRadius: 7,
-                            color: isActive ? '#22d3ee' : '#94a3b8',
+                            color: isActive ? '#a3e635' : '#94a3b8',
                             fontSize: 12,
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -426,7 +533,7 @@ export function TournamentWizard(props) {
                           background: data.qualifiedPerPool === opt.v ? 'rgba(34,211,238,0.12)' : 'transparent',
                           border: data.qualifiedPerPool === opt.v ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
                           borderRadius: 7,
-                          color: data.qualifiedPerPool === opt.v ? '#22d3ee' : '#94a3b8',
+                          color: data.qualifiedPerPool === opt.v ? '#a3e635' : '#94a3b8',
                           fontSize: 12, fontWeight: 700,
                           cursor: 'pointer', textAlign: 'left',
                         }}
@@ -466,7 +573,7 @@ export function TournamentWizard(props) {
                         background: isActive ? 'rgba(167,139,250,0.15)' : 'transparent',
                         border: isActive ? '1px solid rgba(167,139,250,0.5)' : '1px solid rgba(255,255,255,0.1)',
                         borderRadius: 7,
-                        color: isActive ? '#a78bfa' : '#94a3b8',
+                        color: isActive ? '#818cf8' : '#94a3b8',
                         fontSize: 12, fontWeight: 700,
                         cursor: 'pointer',
                       }}
@@ -495,7 +602,7 @@ export function TournamentWizard(props) {
                   onClick={addCustomCategory}
                   style={{
                     padding: '8px 14px',
-                    background: '#22d3ee', border: 'none',
+                    background: '#a3e635', border: 'none',
                     borderRadius: 7, color: '#0a0e1a',
                     fontSize: 11, fontWeight: 800,
                     cursor: 'pointer',
@@ -513,7 +620,7 @@ export function TournamentWizard(props) {
                 }}>
                   <div style={{
                     fontSize: 10, fontWeight: 800, letterSpacing: 1.5,
-                    color: '#a78bfa', marginBottom: 6,
+                    color: '#818cf8', marginBottom: 6,
                   }}>
                     SELECTIONNEES ({data.categories.length})
                   </div>
@@ -525,7 +632,7 @@ export function TournamentWizard(props) {
                           padding: '4px 8px',
                           background: 'rgba(167,139,250,0.15)',
                           borderRadius: 5,
-                          color: '#a78bfa',
+                          color: '#818cf8',
                           fontSize: 11, fontWeight: 700,
                         }}
                       >
@@ -546,10 +653,56 @@ export function TournamentWizard(props) {
               }}>
                 Verifie tes choix avant de creer le tournoi.
               </div>
+              {/* ALERTE FAISABILITÉ */}
+              {data.nbTeams && data.nbPools && (() => {
+                const result = checkFeasibility({
+                  startDate: data.date,
+                  endDate: data.endDate,
+                  startTime: data.startTime,
+                  endTime: data.endTime,
+                  breaks: data.breaks,
+                  fields: data.fields,
+                  matchDurationMin: data.matchDurationMin,
+                  pauseMin: data.pauseMin,
+                  nbTeams: parseInt(data.nbTeams, 10),
+                  nbPools: parseInt(data.nbPools, 10),
+                  qualifiedPerPool: data.qualifiedPerPool,
+                  hasKnockout: data.hasKnockout,
+                  hasThirdPlace: data.hasThirdPlace,
+                  hasConsolation: data.hasConsolation,
+                  knockoutFormat: data.knockoutFormat,
+                });
+                return (
+                  <div style={{
+                    padding: '12px 14px',
+                    marginBottom: 16,
+                    background: result.ok ? 'rgba(34,211,238,0.08)' : 'rgba(251,113,133,0.08)',
+                    border: `1px solid ${result.ok ? 'rgba(34,211,238,0.3)' : 'rgba(251,113,133,0.3)'}`,
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: result.ok ? '#a3e635' : '#fb7185', marginBottom: 6 }}>
+                      {result.ok ? '✓ Faisabilite estimee OK' : '✗ Attention — Planning serre'}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.6 }}>
+                      {result.days} jour(s) × {result.minPerDay} min utiles × {data.fields} terrain(s) = <strong style={{color:'#f1f5f9'}}>{result.capacity} créneaux</strong><br/>
+                      Matchs estimés : {result.poolMatches} poules + {result.knockoutMatches} finale = <strong style={{color:'#f1f5f9'}}>{result.required} matchs</strong><br/>
+                      {!result.ok && <span style={{color:'#fb7185'}}>Il manque {result.deficit} créneau(x). Ajoutez un terrain, réduisez les équipes ou élargissez la fenêtre.</span>}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#475569', marginTop: 8, fontStyle: 'italic' }}>
+                      * Estimation basée sur {data.nbTeams} équipes réparties en {data.nbPools} poules.
+                    </div>
+                  </div>
+                );
+              })()}
               <RecapSection title="BASES">
                 <RecapRow label="Nom" value={data.name} />
-                <RecapRow label="Date" value={data.date} />
+                <RecapRow label="Date debut" value={data.date} />
+                {data.endDate && <RecapRow label="Date fin" value={data.endDate} />}
                 {data.location && <RecapRow label="Lieu" value={data.location} />}
+                <RecapRow label="Horaires" value={`${data.startTime} → ${data.endTime}`} />
+                {data.breaks.length > 0 && (
+                  <RecapRow label="Pauses" value={data.breaks.map(b => `${b.from}→${b.to}`).join(', ')} />
+                )}
               </RecapSection>
               <RecapSection title="FORMAT">
                 <RecapRow label="Terrains" value={data.fields} />
@@ -589,7 +742,7 @@ export function TournamentWizard(props) {
                         padding: '3px 8px',
                         background: 'rgba(167,139,250,0.15)',
                         borderRadius: 5,
-                        color: '#a78bfa',
+                        color: '#818cf8',
                         fontSize: 11, fontWeight: 700,
                       }}
                     >
@@ -639,7 +792,7 @@ export function TournamentWizard(props) {
               onClick={handleNext}
               style={{
                 padding: '10px 18px',
-                background: '#22d3ee', border: 'none',
+                background: '#a3e635', border: 'none',
                 borderRadius: 8, color: '#0a0e1a',
                 fontSize: 11, fontWeight: 800, letterSpacing: 0.5,
                 cursor: 'pointer',
@@ -654,7 +807,7 @@ export function TournamentWizard(props) {
               disabled={submitting}
               style={{
                 padding: '10px 22px',
-                background: submitting ? 'rgba(34,211,238,0.3)' : '#22d3ee',
+                background: submitting ? 'rgba(34,211,238,0.3)' : '#a3e635',
                 border: 'none',
                 borderRadius: 8, color: '#0a0e1a',
                 fontSize: 12, fontWeight: 800, letterSpacing: 1,
@@ -699,7 +852,7 @@ function RecapSection({ title, children }) {
     }}>
       <div style={{
         fontSize: 10, fontWeight: 800, letterSpacing: 1.5,
-        color: '#22d3ee', marginBottom: 8,
+        color: '#a3e635', marginBottom: 8,
       }}>
         {title}
       </div>
@@ -732,7 +885,7 @@ const toggleActive = {
   background: 'rgba(34,211,238,0.12)',
   border: '1px solid rgba(34,211,238,0.4)',
   borderRadius: 7,
-  color: '#22d3ee',
+  color: '#a3e635',
   fontSize: 11, fontWeight: 800, letterSpacing: 0.5,
   cursor: 'pointer',
 };

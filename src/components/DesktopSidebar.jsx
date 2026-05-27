@@ -1,20 +1,23 @@
 import React from 'react';
 import {
   Sparkles, Users, GitBranch, Calendar, Monitor, Trophy,
-  Plus, LogOut, BookOpen, Archive, Settings,
+  Plus, LogOut, BookOpen, Archive, Settings, Trash2, LayoutDashboard, ClipboardList,
 } from 'lucide-react';
 import { getCategories } from '../utils/categoryHelpers';
 
 const SIDEBAR_WIDTH = 240;
 const SECTION_LIST = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: Sparkles, color: '#22d3ee' },
-  { id: 'teams',     label: 'Equipes',          icon: Users,    color: '#a78bfa' },
+  { id: 'dashboard', label: 'Tableau de bord', icon: Sparkles, color: '#a3e635' },
+  { id: 'teams',     label: 'Equipes',          icon: Users,    color: '#818cf8' },
   { id: 'format',    label: 'Format',           icon: GitBranch, color: '#f59e0b' },
   { id: 'schedule',  label: 'Calendrier',       icon: Calendar, color: '#34d399' },
   { id: 'presentation', label: 'Presentation',  icon: Monitor,  color: '#fb7185' },
   { id: 'standings', label: 'Resultats',        icon: Trophy,   color: '#facc15' },
-  { id: 'library',   label: 'Bibliotheque',     icon: BookOpen, color: '#f472b6' },
-  { id: 'archives',  label: 'Archives',         icon: Archive,  color: '#94a3b8' },
+  { id: 'library',      label: 'Bibliotheque',  icon: BookOpen, color: '#f472b6' },
+  { id: 'registrations', label: 'Inscriptions', icon: Users,    color: '#818cf8' },
+  { id: 'checkin',      label: 'Table de marque', icon: ClipboardList, color: '#34d399' },
+  { id: 'archives',     label: 'Archives',      icon: Archive,  color: '#94a3b8' },
+  { id: 'account',      label: 'Mon compte',    icon: Settings, color: '#64748b' },
 ];
 
 export function DesktopSidebar(props) {
@@ -29,6 +32,9 @@ export function DesktopSidebar(props) {
   const onOpenCategoryManager = props.onOpenCategoryManager;
   const onOpenParams = props.onOpenParams;
   const signOut = props.signOut;
+  const onGoToHub = props.onGoToHub;
+  const profile = props.profile;
+  const pendingRegistrations = props.pendingRegistrations || 0;
 
   const categories = getCategories(tournament);
   const showCategoryTabs = categories.length > 0;
@@ -49,18 +55,23 @@ export function DesktopSidebar(props) {
       zIndex: 100,
       overflowY: 'auto',
     }}>
-      <div style={{
-        padding: '20px 18px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        borderBottom: '1px solid rgba(34,211,238,0.08)',
-      }}>
+      <div
+        onClick={() => onGoToHub && onGoToHub()}
+        style={{
+          padding: '20px 18px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          borderBottom: '1px solid rgba(34,211,238,0.08)',
+          cursor: onGoToHub ? 'pointer' : 'default',
+        }}
+        title="Retour au hub"
+      >
         <div style={{
           width: 36,
           height: 36,
           borderRadius: 9,
-          background: 'linear-gradient(135deg, #22d3ee, #67e8f9)',
+          background: 'linear-gradient(135deg, #a3e635, #67e8f9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -69,7 +80,7 @@ export function DesktopSidebar(props) {
           <Sparkles size={18} color="#0a0e1a" strokeWidth={2.5} />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#22d3ee', letterSpacing: 2 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#a3e635', letterSpacing: 2 }}>
             FOOTPLANNER
           </div>
           <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 1 }}>
@@ -106,7 +117,7 @@ export function DesktopSidebar(props) {
                   padding: 4,
                   background: 'transparent',
                   border: 'none',
-                  color: '#22d3ee',
+                  color: '#a3e635',
                   cursor: 'pointer',
                   display: 'flex',
                   flexShrink: 0,
@@ -139,7 +150,7 @@ export function DesktopSidebar(props) {
                           background: isActive ? 'rgba(167,139,250,0.18)' : 'transparent',
                           border: isActive ? '1px solid rgba(167,139,250,0.5)' : '1px solid transparent',
                           borderRadius: 7,
-                          color: isActive ? '#a78bfa' : '#94a3b8',
+                          color: isActive ? '#818cf8' : '#94a3b8',
                           fontSize: 12,
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -164,7 +175,7 @@ export function DesktopSidebar(props) {
               background: 'rgba(167,139,250,0.08)',
               border: '1px dashed rgba(167,139,250,0.3)',
               borderRadius: 7,
-              color: '#a78bfa',
+              color: '#818cf8',
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: 0.5,
@@ -212,96 +223,182 @@ export function DesktopSidebar(props) {
                       fontWeight: isActive ? 800 : 600,
                       cursor: 'pointer',
                       textAlign: 'left',
+                      justifyContent: 'space-between',
                     }}
-                  >
-                    <Icon size={16} color={isActive ? section.color : '#94a3b8'} />
-                    {section.label}
-                  </button>
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Icon size={16} color={isActive ? section.color : '#94a3b8'} />
+                        {section.label}
+                      </div>
+                      {section.id === 'registrations' && pendingRegistrations > 0 && (
+                        <span style={{
+                          background: '#fb7185',
+                          color: '#fff',
+                          borderRadius: '50%',
+                          width: 18,
+                          height: 18,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 10,
+                          fontWeight: 900,
+                          flexShrink: 0,
+                        }}>
+                          {pendingRegistrations}
+                        </span>
+                      )}
+                    </button>
                 );
               })}
             </nav>
 
-            {myTournaments && myTournaments.length > 1 && (
-              <div style={{ padding: '12px 12px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: 1.5,
-                  color: '#64748b',
-                  padding: '8px 6px 4px',
-                }}>
-                  MES TOURNOIS
-                </div>
-                {myTournaments.slice(0, 4).map(function(t) {
-                  const isActive = tournament && tournament.id === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={function() { if (onPickTournament) onPickTournament(t.id); }}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        padding: '6px 10px',
-                        marginBottom: 2,
-                        background: isActive ? 'rgba(34,211,238,0.08)' : 'transparent',
-                        border: 'none',
-                        color: isActive ? '#22d3ee' : '#64748b',
-                        fontSize: 11,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        borderRadius: 6,
-                      }}
-                    >
-                      {t.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div style={{
-              padding: '12px 18px',
-              borderTop: '1px solid rgba(255,255,255,0.04)',
-              display: 'flex',
-              gap: 8,
-            }}>
-              {onCreateTournament && (
-                <button
-                  onClick={onCreateTournament}
+      {myTournaments && myTournaments.length > 0 && (
+        <div style={{ padding: '12px 12px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{
+            fontSize: 9,
+            fontWeight: 800,
+            letterSpacing: 1.5,
+            color: '#64748b',
+            padding: '8px 6px 4px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            MES TOURNOIS
+            <span style={{ color: '#475569', fontWeight: 600 }}>{myTournaments.filter(function(t) { return t.status !== 'archived'; }).length}</span>
+          </div>
+          <div style={{ maxHeight: 200, overflowY: 'auto', overflowX: 'hidden' }}>
+            {myTournaments.filter(function(t) { return t.status !== 'archived'; }).map(function(t) {
+              const isActive = tournament && tournament.id === t.id;
+              return (
+                <div
+                  key={t.id}
                   style={{
-                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginBottom: 2,
+                  }}
+                >
+                  <button
+                    onClick={function() { if (onPickTournament) onPickTournament(t.id); }}
+                    style={{
+                      flex: 1,
+                      padding: '6px 10px',
+                      background: isActive ? 'rgba(34,211,238,0.08)' : 'transparent',
+                      border: 'none',
+                      color: isActive ? '#a3e635' : '#94a3b8',
+                      fontSize: 11,
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      borderRadius: 6,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t.name}
+                  </button>
+                  {props.onDeleteTournament && (
+                    <button
+                      onClick={function(e) {
+                        e.stopPropagation();
+                        if (window.confirm('Supprimer "' + t.name + '" ? Cette action est irreversible.')) {
+                          props.onDeleteTournament(t.id);
+                        }
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: 4,
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexShrink: 0,
+                        opacity: 0.4,
+                      }}
+                      title="Supprimer ce tournoi"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+            <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {onGoToHub && (
+                <button
+                  onClick={onGoToHub}
+                  style={{
+                    width: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 6,
-                    padding: '8px',
-                    background: 'rgba(34,211,238,0.12)',
-                    border: '1px solid rgba(34,211,238,0.3)',
-                    borderRadius: 7,
-                    color: '#22d3ee',
-                    fontSize: 11,
+                    gap: 8,
+                    padding: '10px',
+                    background: 'rgba(167,139,250,0.1)',
+                    border: '1px solid rgba(167,139,250,0.3)',
+                    borderRadius: 8,
+                    color: '#818cf8',
+                    fontSize: 12,
                     fontWeight: 800,
                     cursor: 'pointer',
+                    letterSpacing: 0.5,
+                    fontFamily: 'inherit',
                   }}
+                  title="Retour au tableau de bord"
                 >
-                  <Plus size={12} /> NOUVEAU
+                  <LayoutDashboard size={14} /> TABLEAU DE BORD
                 </button>
               )}
-              {signOut && (
-                <button
-                  onClick={signOut}
-                  style={{
-                    padding: '8px 10px',
-                    background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 7,
-                    color: '#64748b',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <LogOut size={12} />
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {onCreateTournament && (
+                  <button
+                    onClick={onCreateTournament}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      padding: '8px',
+                      background: 'rgba(34,211,238,0.12)',
+                      border: '1px solid rgba(34,211,238,0.3)',
+                      borderRadius: 7,
+                      color: '#a3e635',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <Plus size={12} /> NOUVEAU
+                  </button>
+                )}
+                {signOut && (
+                  <button
+                    onClick={signOut}
+                    style={{
+                      padding: '8px 10px',
+                      background: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 7,
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <LogOut size={12} />
+                  </button>
+                )}
+              </div>
             </div>
           </aside>
         );

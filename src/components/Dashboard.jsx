@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   Sparkles, Calendar, MapPin, Activity, Clock, Zap, Trophy, Users, Star,
-  Timer, ArrowLeft, ChevronRight, Play, AlertCircle, 
+  Timer, ArrowLeft, ChevronRight, Play, AlertCircle, FileText,
   Goal as Whistle,
 } from 'lucide-react';
 import { StatTile, SectionHeader, QuickAction, LiveMatchCard, UpcomingMatchCard } from './MatchCards';
 import { MatchWaveGroup } from './MatchWaveGroup';
 import { groupScheduledByTime } from '../utils/waves';
 import { styles } from '../styles/styles';
+import { pdfService } from '../services/pdfService';
 // ============================================================
 // Dashboard — écran d'accueil après onboarding
 // Reçoit ctx (App.jsx) avec :
@@ -32,6 +33,7 @@ export function Dashboard({
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const isOrganizer = role === 'organizer';
+  console.log("Dashboard role:", role, "isOrganizer:", isOrganizer);
   const canFollow = role === 'spectator' || role === 'coach';
 
   // Toast géré par un état React (plus fiable que document.createElement)
@@ -49,6 +51,20 @@ export function Dashboard({
       await updateMatch(matchId, { scoreHome, scoreAway });
     } catch (e) {
       console.error('Score update failed', e);
+    }
+  };
+  
+  const [shifting, setShifting] = useState(false);
+  const handleShift = async (minutes) => {
+    if (shifting) return;
+    setShifting(true);
+    try {
+      await shiftSchedule(minutes);
+      showToast(`Planning decale de ${minutes > 0 ? '+' : ''}${minutes} min`);
+    } catch (e) {
+      showToast('Erreur lors du decalage', true);
+    } finally {
+      setShifting(false);
     }
   };
 
@@ -103,7 +119,7 @@ export function Dashboard({
           left: '50%',
           transform: 'translateX(-50%)',
           padding: '12px 20px',
-          background: toast.isError ? '#fb7185' : '#22d3ee',
+          background: toast.isError ? '#fb7185' : '#a3e635',
           color: '#0a0e1a',
           borderRadius: 10,
           fontWeight: 800,
@@ -138,7 +154,7 @@ export function Dashboard({
                 <div style={{ ...styles.progressFill, width: `${progress}%` }} />
               </div>
               <div style={styles.progressMeta}>
-                <span style={{ color: '#22d3ee', fontWeight: 800 }}>{completedCount}</span>
+                <span style={{ color: '#a3e635', fontWeight: 800 }}>{completedCount}</span>
                 <span style={{ color: '#64748b' }}>/ {totalCount} matchs joués · {progress}%</span>
               </div>
             </div>
@@ -149,9 +165,9 @@ export function Dashboard({
 
       {/* Stats */}
       <section style={styles.statRow}>
-        <StatTile label="EN DIRECT" value={liveMatches.length} color="#22d3ee" pulse />
+        <StatTile label="EN DIRECT" value={liveMatches.length} color="#a3e635" pulse />
         <StatTile label="TERMINÉS" value={completedCount} color="#34d399" />
-        <StatTile label="ÉQUIPES" value={teams.length} color="#a78bfa" />
+        <StatTile label="ÉQUIPES" value={teams.length} color="#818cf8" />
         <StatTile label="POULES" value={[...new Set(teams.map(t => t.pool))].length} color="#f59e0b" />
       </section>
 
@@ -160,21 +176,21 @@ export function Dashboard({
         <section style={styles.section}>
           <SectionHeader icon={Timer} title="Décaler le planning" accent="#fb7185" />
           <div style={styles.adjustPanel}>
-            <button onClick={() => handleShift(-5)} style={styles.adjustBtn}>
-              <ArrowLeft size={12} /> -5 min
+            <button onClick={() => handleShift(-5)} disabled={shifting} style={{...styles.adjustBtn, opacity: shifting ? 0.5 : 1}}>
+              {shifting ? '...' : '← -5 min'}
             </button>
-            <button onClick={() => handleShift(-10)} style={styles.adjustBtn}>
-              -10 min
+            <button onClick={() => handleShift(-10)} disabled={shifting} style={{...styles.adjustBtn, opacity: shifting ? 0.5 : 1}}>
+              {shifting ? '...' : '-10 min'}
             </button>
             <div style={styles.adjustLabel}>
               <Timer size={14} color="#fb7185" />
               <span>Avance / Retard</span>
             </div>
-            <button onClick={() => handleShift(10)} style={styles.adjustBtn}>
-              +10 min
+            <button onClick={() => handleShift(10)} disabled={shifting} style={{...styles.adjustBtn, opacity: shifting ? 0.5 : 1}}>
+              {shifting ? '...' : '+10 min'}
             </button>
-            <button onClick={() => handleShift(5)} style={styles.adjustBtn}>
-              +5 min <ChevronRight size={12} />
+            <button onClick={() => handleShift(5)} disabled={shifting} style={{...styles.adjustBtn, opacity: shifting ? 0.5 : 1}}>
+              {shifting ? '...' : '+5 min →'}
             </button>
           </div>
           <div style={{ fontSize: 10, color: '#64748b', textAlign: 'center', marginTop: 6 }}>
@@ -186,7 +202,7 @@ export function Dashboard({
       {/* Live */}
       {liveMatches.length > 0 && (
         <section style={styles.section}>
-          <SectionHeader icon={Activity} title="Matchs en direct" accent="#22d3ee" />
+          <SectionHeader icon={Activity} title="Matchs en direct" accent="#a3e635" />
           {isOrganizer && liveMatches.length > 0 && (
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
               <button
@@ -212,7 +228,7 @@ export function Dashboard({
                   background: 'rgba(34,211,238,0.12)',
                   border: '1px solid rgba(34,211,238,0.35)',
                   borderRadius: 7,
-                  color: '#22d3ee',
+                  color: '#a3e635',
                   fontSize: 11,
                   fontWeight: 800,
                   letterSpacing: 1,
@@ -269,22 +285,57 @@ export function Dashboard({
         );
       })()}
 
+      {/* Documents */}
+      {isOrganizer && (
+        <section style={styles.section}>
+          <SectionHeader icon={FileText} title="Documents" accent="#a3e635" />
+          <div style={styles.quickGrid}>
+            <QuickAction
+              icon={FileText}
+              label="Affiche QR Code"
+              onClick={() => setView('poster')}
+              color="#a3e635"
+            />
+            <QuickAction
+              icon={FileText}
+              label="Planning complet"
+              onClick={() => pdfService.downloadSchedulePdf(tournament, teams, matches)}
+              color="#34d399"
+            />
+            <QuickAction
+              icon={FileText}
+              label="Résumé compact"
+              onClick={() => pdfService.downloadSummaryPdf(tournament, teams, matches)}
+              color="#818cf8"
+            />
+            {[...new Set(teams.map(t => t.pool).filter(Boolean))].sort().map(pool => (
+              <QuickAction
+                key={pool}
+                icon={FileText}
+                label={"Poule " + pool}
+                onClick={() => pdfService.downloadPoolPdf(tournament, teams, matches, pool)}
+                color="#f59e0b"
+              />
+            ))}
+          </div>
+        </section>
+      )}
       {/* Quick actions */}
       <section style={styles.section}>
-        <SectionHeader icon={Zap} title="Raccourcis" accent="#a78bfa" />
+        <SectionHeader icon={Zap} title="Raccourcis" accent="#818cf8" />
         <div style={styles.quickGrid}>
           <QuickAction icon={Trophy} label="Classement live" onClick={() => setView('standings')} color="#f59e0b" />
-          <QuickAction icon={Whistle} label="Tous les matchs" onClick={() => setView('matches')} color="#22d3ee" />
+          <QuickAction icon={Whistle} label="Tous les matchs" onClick={() => setView('matches')} color="#a3e635" />
           {canFollow && (
             <QuickAction icon={Star} label="Mes équipes" onClick={() => setView('follow')} color="#facc15" />
           )}
           {role !== 'spectator' && (
-            <QuickAction icon={Users} label="Équipes" onClick={() => setView('teams')} color="#a78bfa" />
+            <QuickAction icon={Users} label="Équipes" onClick={() => setView('teams')} color="#818cf8" />
           )}
           {isOrganizer && (
             <>
               <QuickAction icon={Calendar} label="Calendrier" onClick={() => setView('schedule')} color="#34d399" />
-              <QuickAction icon={Trophy} label="Archives" onClick={() => setView('archives')} color="#a78bfa" />
+              <QuickAction icon={Trophy} label="Archives" onClick={() => setView('archives')} color="#818cf8" />
             </>
           )}
         </div>

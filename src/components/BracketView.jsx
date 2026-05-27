@@ -71,7 +71,7 @@ export function BracketView({ knockoutMatches, teams, matches, standings, onMatc
           />
         )}
         <div style={{ ...styles.helpBox, marginTop: 4 }}>
-          <Sparkles size={12} color="#a78bfa" />
+          <Sparkles size={12} color="#818cf8" />
           <span>Multi-cup : 2 coupes séparées. Les équipes se placent automatiquement après les poules.</span>
         </div>
       </div>
@@ -106,7 +106,7 @@ export function BracketView({ knockoutMatches, teams, matches, standings, onMatc
         </div>
       </div>
       <div style={{ ...styles.helpBox, marginTop: 16 }}>
-        <Sparkles size={12} color="#a78bfa" />
+        <Sparkles size={12} color="#818cf8" />
         <span>Les équipes se placent automatiquement dès que les matchs précédents sont validés.</span>
       </div>
     </>
@@ -214,7 +214,7 @@ function BracketMatchCard({ match, teams, matches, standings, onTap }) {
       </div>
       <div style={styles.bracketMeta}>
         <span>{match.field || '?'} · {(match.time || '—').slice(0, 5)}</span>
-        {isLive && <span style={{ color: '#22d3ee' }}>● LIVE</span>}
+        {isLive && <span style={{ color: '#a3e635' }}>● LIVE</span>}
         {isDone && <span style={{ color: '#34d399' }}>FT</span>}
       </div>
     </button>

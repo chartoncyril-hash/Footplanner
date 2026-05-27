@@ -62,7 +62,7 @@ export function RankingByCategory({ rankings, categories, onChange }) {
             style={{
               ...styles.rankingChip,
               borderColor: isActive
-                ? (enabled ? '#22d3ee' : '#fb7185')
+                ? (enabled ? '#a3e635' : '#fb7185')
                 : enabled ? 'rgba(52,211,153,0.3)' : 'rgba(251,113,133,0.2)',
               background: enabled ? 'rgba(52,211,153,0.06)' : 'rgba(251,113,133,0.04)',
             }}
@@ -70,7 +70,7 @@ export function RankingByCategory({ rankings, categories, onChange }) {
             <span
               style={{
                 fontSize: 11, fontWeight: 800, letterSpacing: 0.5,
-                color: isActive ? '#22d3ee' : enabled ? '#34d399' : '#94a3b8',
+                color: isActive ? '#a3e635' : enabled ? '#34d399' : '#94a3b8',
                 fontFamily: "'JetBrains Mono', monospace",
               }}
             >
@@ -110,7 +110,7 @@ export function CategoryDurations({ durations, categories, onChange }) {
                 background: isActive ? 'rgba(34,211,238,0.06)' : 'rgba(0,0,0,0.2)',
               }}
             >
-              <span style={{ ...styles.durationCat, color: isActive ? '#22d3ee' : '#cbd5e1' }}>
+              <span style={{ ...styles.durationCat, color: isActive ? '#a3e635' : '#cbd5e1' }}>
                 {cat}
               </span>
               <div style={styles.durationStepper}>
@@ -244,7 +244,7 @@ export function KnockoutToggle({
                                 background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
                                 border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
                                 borderRadius: 7,
-                                color: isActive ? '#22d3ee' : '#94a3b8',
+                                color: isActive ? '#a3e635' : '#94a3b8',
                                 fontSize: 12,
                                 fontWeight: 700,
                                 cursor: 'pointer',
@@ -289,7 +289,7 @@ export function KnockoutToggle({
                                   background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
                                   border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.1)',
                                   borderRadius: 7,
-                                  color: isActive ? '#22d3ee' : '#64748b',
+                                  color: isActive ? '#a3e635' : '#64748b',
                                   fontSize: 11,
                                   fontWeight: 700,
                                   cursor: 'pointer',
@@ -387,7 +387,7 @@ export function AnnouncementsManager({ announcements, onAdd, onRemove }) {
   const [submitting, setSubmitting] = useState(false);
 
   const types = [
-    { id: 'info', label: 'Info', color: '#22d3ee' },
+    { id: 'info', label: 'Info', color: '#a3e635' },
     { id: 'success', label: 'Bon plan', color: '#34d399' },
     { id: 'warning', label: 'Attention', color: '#f59e0b' },
     { id: 'urgent', label: 'Urgent', color: '#fb7185' },
@@ -581,7 +581,7 @@ export function SponsorsManager({
             borderRadius: 8,
           }}
         >
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: '#a78bfa', marginBottom: 4 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.5, color: '#818cf8', marginBottom: 4 }}>
             SPONSORS DÉJÀ ENREGISTRÉS
           </div>
           {availableInLib.map(s => (

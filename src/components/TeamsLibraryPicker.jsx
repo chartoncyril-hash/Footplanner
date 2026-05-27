@@ -203,7 +203,7 @@ export function TeamsLibraryPicker(props) {
               >
                 <div style={{
                   width: 14, height: 14, borderRadius: 4,
-                  background: lib.color || '#22d3ee',
+                  background: lib.color || '#a3e635',
                   flexShrink: 0,
                 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -256,7 +256,7 @@ export function TeamsLibraryPicker(props) {
                       background: 'rgba(34,211,238,0.15)',
                       border: '1px solid rgba(34,211,238,0.4)',
                       borderRadius: 6,
-                      color: '#22d3ee',
+                      color: '#a3e635',
                       fontSize: 14, fontWeight: 800,
                       cursor: 'pointer',
                       padding: 0, lineHeight: 1,
@@ -292,7 +292,7 @@ export function TeamsLibraryPicker(props) {
             disabled={totalSelected === 0 || submitting}
             style={{
               padding: '10px 22px',
-              background: (totalSelected === 0 || submitting) ? 'rgba(34,211,238,0.3)' : '#22d3ee',
+              background: (totalSelected === 0 || submitting) ? 'rgba(34,211,238,0.3)' : '#a3e635',
               border: 'none',
               borderRadius: 8, color: '#0a0e1a',
               fontSize: 12, fontWeight: 800, letterSpacing: 0.5,

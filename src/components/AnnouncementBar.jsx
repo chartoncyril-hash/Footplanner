@@ -6,7 +6,7 @@ import { styles } from '../styles/styles';
 // AnnouncementBar — bandeau défilant en haut
 // ============================================================
 const COLOR_MAP = {
-  info: '#22d3ee',
+  info: '#a3e635',
   success: '#34d399',
   warning: '#f59e0b',
   urgent: '#fb7185',

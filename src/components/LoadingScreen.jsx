@@ -26,7 +26,7 @@ export function LoadingScreen({ message }) {
         <div style={{ ...styles.logoMark, width: 48, height: 48, borderRadius: 12 }}>
           <Zap size={24} strokeWidth={2.5} color="#0a0a0a" />
         </div>
-        <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: 4, color: '#22d3ee' }}>FOOTPLANNER</div>
+        <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: 4, color: '#a3e635' }}>FOOTPLANNER</div>
         <div style={{ fontSize: 10, color: '#64748b', letterSpacing: 2 }}>
           {message || 'CHARGEMENT...'}
         </div>

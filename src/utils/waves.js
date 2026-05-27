@@ -39,7 +39,7 @@ export function getWaveColor(status) {
   switch (status) {
     case 'late':   return '#fb7185';
     case 'soon':   return '#facc15';
-    default:       return '#22d3ee';
+    default:       return '#a3e635';
   }
 }
 

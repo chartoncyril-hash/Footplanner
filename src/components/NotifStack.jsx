@@ -10,12 +10,12 @@ import { styles } from '../styles/styles';
 // ============================================================
 const KIND_META = {
   soon: { color: '#f59e0b', icon: Clock, label: 'BIENTÔT' },
-  start: { color: '#22d3ee', icon: Activity, label: "C'EST PARTI" },
+  start: { color: '#a3e635', icon: Activity, label: "C'EST PARTI" },
   score: { color: '#34d399', icon: Target, label: 'BUT' },
-  end: { color: '#a78bfa', icon: ShieldCheck, label: 'TERMINÉ' },
+  end: { color: '#818cf8', icon: ShieldCheck, label: 'TERMINÉ' },
   ref_soon: { color: '#f59e0b', icon: Flag, label: 'À VOUS' },
   ref_remind: { color: '#fb7185', icon: AlertCircle, label: 'PENSEZ-Y' },
-  info: { color: '#22d3ee', icon: Sparkles, label: 'INFO' },
+  info: { color: '#a3e635', icon: Sparkles, label: 'INFO' },
 };
 
 export function NotifStack({ notifs, teams, onDismiss, onTap }) {

@@ -57,7 +57,7 @@ export function ScoringInput({ label, value, color, onChange }) {
 }
 
 // Switch on/off réutilisable
-export function Switch({ checked, onChange, color = '#22d3ee' }) {
+export function Switch({ checked, onChange, color = '#a3e635' }) {
   return (
     <button
       type="button"

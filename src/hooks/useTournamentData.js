@@ -13,7 +13,6 @@ export function useTournament({ id, accessCode } = {}) {
   const [error, setError] = useState(null);
 
   const reload = useCallback(async () => {
-    setLoading(true);
     setError(null);
     try {
       let t = null;
@@ -48,7 +47,6 @@ export function useMyTournaments() {
   const [error, setError] = useState(null);
 
   const reload = useCallback(async () => {
-    setLoading(true);
     setError(null);
     try {
       const data = await tournamentService.listMine();
@@ -79,7 +77,10 @@ export function useMyTournaments() {
     setList(prev => prev.filter(x => x.id !== id));
   }, []);
 
-  return { list, loading, error, reload, create, archive, remove };
+  const updateInList = useCallback((id, patch) => {
+    setList(prev => prev.map(x => x.id === id ? { ...x, ...patch } : x));
+  }, []);
+  return { list, loading, error, reload, create, archive, remove, updateInList };
 }
 
 // ============================================================
@@ -164,7 +165,12 @@ export function useTeamLibrary() {
       setLibrary(prev => prev.map(t => t.libraryId === libraryId ? updated : t));
       return updated;
     }, []);
-    return { library, loading, error, reload, remove, update };
+  const add = useCallback(async (input) => {
+      const newItem = await teamService.addToLibrary(input);
+      setLibrary(prev => [...prev, newItem]);
+      return newItem;
+    }, []);
+    return { library, loading, error, reload, remove, update, add };
 }
 
 // ============================================================
