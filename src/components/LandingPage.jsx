@@ -91,7 +91,7 @@ export function LandingPage() {
           <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
               <div style={S.badge}><span style={S.badgeDot}></span>BETA OUVERTE — 100% gratuit</div>
-              <h1 style={S.h1}>Vos tournois,<br/>sans <span style={{color:'#a3e635'}}>prise de tete.</span></h1>
+              <h1 style={S.h1}>Gerez votre club<br/>et vos tournois<br/>sans <span style={{color:'#a3e635'}}>prise de tete.</span></h1>
               <p style={S.heroSub}>FootPlanner genere automatiquement vos poules, calendriers et phases finales. Vous gerez les scores en direct. Le classement se fait tout seul.</p>
               <div style={S.heroFeats}>
                 {['Calendrier automatique','Scores en direct','Affichage grand ecran','Multi-categories','100% Cloud','Concu en France'].map(f => (
