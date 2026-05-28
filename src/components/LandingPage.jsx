@@ -73,9 +73,9 @@ export function LandingPage() {
       {/* NAV */}
       <nav style={S.nav}>
         <div style={S.navInner}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:48,width:'auto'}} />
-            {!isMobile && <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>}
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height: isMobile ? 40 : 48, width:'auto'}} />
+            <div style={{...S.logo, fontSize: isMobile ? 14 : 16}}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
           </div>
           {!isMobile && (
             <div style={{display:'flex',gap:16,alignItems:'center'}}>
@@ -85,8 +85,8 @@ export function LandingPage() {
             </div>
           )}
           <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth-form'); }}>Connexion</button>
-            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth-form'); }}>Bêta gratuite</button>
+            <button style={{...S.btnGhost, fontSize:12, padding:'7px 10px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth-form'); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 10px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth-form'); }}>{isMobile ? 'Bêta' : 'Bêta gratuite'}</button>
           </div>
         </div>
       </nav>
