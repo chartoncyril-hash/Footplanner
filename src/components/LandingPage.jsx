@@ -71,7 +71,10 @@ export function LandingPage() {
       {/* NAV */}
       <nav style={S.nav}>
         <div style={S.navInner}>
-          <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:36,width:'auto'}} />
+            <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
+          </div>
           {!isMobile && (
             <div style={{display:'flex',gap:16,alignItems:'center'}}>
               <a style={S.navLink} onClick={() => scrollTo('features')}>Fonctionnalites</a>
@@ -431,7 +434,10 @@ export function LandingPage() {
         <div style={S.container}>
           <div style={{...S.footerGrid, gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 1fr', gap: isMobile ? 24 : 40}}>
             <div>
-              <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:36,width:'auto'}} />
+                <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
+              </div>
               <p style={{fontSize:12,color:'#64748b',lineHeight:1.6,maxWidth:280,marginTop:8}}>La plateforme nouvelle generation pour organiser vos tournois de football.</p>
               <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#94a3b8',marginTop:12,fontWeight:600}}>🇫🇷 Concu et heberge en France</div>
             </div>
