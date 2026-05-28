@@ -87,8 +87,8 @@ export function LandingPage() {
             </div>
           )}
           <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-            {!isMobile && <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>}
-            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>{isMobile ? 'Bêta gratuite' : 'Beta gratuite'}</button>
+            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Bêta gratuite</button>
           </div>
         </div>
       </nav>
