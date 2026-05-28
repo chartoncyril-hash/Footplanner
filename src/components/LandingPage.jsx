@@ -63,11 +63,7 @@ export function LandingPage() {
   const [cookiesBanner, setCookiesBanner] = React.useState(() => !localStorage.getItem('fp_cookies_ok'));
   const scrollTo = (id) => {
     const el = document.getElementById(id);
-    if (el) {
-      const navHeight = 68;
-      const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -87,8 +83,8 @@ export function LandingPage() {
             </div>
           )}
           <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); setTimeout(() => scrollTo('auth'), 80); }}>Connexion</button>
-            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); setTimeout(() => scrollTo('auth'), 80); }}>Bêta gratuite</button>
+            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); setTimeout(() => scrollTo('auth'), 150); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); setTimeout(() => scrollTo('auth'), 150); }}>Bêta gratuite</button>
           </div>
         </div>
       </nav>
@@ -316,7 +312,7 @@ export function LandingPage() {
         </div>
       </section>
       {/* AUTH SECTION */}
-      <section id="auth" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+      <section id="auth" style={{...S.section,background:'#0c1120',borderTop:'1px solid rgba(255,255,255,0.06)',scrollMarginTop:'68px'}}>
         <div style={{...S.container,maxWidth:authMode === 'signup' ? 1200 : 1200}}>
           <div style={{...S.heroGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 60}}>
             <div>
