@@ -63,7 +63,9 @@ export function LandingPage() {
   const [cookiesBanner, setCookiesBanner] = React.useState(() => !localStorage.getItem('fp_cookies_ok'));
   const scrollTo = (id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.pageYOffset - 68;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   };
 
   return (
