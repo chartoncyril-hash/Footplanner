@@ -72,7 +72,7 @@ export function LandingPage() {
       <nav style={S.nav}>
         <div style={S.navInner}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:36,width:'auto'}} />
+            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:48,width:'auto'}} />
             <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
           </div>
           {!isMobile && (
@@ -83,8 +83,8 @@ export function LandingPage() {
             </div>
           )}
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <button style={{...S.btnGhost, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
-            <button style={{...S.btnCyan, fontSize:13, padding:'8px 16px'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Beta gratuite</button>
+            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Beta gratuite</button>
           </div>
         </div>
       </nav>
@@ -487,9 +487,9 @@ const S = {
   container: { maxWidth: 1200, margin: '0 auto', padding: '0 16px', boxSizing: 'border-box', width: '100%' },
 
   // NAV
-  nav: { position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '16px 0', background: 'rgba(6,10,18,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
-  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  logo: { fontSize: 22, fontWeight: 900, letterSpacing: 1, cursor: 'pointer' },
+  nav: { position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '10px 0', background: 'rgba(6,10,18,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
+  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'nowrap', minWidth: 0 },
+  logo: { fontSize: 16, fontWeight: 900, letterSpacing: 1, cursor: 'pointer', whiteSpace: 'nowrap' },
   navLinks: { display: 'flex', gap: 32, fontSize: 14, fontWeight: 600, color: '#94a3b8' },
   navLink: { cursor: 'pointer', transition: 'color 0.2s' },
 
