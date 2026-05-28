@@ -85,8 +85,8 @@ export function LandingPage() {
             </div>
           )}
           <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
-            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
-            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Bêta gratuite</button>
+            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth-form'); }}>Connexion</button>
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth-form'); }}>Bêta gratuite</button>
           </div>
         </div>
       </nav>
@@ -106,7 +106,7 @@ export function LandingPage() {
                 ))}
               </div>
               <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
-                <button style={S.btnCyanLg} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Demarrer gratuitement →</button>
+                <button style={S.btnCyanLg} onClick={() => { setAuthMode('signup'); scrollTo('auth-form'); }}>Demarrer gratuitement →</button>
                 <button style={S.btnOutlineLg} onClick={() => scrollTo('features')}>Voir les fonctionnalites</button>
               </div>
             </div>
@@ -306,7 +306,7 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
-              <button style={{...S.btnCyan,width:'100%',padding:'14px',fontSize:15,borderRadius:12}} onClick={() => {setAuthMode('signup');scrollTo('auth');}}>
+              <button style={{...S.btnCyan,width:'100%',padding:'14px',fontSize:15,borderRadius:12}} onClick={() => {setAuthMode('signup');scrollTo('auth-form');}}>
                 Rejoindre la beta gratuitement →
               </button>
             </div>
@@ -329,7 +329,7 @@ export function LandingPage() {
             </div>
             <div>
               {/* TABS */}
-              <div style={S.authCard}>
+              <div id="auth-form" style={S.authCard}>
                 <div style={S.authTabs}>
                   <button
                     style={{...S.authTab,...((!authMode || authMode==='signup') ? S.authTabActive : {})}}
