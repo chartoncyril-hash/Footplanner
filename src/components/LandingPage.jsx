@@ -64,8 +64,13 @@ export function LandingPage() {
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.pageYOffset - 68;
-    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    const top = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - 68);
+    if ('scrollBehavior' in document.documentElement.style) {
+      window.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      document.documentElement.scrollTop = top;
+      document.body.scrollTop = top;
+    }
   };
 
   return (
@@ -485,7 +490,7 @@ export function LandingPage() {
 // STYLES
 // ============================================================
 const S = {
-  page: { background: '#060a12', color: '#f1f5f9', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", minHeight: '100vh', overflowX: 'hidden', maxWidth: '100vw' },
+  page: { background: '#060a12', color: '#f1f5f9', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", minHeight: '100vh', maxWidth: '100vw' },
   container: { maxWidth: 1200, margin: '0 auto', padding: '0 16px', boxSizing: 'border-box', width: '100%' },
 
   // NAV
