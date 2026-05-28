@@ -63,7 +63,11 @@ export function LandingPage() {
   const [cookiesBanner, setCookiesBanner] = React.useState(() => !localStorage.getItem('fp_cookies_ok'));
   const scrollTo = (id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) {
+      const navHeight = 68;
+      const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -82,9 +86,9 @@ export function LandingPage() {
               <a style={S.navLink} onClick={() => scrollTo('formats')}>Formats</a>
             </div>
           )}
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>
-            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>Beta gratuite</button>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            {!isMobile && <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>}
+            <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>{isMobile ? 'Bêta gratuite' : 'Beta gratuite'}</button>
           </div>
         </div>
       </nav>
