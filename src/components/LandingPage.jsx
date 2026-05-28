@@ -6,9 +6,9 @@ import { useAuth } from '../hooks/useAuth';
 // ============================================================
 export function LandingPage() {
   const { signIn, signUp } = useAuth();
-  const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' && window.innerWidth < 900);
   React.useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 900);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
