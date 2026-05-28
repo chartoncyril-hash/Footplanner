@@ -75,7 +75,7 @@ export function LandingPage() {
         <div style={S.navInner}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner logo" style={{height:48,width:'auto'}} />
-            <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>
+            {!isMobile && <div style={S.logo}><span style={{color:'#fff'}}>FOOT</span><span style={{color:'#a3e635'}}>PLANNER</span></div>}
           </div>
           {!isMobile && (
             <div style={{display:'flex',gap:16,alignItems:'center'}}>
