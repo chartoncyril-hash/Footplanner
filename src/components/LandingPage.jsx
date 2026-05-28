@@ -86,7 +86,7 @@ export function LandingPage() {
               <a style={S.navLink} onClick={() => scrollTo('formats')}>Formats</a>
             </div>
           )}
-          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+          <div style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
             {!isMobile && <button style={{...S.btnGhost, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signin'); scrollTo('auth'); }}>Connexion</button>}
             <button style={{...S.btnCyan, fontSize:12, padding:'7px 12px', whiteSpace:'nowrap'}} onClick={() => { setAuthMode('signup'); scrollTo('auth'); }}>{isMobile ? 'Bêta gratuite' : 'Beta gratuite'}</button>
           </div>
@@ -492,7 +492,7 @@ const S = {
 
   // NAV
   nav: { position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, padding: '10px 0', background: 'rgba(6,10,18,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
-  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'nowrap', minWidth: 0 },
+  navInner: { maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'nowrap', minWidth: 0 },
   logo: { fontSize: 16, fontWeight: 900, letterSpacing: 1, cursor: 'pointer', whiteSpace: 'nowrap' },
   navLinks: { display: 'flex', gap: 32, fontSize: 14, fontWeight: 600, color: '#94a3b8' },
   navLink: { cursor: 'pointer', transition: 'color 0.2s' },
