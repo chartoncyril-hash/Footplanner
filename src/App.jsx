@@ -70,21 +70,29 @@ export default function App() {
   const isCGUMode = urlParams?.get('page') === 'cgu';
   const registrationCode = urlParams?.get('t') || null;
 
+  // Lien QR spectateur : /?t=CODE (ni register, ni presentation)
+  // Le spectateur n'a pas besoin d'être connecté — accès direct au tournoi live.
+  const spectatorCode = (!isRegistrationMode && !isPresentationMode && registrationCode)
+    ? registrationCode
+    : null;
+
   if (authLoading) return <LoadingScreen />;
   if (isPosterMode) return <PosterView />;
   if (isPrivacyMode) return <PrivacyPage onBack={() => window.history.back()} />;
   if (isCGUMode) return <CGUPage onBack={() => window.history.back()} />;
   if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
-  if (!user && !isPresentationMode) return <LandingPage />;
-  
+  // Spectateur via QR : bypass la landing même sans compte
+  if (!user && !isPresentationMode && !spectatorCode) return <LandingPage />;
+
   // key={user.id} force React à tout recréer quand l'utilisateur change
-  return <AuthenticatedApp key={user?.id || 'anon'} user={user} signOut={signOut} isPresentationMode={isPresentationMode} />;
+  return <AuthenticatedApp key={user?.id || 'anon'} user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
 }
 
-function AuthenticatedApp({ user, signOut, isPresentationMode }) {
+function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
   const isDesktop = useIsDesktop();
   const { profile } = useProfile(user);
-  const [hubMode, setHubMode] = useState(true);
+  // hubMode désactivé d'emblée pour les accès QR spectateur
+  const [hubMode, setHubMode] = useState(spectatorCode ? false : true);
   const [hubView, setHubView] = useState('home');
   const [pendingRegistrations, setPendingRegistrations] = useState(0);
 
@@ -99,7 +107,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode }) {
     return null;
   })();
   const [activeTournamentId, setActiveTournamentId] = useState(initialTournamentId);
-  const [accessCode, setAccessCode] = useState(null);
+  // Lien QR : le code spectateur est pré-chargé comme accessCode
+  const [accessCode, setAccessCode] = useState(spectatorCode || null);
 
   // Rôle d'affichage : organizer | referee | spectator | coach
   const [role, setRole] = useState('spectator');
@@ -157,8 +166,10 @@ function AuthenticatedApp({ user, signOut, isPresentationMode }) {
   });
 
   // ----- Sélection automatique du tournoi -----
-  // Quand l'utilisateur s'authentifie, on charge automatiquement son dernier tournoi live
+  // Quand l'utilisateur s'authentifie, on charge automatiquement son dernier tournoi live.
+  // Exception : si l'accès vient d'un QR spectateur, on ne touche pas au rôle/tournoi.
   useEffect(() => {
+    if (spectatorCode) return; // accès QR — ne pas écraser le mode spectateur
     if (!user) {
       setActiveTournamentId(null);
       return;
@@ -168,7 +179,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode }) {
       setActiveTournamentId(live.id);
       setRole('organizer');
     }
-  }, [user, myTournaments, activeTournamentId, accessCode]);
+  }, [user, myTournaments, activeTournamentId, accessCode, spectatorCode]);
 
   // ----- Coup d'envoi automatique des vagues -----
   // Surveille toutes les 10s les matchs scheduled : si l'heure est atteinte
