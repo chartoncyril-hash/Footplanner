@@ -6,7 +6,7 @@ import { circleMethodRoundRobin, pickBracketSize, makeKnockoutPairs } from '../u
 // CRUD matchs + génération auto du planning + saisie de score arbitre
 // ============================================================
 
-function fromDb(row) {
+export function fromDb(row) {
   if (!row) return null;
   return {
     id: row.id,

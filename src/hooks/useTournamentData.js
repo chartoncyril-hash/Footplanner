@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { tournamentService } from '../services/tournamentService';
 import { teamService } from '../services/teamService';
-import { matchService } from '../services/matchService';
+import { matchService, fromDb as matchFromDb } from '../services/matchService';
 import { computeStandings } from '../utils/standings';
+import { supabase } from '../lib/supabase';
 
 // ============================================================
 // useTournament — charge un tournoi par id ou par accessCode
@@ -196,6 +197,33 @@ export function useMatches(tournamentId) {
   }, [tournamentId]);
 
   useEffect(() => { reload(); }, [reload]);
+
+  // Abonnement Realtime — toute fenêtre (régie, arbitre, spectateur) reçoit les MAJ en direct
+  useEffect(() => {
+    if (!tournamentId) return;
+    const channel = supabase
+      .channel(`matches_rt_${tournamentId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournamentId}` },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            const updated = matchFromDb(payload.new);
+            setMatches(prev => prev.map(x => x.id === updated.id ? updated : x));
+          } else if (payload.eventType === 'INSERT') {
+            const inserted = matchFromDb(payload.new);
+            setMatches(prev => {
+              if (prev.find(x => x.id === inserted.id)) return prev;
+              return [...prev, inserted];
+            });
+          } else if (payload.eventType === 'DELETE') {
+            setMatches(prev => prev.filter(x => x.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tournamentId]);
 
   const create = useCallback(async (input) => {
     const m = await matchService.create(tournamentId, input);
