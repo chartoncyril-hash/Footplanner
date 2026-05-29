@@ -13,11 +13,28 @@ import { styles } from '../styles/styles';
 export function MatchList({
   matches, teams, standings, tournament, role,
   setSelectedMatch, setView,
+  updateMatch,
   kickoffWave, askConfirm, closeConfirm,
 }) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+
+  // Handlers saisie rapide pour l'organisateur
+  const handleQuickScore = async (matchId, { scoreHome, scoreAway }) => {
+    if (!updateMatch) return;
+    await updateMatch(matchId, { scoreHome, scoreAway });
+  };
+
+  const handleQuickValidate = async (matchId, { scoreHome, scoreAway }) => {
+    if (!updateMatch) return;
+    await updateMatch(matchId, { status: 'validated', scoreHome, scoreAway });
+  };
+
+  const handleQuickKickoff = async (matchId) => {
+    if (!updateMatch) return;
+    await updateMatch(matchId, { status: 'live', scoreHome: 0, scoreAway: 0 });
+  };
 
   const filters = [
     { id: 'all', label: 'TOUS' },
@@ -171,6 +188,10 @@ export function MatchList({
               matches={matches}
               standings={standings}
               onTap={() => { setSelectedMatch(m); setView('match'); }}
+              role={role}
+              onUpdateScore={handleQuickScore}
+              onValidate={handleQuickValidate}
+              onKickoff={handleQuickKickoff}
             />
           ))}
         </div>

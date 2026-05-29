@@ -238,35 +238,100 @@ export function UpcomingMatchCard({ match, teams, matches, standings, onTap }) {
 
 // ============================================================
 // MatchListCard — utilisée dans la liste complète
+// Organizer : saisie rapide de score inline sans entrer dans les détails
 // ============================================================
-export function MatchListCard({ match, teams, matches, standings, onTap }) {
+export function MatchListCard({ match, teams, matches, standings, onTap, role, onUpdateScore, onValidate, onKickoff }) {
   const home = getDisplayTeam('home', match, teams, matches, standings);
   const away = getDisplayTeam('away', match, teams, matches, standings);
   const isLive = match.status === 'live';
   const isDone = match.status === 'validated';
+  const isScheduled = match.status === 'scheduled';
+  const isOrganizer = role === 'organizer';
+
+  const [draftHome, setDraftHome] = React.useState(match.scoreHome ?? 0);
+  const [draftAway, setDraftAway] = React.useState(match.scoreAway ?? 0);
+  const [editMode, setEditMode] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    setDraftHome(match.scoreHome ?? 0);
+    setDraftAway(match.scoreAway ?? 0);
+  }, [match.scoreHome, match.scoreAway]);
+
+  const adj = (side, delta) => async (e) => {
+    e.stopPropagation();
+    const nh = side === 'home' ? Math.max(0, draftHome + delta) : draftHome;
+    const na = side === 'away' ? Math.max(0, draftAway + delta) : draftAway;
+    if (side === 'home') setDraftHome(nh); else setDraftAway(na);
+    if (onUpdateScore && isLive) {
+      try { await onUpdateScore(match.id, { scoreHome: nh, scoreAway: na }); } catch (_) {}
+    }
+  };
+
+  const handleValidate = async (e) => {
+    e.stopPropagation();
+    if (!onValidate || saving) return;
+    setSaving(true);
+    try { await onValidate(match.id, { scoreHome: draftHome, scoreAway: draftAway }); }
+    catch (_) {} finally { setSaving(false); }
+  };
+
+  const handleKickoff = async (e) => {
+    e.stopPropagation();
+    if (!onKickoff || saving) return;
+    setSaving(true);
+    try { await onKickoff(match.id); }
+    catch (_) {} finally { setSaving(false); }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.stopPropagation();
+    if (!onUpdateScore || saving) return;
+    setSaving(true);
+    try {
+      await onUpdateScore(match.id, { scoreHome: draftHome, scoreAway: draftAway });
+      setEditMode(false);
+    } catch (_) {} finally { setSaving(false); }
+  };
 
   let stateColor = '#94a3b8';
   let stateLabel = (match.time || '').slice(0, 5) || '—';
   if (isLive) { stateColor = '#a3e635'; stateLabel = 'EN DIRECT'; }
   else if (isDone) { stateColor = '#34d399'; stateLabel = 'TERMINÉ'; }
 
-  return (
-    <button onClick={onTap} style={styles.matchListCard}>
+  const btnSm = (color = '#22d3ee') => ({
+    width: 26, height: 26,
+    background: color + '18',
+    border: '1px solid ' + color + '40',
+    borderRadius: 6,
+    color,
+    fontSize: 16, fontWeight: 800,
+    cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: 0, lineHeight: 1, flexShrink: 0,
+  });
+
+  const scoreNum = (val) => (
+    <span style={{ fontSize: 18, fontWeight: 800, minWidth: 22, textAlign: 'center', color: '#f1f5f9', fontFamily: "'JetBrains Mono', monospace" }}>
+      {val}
+    </span>
+  );
+
+  // Rangée du haut : info équipes + score
+  const topRow = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
       <div style={{ ...styles.matchListLeft, color: stateColor }}>
         {isLive && <span style={styles.livePulse} />}
         <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>{stateLabel}</span>
       </div>
-
-      <div style={styles.matchListMid}>
+      <div style={{ ...styles.matchListMid }}>
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
           <span style={styles.matchListName}>{home.short}</span>
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
-            ? <span style={{ color: stateColor, fontWeight: 800 }}>
-                {match.scoreHome ?? 0} - {match.scoreAway ?? 0}
-              </span>
+            ? <span style={{ color: stateColor, fontWeight: 800 }}>{match.scoreHome ?? 0} - {match.scoreAway ?? 0}</span>
             : <span style={{ color: '#475569' }}>vs</span>}
         </div>
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
@@ -274,7 +339,114 @@ export function MatchListCard({ match, teams, matches, standings, onTap }) {
           <span style={styles.matchListName}>{away.short}</span>
         </div>
       </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ ...styles.matchListRight }}>
+          <Hash size={9} /> {match.field}
+        </div>
+        {/* Bouton édition pour matchs terminés */}
+        {isOrganizer && isDone && !editMode && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditMode(true); }}
+            style={{ ...btnSm('#94a3b8'), width: 22, height: 22, marginLeft: 4 }}
+            title="Modifier le score"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
+  // Contrôles inline pour live et edit mode
+  const scoreControls = (onClose) => (
+    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Home score */}
+      <button onClick={adj('home', -1)} style={btnSm()}>−</button>
+      {scoreNum(draftHome)}
+      <button onClick={adj('home', +1)} style={btnSm('#a3e635')}>+</button>
+      <span style={{ color: '#334155', fontWeight: 800, margin: '0 4px' }}>—</span>
+      {/* Away score */}
+      <button onClick={adj('away', -1)} style={btnSm()}>−</button>
+      {scoreNum(draftAway)}
+      <button onClick={adj('away', +1)} style={btnSm('#a3e635')}>+</button>
+      {/* Action button */}
+      {isLive && (
+        <button onClick={handleValidate} disabled={saving} style={{ flex: 1, padding: '5px 8px', background: '#a3e635', border: 'none', borderRadius: 6, color: '#0a0e1a', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: saving ? 'not-allowed' : 'pointer' }}>
+          {saving ? '...' : `CLÔTURER ${draftHome}-${draftAway}`}
+        </button>
+      )}
+      {editMode && isDone && (
+        <>
+          <button onClick={handleSaveEdit} disabled={saving} style={{ flex: 1, padding: '5px 8px', background: '#22d3ee', border: 'none', borderRadius: 6, color: '#0a0e1a', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            {saving ? '...' : 'SAUVEGARDER'}
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); setEditMode(false); }} style={{ padding: '5px 8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#64748b', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+            ✕
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  if (isOrganizer && isScheduled) {
+    return (
+      <div style={{ ...styles.matchListCard, flexDirection: 'column', alignItems: 'stretch', cursor: 'default' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <button onClick={onTap} style={{ flex: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', textAlign: 'left' }}>
+            {topRow}
+          </button>
+          <button onClick={handleKickoff} disabled={saving} style={{ marginLeft: 8, padding: '5px 10px', background: '#a3e63520', border: '1px solid #a3e63550', borderRadius: 7, color: '#a3e635', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: saving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {saving ? '...' : '▶ DÉMARRER'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isOrganizer && isLive) {
+    return (
+      <div style={{ ...styles.matchListCard, flexDirection: 'column', alignItems: 'stretch', cursor: 'default', borderColor: 'rgba(163,230,53,0.2)' }}>
+        <button onClick={onTap} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#f1f5f9' }}>
+          {topRow}
+        </button>
+        {scoreControls()}
+      </div>
+    );
+  }
+
+  if (isOrganizer && isDone) {
+    return (
+      <div style={{ ...styles.matchListCard, flexDirection: 'column', alignItems: 'stretch', cursor: 'default' }}>
+        <button onClick={onTap} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#f1f5f9' }}>
+          {topRow}
+        </button>
+        {editMode && scoreControls()}
+      </div>
+    );
+  }
+
+  // Lecture seule (spectateur, coach, arbitre, etc.)
+  return (
+    <button onClick={onTap} style={styles.matchListCard}>
+      <div style={{ ...styles.matchListLeft, color: stateColor }}>
+        {isLive && <span style={styles.livePulse} />}
+        <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>{stateLabel}</span>
+      </div>
+      <div style={styles.matchListMid}>
+        <div style={styles.matchListSide}>
+          <Crest team={home} size="sm" />
+          <span style={styles.matchListName}>{home.short}</span>
+        </div>
+        <div style={styles.matchListScore}>
+          {(isLive || isDone)
+            ? <span style={{ color: stateColor, fontWeight: 800 }}>{match.scoreHome ?? 0} - {match.scoreAway ?? 0}</span>
+            : <span style={{ color: '#475569' }}>vs</span>}
+        </div>
+        <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
+          <Crest team={away} size="sm" />
+          <span style={styles.matchListName}>{away.short}</span>
+        </div>
+      </div>
       <div style={styles.matchListRight}>
         <Hash size={9} /> {match.field}
       </div>
