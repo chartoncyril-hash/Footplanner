@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Activity, Clock, ShieldCheck, Lock, Eye, Star, Flag,
-  MinusCircle, PlusCircle, Save, Check, RefreshCw,
+  MinusCircle, PlusCircle, Check, RefreshCw,
   Goal as Whistle,
 } from 'lucide-react';
 import { Crest } from './Crest';
@@ -30,11 +30,11 @@ export function MatchDetail({
   const [away, setAway] = useState(selectedMatch.scoreAway ?? 0);
   const [fpHome, setFpHome] = useState(selectedMatch.fairplayHome ?? true);
   const [fpAway, setFpAway] = useState(selectedMatch.fairplayAway ?? true);
-  const [savedFlash, setSavedFlash] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
 
-  // Reflète le match courant (peut avoir changé via Realtime ou refresh)
   const m = matches.find(x => x.id === selectedMatch.id) || selectedMatch;
   const homeTeam = getDisplayTeam('home', m, teams, matches, standings);
   const awayTeam = getDisplayTeam('away', m, teams, matches, standings);
@@ -52,13 +52,18 @@ export function MatchDetail({
     setFpAway(m.fairplayAway ?? true);
   }, [m.id]);
 
+  const showToast = (msg = 'Score enregistré') => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  };
+
   // Routage de l'écriture selon le rôle
-  const persist = async (patch) => {
+  const persist = async (patch, msg) => {
     setError('');
     setSaving(true);
     try {
       if (isReferee && !isOrganizer) {
-        // Arbitre : RPC sécurisée
         await submitScore({
           matchId: m.id,
           scoreHome: patch.scoreHome ?? m.scoreHome ?? 0,
@@ -70,31 +75,49 @@ export function MatchDetail({
       } else {
         await updateMatch(m.id, patch);
       }
-      setSavedFlash(true);
-      setTimeout(() => setSavedFlash(false), 1500);
+      if (msg !== false) showToast(msg);
     } catch (e) {
-      setError(e.message || 'Erreur d\'enregistrement.');
+      setError(e.message || "Erreur d'enregistrement.");
     } finally {
       setSaving(false);
     }
   };
 
-  const startMatch = () => persist({ status: 'live', scoreHome: 0, scoreAway: 0 });
+  // Auto-save : chaque +/- déclenche une sauvegarde immédiate
+  const handleHomeChange = (newVal) => {
+    setHome(newVal);
+    persist({ scoreHome: newVal, scoreAway: away }, 'Score enregistré');
+  };
+
+  const handleAwayChange = (newVal) => {
+    setAway(newVal);
+    persist({ scoreHome: home, scoreAway: newVal }, 'Score enregistré');
+  };
+
+  const handleFpHomeChange = (newVal) => {
+    setFpHome(newVal);
+    persist({
+      scoreHome: home, scoreAway: away,
+      fairplayHome: newVal, fairplayAway: fpAway,
+    }, 'Fair-play mis à jour');
+  };
+
+  const handleFpAwayChange = (newVal) => {
+    setFpAway(newVal);
+    persist({
+      scoreHome: home, scoreAway: away,
+      fairplayHome: fpHome, fairplayAway: newVal,
+    }, 'Fair-play mis à jour');
+  };
+
+  const startMatch = () => persist({ status: 'live', scoreHome: 0, scoreAway: 0 }, false);
   const closeMatch = () => persist({
     status: 'validated',
-    scoreHome: home,
-    scoreAway: away,
-    fairplayHome: fpHome,
-    fairplayAway: fpAway,
-  });
-  const liveSave = () => persist({ scoreHome: home, scoreAway: away });
-  const reopenMatch = () => persist({ status: 'live' });
-  const saveCorrection = () => persist({
-    scoreHome: home,
-    scoreAway: away,
-    fairplayHome: fpHome,
-    fairplayAway: fpAway,
-  });
+    scoreHome: home, scoreAway: away,
+    fairplayHome: fpHome, fairplayAway: fpAway,
+  }, false);
+  const reopenMatch = () => persist({ status: 'live' }, false);
+
   const back = () => { setSelectedMatch(null); setView('matches'); };
 
   return (
@@ -122,7 +145,7 @@ export function MatchDetail({
           <span style={styles.matchMeta}>{(m.time || '').slice(0, 5)}</span>
         </div>
 
-        <StatusPill status={m.status} />
+        <StatusPill status={m.status} saving={saving} />
 
         {isPlaceholderMatch && (
           <div style={{ ...styles.infoBox, marginBottom: 14, marginTop: 0 }}>
@@ -137,13 +160,13 @@ export function MatchDetail({
           </div>
           <div style={styles.bigScoreNumbers}>
             {canModifyNow && m.status !== 'scheduled' ? (
-              <ScoreEditor value={home} onChange={setHome} color="#a3e635" />
+              <ScoreEditor value={home} onChange={handleHomeChange} color="#a3e635" disabled={saving} />
             ) : (
               <span style={styles.bigScoreNum}>{m.scoreHome ?? '-'}</span>
             )}
             <span style={styles.bigScoreSep}>:</span>
             {canModifyNow && m.status !== 'scheduled' ? (
-              <ScoreEditor value={away} onChange={setAway} color="#f472b6" />
+              <ScoreEditor value={away} onChange={handleAwayChange} color="#f472b6" disabled={saving} />
             ) : (
               <span style={styles.bigScoreNum}>{m.scoreAway ?? '-'}</span>
             )}
@@ -167,8 +190,8 @@ export function MatchDetail({
             <Star size={13} color="#facc15" /> FAIR-PLAY
           </div>
           <div style={styles.fpRow}>
-            <FpToggle team={homeTeam} value={fpHome} onChange={setFpHome} />
-            <FpToggle team={awayTeam} value={fpAway} onChange={setFpAway} />
+            <FpToggle team={homeTeam} value={fpHome} onChange={handleFpHomeChange} />
+            <FpToggle team={awayTeam} value={fpAway} onChange={handleFpAwayChange} />
           </div>
           <div style={styles.fpHint}>+1 pt si fair-play respecté ce match</div>
         </section>
@@ -187,42 +210,14 @@ export function MatchDetail({
           </button>
         )}
         {m.status === 'live' && canModifyNow && (
-          <>
-            <button
-              onClick={liveSave}
-              disabled={saving}
-              style={{
-                ...styles.btnSecondary,
-                ...(savedFlash ? { background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.5)', color: '#34d399' } : {}),
-              }}
-            >
-              {savedFlash
-                ? <><Check size={14} /> Score sauvegardé</>
-                : <><Save size={14} /> Sauvegarder le score live</>}
-            </button>
-            <button onClick={closeMatch} disabled={saving} style={styles.btnPrimary}>
-              <Check size={16} /> CLÔTURER LE MATCH
-            </button>
-          </>
+          <button onClick={closeMatch} disabled={saving} style={styles.btnPrimary}>
+            <Check size={16} /> {saving ? 'EN COURS…' : 'CLÔTURER LE MATCH'}
+          </button>
         )}
         {m.status === 'validated' && isOrganizer && (
-          <>
-            <button
-              onClick={saveCorrection}
-              disabled={saving}
-              style={{
-                ...styles.btnPrimary,
-                ...(savedFlash ? { background: 'linear-gradient(135deg, #34d399, #34d399)' } : {}),
-              }}
-            >
-              {savedFlash
-                ? <><Check size={16} /> CORRECTION ENREGISTRÉE</>
-                : <><Save size={16} /> ENREGISTRER LA CORRECTION</>}
-            </button>
-            <button onClick={reopenMatch} disabled={saving} style={styles.btnSecondary}>
-              <RefreshCw size={14} /> Rouvrir le match
-            </button>
-          </>
+          <button onClick={reopenMatch} disabled={saving} style={styles.btnSecondary}>
+            <RefreshCw size={14} /> Rouvrir le match
+          </button>
         )}
         {m.status === 'validated' && !isOrganizer && canEditScores && (
           <div style={styles.infoBox}>
@@ -240,18 +235,52 @@ export function MatchDetail({
           </div>
         )}
       </div>
+
+      {/* Toast auto-save */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 96,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(52,211,153,0.15)',
+          border: '1px solid rgba(52,211,153,0.45)',
+          borderRadius: 24,
+          padding: '9px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+          color: '#34d399',
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: 0.3,
+          zIndex: 200,
+          backdropFilter: 'blur(10px)',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          animation: 'slideUp 0.2s ease',
+        }}>
+          <Check size={13} strokeWidth={3} /> {toast}
+        </div>
+      )}
     </div>
   );
 }
 
-function ScoreEditor({ value, onChange, color }) {
+function ScoreEditor({ value, onChange, color, disabled }) {
   return (
     <div style={styles.scoreEditor}>
-      <button onClick={() => onChange(Math.max(0, value - 1))} style={{ ...styles.scoreBtn, color }}>
+      <button
+        onClick={() => !disabled && onChange(Math.max(0, value - 1))}
+        style={{ ...styles.scoreBtn, color, opacity: disabled ? 0.5 : 1 }}
+      >
         <MinusCircle size={20} />
       </button>
       <span style={{ ...styles.bigScoreNum, color, minWidth: 50, textAlign: 'center' }}>{value}</span>
-      <button onClick={() => onChange(value + 1)} style={{ ...styles.scoreBtn, color }}>
+      <button
+        onClick={() => !disabled && onChange(value + 1)}
+        style={{ ...styles.scoreBtn, color, opacity: disabled ? 0.5 : 1 }}
+      >
         <PlusCircle size={20} />
       </button>
     </div>
@@ -275,7 +304,7 @@ function FpToggle({ team, value, onChange }) {
   );
 }
 
-function StatusPill({ status }) {
+function StatusPill({ status, saving }) {
   const map = {
     scheduled: { label: 'PROGRAMMÉ', color: '#94a3b8', icon: Clock },
     live: { label: 'EN DIRECT', color: '#a3e635', icon: Activity, pulse: true },
@@ -287,6 +316,7 @@ function StatusPill({ status }) {
     <div style={{ ...styles.statusPill, color: s.color, borderColor: s.color + '55', background: s.color + '12' }}>
       {s.pulse && <span style={{ ...styles.pulseDot, background: s.color, position: 'static' }} />}
       <Icon size={10} /> {s.label}
+      {saving && <span style={{ fontSize: 9, opacity: 0.7, marginLeft: 4 }}>· enreg…</span>}
     </div>
   );
 }
