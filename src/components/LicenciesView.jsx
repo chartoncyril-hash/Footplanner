@@ -334,12 +334,14 @@ function LicencieForm({ initial, onSave, onCancel }) {
         </div>
         <div>
           <label style={S.label}>Équipe</label>
-          <input
-            style={S.input}
-            value={form.team}
-            onChange={(e) => u("team", e.target.value)}
-            placeholder="Ex: U11 A"
-          />
+          <select style={S.input} value={form.team} onChange={e => u('team', e.target.value)}>
+            <option value="" style={{background:'#1e293b'}}>Sélectionner...</option>
+            {(form.category ? [form.category] : CATEGORIES).flatMap(cat =>
+              [1,2,3,4].map(n => (
+                <option key={cat+n} value={cat + ' - Équipe ' + n} style={{background:'#1e293b'}}>{cat} - Équipe {n}</option>
+              ))
+            )}
+          </select>
         </div>
         <div>
           <label style={S.label}>Statut</label>
