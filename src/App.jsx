@@ -380,6 +380,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             setHubView('scoreboard');
           } else if (moduleId === 'sponsors') {
             setHubView('sponsors');
+          } else if (moduleId === 'licencies') {
+            setHubView('licencies');
           }
         }}
         onCreateTournament={() => {

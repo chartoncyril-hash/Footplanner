@@ -6,6 +6,7 @@ import {
 import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
 import { SponsorsHubView } from './SponsorsHubView';
+import { LicenciesView } from './LicenciesView';
 import { CheckInView } from './CheckInView';
 
 // ============================================================
@@ -39,12 +40,12 @@ const MODULES = [
     available: true,
   },
   {
-    id: 'buvette',
-    label: 'Buvette & Finances',
+    id: 'licencies',
+    label: 'Licenciés & Équipes',
     icon: ShoppingCart,
     color: '#34d399',
-    desc: 'Gérez vos ventes, recettes et bilan financier du tournoi.',
-    available: false,
+    desc: 'Gérez vos licenciés, documents, conformité et équipes.',
+    available: true,
   },
   {
     id: 'benevoles',
@@ -172,6 +173,16 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         );
       }
 
+      if (hubView === 'licencies') {
+        return (
+          <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
+            <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:24}}>
+              ← Retour au dashboard
+            </button>
+            <LicenciesView />
+          </div>
+        );
+      }
       if (hubView === 'sponsors') {
         return (
           <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
