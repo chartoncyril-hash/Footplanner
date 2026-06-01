@@ -55,12 +55,12 @@ const MODULES = [
     available: false,
   },
   {
-    id: 'stats',
-    label: 'Statistiques',
+    id: 'sponsors',
+    label: 'Sponsors & Partenaires',
     icon: BarChart2,
     color: '#facc15',
-    desc: 'Bilans, performances et historique de vos tournois.',
-    available: false,
+    desc: 'Gérez vos partenaires commerciaux et suivez vos contrats.',
+    available: true,
   },
   {
     id: 'communication',
