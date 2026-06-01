@@ -666,7 +666,10 @@ export function SponsorsHubView({ profile }) {
         },
         { onConflict: "owner_id" },
       );
+    setSettings({ ...settings, ...newSettings });
     setShowSettings(false);
+    setShowForm(false);
+    setEditing(null);
     load();
   };
 
