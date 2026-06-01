@@ -285,7 +285,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         <div style={{ width:220, flexShrink:0, background:'rgba(255,255,255,0.02)', borderRight:'1px solid rgba(255,255,255,0.06)', padding:'24px 12px', display:'flex', flexDirection:'column', gap:4, minHeight:'100vh' }}>
           <div style={{ fontSize:11, color:'#475569', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'8px 12px', marginBottom:4 }}>Modules</div>
           {MODULES.filter(m => m.available).map(mod => (
-            <button key={mod.id} onClick={() => onEnterModule(mod.id)} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, border:'none', background: hubView === mod.id ? `${mod.color}18` : 'transparent', color: hubView === mod.id ? mod.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', transition:'all 0.15s', fontFamily:'inherit' }}>
+            <button key={mod.id} onClick={() => onEnterModule(mod.id)} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, border:'none', background: hubView === mod.id ? mod.color + '18' : 'transparent', color: hubView === mod.id ? mod.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', transition:'all 0.15s', fontFamily:'inherit' }}>
               <span style={{ fontSize:16 }}>{mod.id === 'tournaments' ? '🏆' : mod.id === 'inscriptions' ? '📝' : mod.id === 'scoreboard' ? '🏷️' : mod.id === 'sponsors' ? '🤝' : mod.id === 'licencies' ? '👥' : mod.id === 'compositions' ? '⚽' : '📦'}</span>
               {mod.label}
             </button>
