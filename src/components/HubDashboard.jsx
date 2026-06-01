@@ -53,7 +53,7 @@ const MODULES = [
     label: 'Compositions & Tactique',
     icon: Users,
     color: '#818cf8',
-    desc: 'Créez vos compositions d'équipe et plans tactiques.',
+    desc: "Créez vos compositions d'équipe et plans tactiques.",
     available: true,
   },
   {
