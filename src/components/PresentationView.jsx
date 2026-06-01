@@ -170,19 +170,19 @@ export function PresentationView({ tournament, teams, matches, standings, active
                 flexShrink: 0,
               }}>
                 {s.logoUrl ? (
-                  <img src={s.logoUrl} alt="" style={{ height: 36, maxWidth: 80, objectFit: 'contain' }} />
+                  <img src={s.logoUrl} alt="" style={{ height: 64, maxWidth: 140, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                 ) : (
                   <div style={{
                     height: 36,
                     padding: '0 16px',
                     background: 'rgba(255,255,255,0.06)',
-                    borderRadius: 6,
+                    borderRadius: 8,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#94a3b8',
-                    fontSize: 13,
-                    fontWeight: 700,
+                    color: '#f1f5f9',
+                    fontSize: 18,
+                    fontWeight: 800,
                   }}>
                     {s.name}
                   </div>
