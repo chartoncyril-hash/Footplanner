@@ -101,7 +101,7 @@ export function LibraryView(props) {
           BIBLIOTHEQUE
         </div>
         <div style={{ fontSize: 11, color: '#64748b' }}>
-          Gere les equipes et sponsors reutilisables entre tournois
+          Gérez vos clubs réutilisables entre tournois
         </div>
       </div>
 
@@ -127,27 +127,7 @@ export function LibraryView(props) {
         >
           <Users size={13} /> CLUBS ({teamsLibrary.length})
         </button>
-        <button
-          onClick={() => setTab('sponsors')}
-          style={{
-            flex: 1,
-            padding: '10px',
-            background: tab === 'sponsors' ? 'rgba(34,211,238,0.15)' : 'transparent',
-            border: tab === 'sponsors' ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.05)',
-            borderRadius: 8,
-            color: tab === 'sponsors' ? '#a3e635' : '#64748b',
-            fontSize: 12,
-            fontWeight: 800,
-            letterSpacing: 1,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <Briefcase size={13} /> SPONSORS ({sponsors.length})
-        </button>
+
       </div>
 
       {tab === 'teams' && (
@@ -296,7 +276,7 @@ export function LibraryView(props) {
         </div>
       )}
 
-      {tab === 'sponsors' && (
+      {tab === 'sponsors_disabled' && (
         <div>
           {sponsors.length === 0 && (
             <div style={{
