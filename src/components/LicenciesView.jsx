@@ -336,11 +336,9 @@ function LicencieForm({ initial, onSave, onCancel }) {
           <label style={S.label}>Équipe</label>
           <select style={S.input} value={form.team} onChange={e => u('team', e.target.value)}>
             <option value="" style={{background:'#1e293b'}}>Sélectionner...</option>
-            {(form.category ? [form.category] : CATEGORIES).flatMap(cat =>
-              [1,2,3,4].map(n => (
-                <option key={cat+n} value={cat + ' - Équipe ' + n} style={{background:'#1e293b'}}>{cat} - Équipe {n}</option>
-              ))
-            )}
+            {[1,2,3,4].map(n => (
+              <option key={n} value={'Équipe ' + n} style={{background:'#1e293b'}}>Équipe {n}</option>
+            ))}
           </select>
         </div>
         <div>
@@ -1337,88 +1335,47 @@ export function LicenciesView() {
 
       {tab === "equipes" && (
         <div>
-          {teams.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "40px 20px",
-                color: "#475569",
-              }}
-            >
+          {categories.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#475569' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>⚽</div>
               <div style={{ fontSize: 15, fontWeight: 600 }}>Aucune équipe</div>
-              <div style={{ fontSize: 13, marginTop: 8 }}>
-                Ajoutez des licenciés avec un champ "Équipe" pour les voir ici
-              </div>
+              <div style={{ fontSize: 13, marginTop: 8 }}>Ajoutez des licenciés avec une catégorie et une équipe</div>
             </div>
-          ) : (
-            teams.map((team) => {
-              const membres = licencies.filter((l) => l.team === team);
-              return (
-                <div key={team} style={S.card}>
-                  <div
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: "#f1f5f9",
-                      marginBottom: 12,
-                    }}
-                  >
-                    ⚽ {team}{" "}
-                    <span
-                      style={{
-                        fontSize: 13,
-                        color: "#64748b",
-                        fontWeight: 400,
-                      }}
-                    >
-                      — {membres.length} joueur{membres.length > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {membres.map((m) => (
-                      <div
-                        key={m.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          padding: "6px 10px",
-                          background: "rgba(255,255,255,0.04)",
-                          borderRadius: 8,
-                          fontSize: 12,
-                        }}
-                      >
-                        {m.photo_url ? (
-                          <img
-                            src={m.photo_url}
-                            alt=""
-                            style={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: "50%",
-                              background: "rgba(163,230,53,0.15)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 10,
-                              fontWeight: 900,
-                              color: "#a3e635",
-                            }}
-                          >
-                            {m.first_name[0]}
-                            {m.last_name[0]}
+          ) : categories.map(cat => {
+            const catLicencies = licencies.filter(l => l.category === cat);
+            if (catLicencies.length === 0) return null;
+            return (
+              <div key={cat} style={{ ...S.card, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#a3e635' }}>{cat}</div>
+                  <span style={{ fontSize: 13, color: '#64748b' }}>{catLicencies.length} joueur{catLicencies.length > 1 ? 's' : ''} au total</span>
+                </div>
+                {[1,2,3,4].map(n => {
+                  const membres = licencies.filter(l => l.category === cat && l.team === 'Équipe ' + n);
+                  if (membres.length === 0) return null;
+                  return (
+                    <div key={n} style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#818cf8' }}>Équipe {n}</div>
+                        <span style={{ fontSize: 11, color: '#475569' }}>{membres.length} joueur{membres.length > 1 ? 's' : ''}</span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 12 }}>
+                        {membres.map(m => (
+                          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', background: 'rgba(129,140,248,0.06)', border: '1px solid rgba(129,140,248,0.12)', borderRadius: 8, fontSize: 12 }}>
+                            {m.photo_url ? <img src={m.photo_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} /> : <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(163,230,53,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#a3e635' }}>{m.first_name[0]}{m.last_name[0]}</div>}
+                            <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{m.first_name} {m.last_name}</span>
+                            {m.position && <span style={{ color: '#64748b' }}>· {m.position}</span>}
                           </div>
-                        )}
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
                         <span style={{ color: "#f1f5f9" }}>
                           {m.first_name} {m.last_name}
                         </span>
