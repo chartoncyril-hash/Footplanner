@@ -1379,20 +1379,4 @@ export function LicenciesView() {
                         <span style={{ color: "#f1f5f9" }}>
                           {m.first_name} {m.last_name}
                         </span>
-                        {m.position && (
-                          <span style={{ color: "#64748b" }}>
-                            · {m.position}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
