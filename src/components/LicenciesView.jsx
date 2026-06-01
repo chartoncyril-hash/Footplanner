@@ -1376,7 +1376,5 @@ export function LicenciesView() {
           })}
         </div>
       )}
-                        <span style={{ color: "#f1f5f9" }}>
-                          {m.first_name} {m.last_name}
-                        </span>
+  );
 }
