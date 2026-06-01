@@ -281,30 +281,8 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
           </div>
         );
       }
-      const sidebar = (
-        <div style={{ width:220, flexShrink:0, background:'rgba(255,255,255,0.02)', borderRight:'1px solid rgba(255,255,255,0.06)', padding:'24px 12px', display:'flex', flexDirection:'column', gap:4, minHeight:'100vh' }}>
-          <div style={{ fontSize:11, color:'#475569', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'8px 12px', marginBottom:4 }}>Modules</div>
-          {MODULES.filter(m => m.available).map(mod => (
-            <button key={mod.id} onClick={() => onEnterModule(mod.id)} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, border:'none', background: hubView === mod.id ? mod.color + '18' : 'transparent', color: hubView === mod.id ? mod.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', transition:'all 0.15s', fontFamily:'inherit' }}>
-              <span style={{ fontSize:16 }}>{mod.id === 'tournaments' ? '🏆' : mod.id === 'inscriptions' ? '📝' : mod.id === 'scoreboard' ? '🏷️' : mod.id === 'sponsors' ? '🤝' : mod.id === 'licencies' ? '👥' : mod.id === 'compositions' ? '⚽' : '📦'}</span>
-              {mod.label}
-            </button>
-          ))}
-          <div style={{ marginTop:'auto', paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:11, color:'#475569', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'8px 12px', marginBottom:4 }}>Général</div>
-            <button onClick={onGoToAccount} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', color:'#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', fontFamily:'inherit' }}>
-              <span style={{ fontSize:16 }}>👤</span> Mon compte
-            </button>
-            <button style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, border:'none', background:'transparent', color:'#475569', cursor:'not-allowed', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', fontFamily:'inherit', opacity:0.5 }}>
-              <span style={{ fontSize:16 }}>⚙️</span> Paramètres <span style={{ fontSize:9, background:'rgba(255,255,255,0.06)', padding:'1px 6px', borderRadius:4, marginLeft:'auto' }}>Bientôt</span>
-            </button>
-          </div>
-        </div>
-      );
       return (
-        <div style={{ ...S.page, display:'flex', flexDirection:'row' }}>
-          {sidebar}
-          <div style={{ flex:1, minWidth:0 }}>
+        <div style={S.page}>
       {/* HEADER CLUB */}
       <div style={{...S.header, background: `linear-gradient(135deg, ${clubColor}18 0%, transparent 60%)`}}>
         <div style={S.headerInner}>
