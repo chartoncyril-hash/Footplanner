@@ -382,6 +382,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             setHubView('sponsors');
           } else if (moduleId === 'licencies') {
             setHubView('licencies');
+          } else if (moduleId === 'compositions') {
+            setHubView('compositions');
           }
         }}
         onCreateTournament={() => {

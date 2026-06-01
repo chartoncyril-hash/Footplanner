@@ -7,6 +7,7 @@ import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
 import { SponsorsHubView } from './SponsorsHubView';
 import { LicenciesView } from './LicenciesView';
+import { CompositionsView } from './CompositionsView';
 import { CheckInView } from './CheckInView';
 
 // ============================================================
@@ -45,6 +46,14 @@ const MODULES = [
     icon: ShoppingCart,
     color: '#34d399',
     desc: 'Gérez vos licenciés, documents, conformité et équipes.',
+    available: true,
+  },
+  {
+    id: 'compositions',
+    label: 'Compositions & Tactique',
+    icon: Users,
+    color: '#818cf8',
+    desc: 'Créez vos compositions d'équipe et plans tactiques.',
     available: true,
   },
   {
@@ -173,6 +182,16 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         );
       }
 
+      if (hubView === 'compositions') {
+        return (
+          <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
+            <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:24}}>
+              ← Retour au dashboard
+            </button>
+            <CompositionsView />
+          </div>
+        );
+      }
       if (hubView === 'licencies') {
         return (
           <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
