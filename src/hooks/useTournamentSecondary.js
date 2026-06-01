@@ -91,9 +91,17 @@ export function useSponsors(tournamentId) {
     try {
       const [s, l] = await Promise.all([
         sponsorService.listByTournament(tournamentId),
-        sponsorService.listLibrary().catch(() => []), // si pas auth, pas de lib
+        sponsorService.listLibrary().catch(() => []),
       ]);
-      setList(s);
+      // Auto-import sponsors manquants depuis la bibliothèque
+      const missingLib = l.filter(lib => !s.find(sp => sp.name.toLowerCase() === lib.name.toLowerCase()));
+      if (missingLib.length > 0) {
+        await Promise.all(missingLib.map(lib => sponsorService.importFromLibrary(tournamentId, lib.libraryId).catch(() => {})));
+        const updated = await sponsorService.listByTournament(tournamentId);
+        setList(updated);
+      } else {
+        setList(s);
+      }
       setLibrary(l);
     } catch (e) {
       console.error('useSponsors', e);
