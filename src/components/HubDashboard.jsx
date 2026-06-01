@@ -156,22 +156,27 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
                       <button
                         key={t.id}
                         onClick={() => setSelectedInscriptionTournoiId(t.id)}
-                        style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)',
-                          borderRadius:16, padding:'20px 24px', color:'#f1f5f9',
-                          cursor:'pointer', textAlign:'left', width:'100%',
-                          display:'flex', alignItems:'center', justifyContent:'space-between',
-                          transition:'border-color 0.15s' }}
+                        style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)',
+                          borderRadius:16, padding:'0', color:'#f1f5f9', cursor:'pointer', textAlign:'left',
+                          width:'100%', display:'block', overflow:'hidden', transition:'all 0.2s' }}
                       >
-                        <div>
-                          <div style={{ fontSize:16, fontWeight:700, marginBottom:6 }}>{t.name}</div>
-                          <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-                            <span style={{ fontSize:12, color: t.status === 'live' ? '#34d399' : '#64748b', fontWeight:600, background: t.status === 'live' ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)', padding:'2px 10px', borderRadius:20, border: t.status === 'live' ? '1px solid rgba(52,211,153,0.2)' : '1px solid rgba(255,255,255,0.08)' }}>
-                              {t.status === 'live' ? '🟢 En cours' : '⬜ Archivé'}
-                            </span>
-                            {t.date && <span style={{ fontSize:12, color:'#64748b' }}>📅 {new Date(t.date).toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'})}</span>}
+                        <div style={{ height:3, background: t.status === 'live' ? 'linear-gradient(90deg,#a3e635,#34d399)' : 'rgba(255,255,255,0.06)' }} />
+                        <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:15, fontWeight:800, color:'#f1f5f9', marginBottom:8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{t.name}</div>
+                            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color: t.status === 'live' ? '#34d399' : '#64748b', background: t.status === 'live' ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.04)', padding:'3px 10px', borderRadius:20, border: t.status === 'live' ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.07)' }}>
+                                <span style={{ width:5, height:5, borderRadius:'50%', background: t.status === 'live' ? '#34d399' : '#475569', display:'inline-block' }}/>
+                                {t.status === 'live' ? 'En cours' : 'Archivé'}
+                              </span>
+                              {t.date && <span style={{ fontSize:11, color:'#475569' }}>{new Date(t.date).toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'})}</span>}
+                              {t.categories?.length > 0 && <span style={{ fontSize:11, color:'#475569' }}>{t.categories.length} catégorie{t.categories.length > 1 ? 's' : ''}</span>}
+                            </div>
+                          </div>
+                          <div style={{ width:32, height:32, borderRadius:10, background:'rgba(163,230,53,0.08)', border:'1px solid rgba(163,230,53,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginLeft:12 }}>
+                            <span style={{ fontSize:14, color:'#a3e635' }}>→</span>
                           </div>
                         </div>
-                        <span style={{ fontSize:20, color:'#334155' }}>→</span>
                       </button>
                     ))
                   )}
@@ -247,22 +252,27 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
                     <button
                       key={t.id}
                       onClick={() => setSelectedScoreboardTournoi(t)}
-                      style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)',
-                        borderRadius:16, padding:'20px 24px', color:'#f1f5f9',
-                        cursor:'pointer', textAlign:'left', width:'100%',
-                        display:'flex', alignItems:'center', justifyContent:'space-between',
-                        transition:'border-color 0.15s' }}
+                      style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)',
+                        borderRadius:16, padding:'0', color:'#f1f5f9', cursor:'pointer', textAlign:'left',
+                        width:'100%', display:'block', overflow:'hidden', transition:'all 0.2s' }}
                     >
-                      <div>
-                        <div style={{ fontSize:16, fontWeight:700, marginBottom:6 }}>{t.name}</div>
-                        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-                          <span style={{ fontSize:12, color: t.status === 'live' ? '#34d399' : '#64748b', fontWeight:600, background: t.status === 'live' ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)', padding:'2px 10px', borderRadius:20, border: t.status === 'live' ? '1px solid rgba(52,211,153,0.2)' : '1px solid rgba(255,255,255,0.08)' }}>
-                            {t.status === 'live' ? '🟢 En cours' : '⬜ Archivé'}
-                          </span>
-                          {t.date && <span style={{ fontSize:12, color:'#64748b' }}>📅 {new Date(t.date).toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'})}</span>}
+                      <div style={{ height:3, background: t.status === 'live' ? 'linear-gradient(90deg,#a3e635,#34d399)' : 'rgba(255,255,255,0.06)' }} />
+                      <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:15, fontWeight:800, color:'#f1f5f9', marginBottom:8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{t.name}</div>
+                          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color: t.status === 'live' ? '#34d399' : '#64748b', background: t.status === 'live' ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.04)', padding:'3px 10px', borderRadius:20, border: t.status === 'live' ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.07)' }}>
+                              <span style={{ width:5, height:5, borderRadius:'50%', background: t.status === 'live' ? '#34d399' : '#475569', display:'inline-block' }}/>
+                              {t.status === 'live' ? 'En cours' : 'Archivé'}
+                            </span>
+                            {t.date && <span style={{ fontSize:11, color:'#475569' }}>{new Date(t.date).toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'})}</span>}
+                            {t.categories?.length > 0 && <span style={{ fontSize:11, color:'#475569' }}>{t.categories.length} catégorie{t.categories.length > 1 ? 's' : ''}</span>}
+                          </div>
+                        </div>
+                        <div style={{ width:32, height:32, borderRadius:10, background:'rgba(163,230,53,0.08)', border:'1px solid rgba(163,230,53,0.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginLeft:12 }}>
+                          <span style={{ fontSize:14, color:'#a3e635' }}>→</span>
                         </div>
                       </div>
-                      <span style={{ fontSize:20, color:'#334155' }}>→</span>
                     </button>
                   ))}
                 </div>
