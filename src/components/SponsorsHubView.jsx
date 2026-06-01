@@ -507,9 +507,9 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
             value={form.sector}
             onChange={(e) => u("sector", e.target.value)}
           >
-            <option value="">Sélectionner...</option>
+            <option value="" style={{background:"#1e293b",color:"#f1f5f9"}}>Sélectionner...</option>
             {(settings?.secteurs || DEFAULT_SECTEURS).map((s) => (
-              <option key={s} value={s}>
+              <option key={s} value={s} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {s}
               </option>
             ))}
@@ -522,9 +522,9 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
             value={form.partnership_type}
             onChange={(e) => u("partnership_type", e.target.value)}
           >
-            <option value="">Sélectionner...</option>
+            <option value="" style={{background:"#1e293b",color:"#f1f5f9"}}>Sélectionner...</option>
             {(settings?.types_partenariat || DEFAULT_TYPES).map((t) => (
-              <option key={t} value={t}>
+              <option key={t} value={t} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {t}
               </option>
             ))}
@@ -549,7 +549,7 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
             onChange={(e) => u("status", e.target.value)}
           >
             {STATUTS.map((s) => (
-              <option key={s.value} value={s.value}>
+              <option key={s.value} value={s.value} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {s.label}
               </option>
             ))}
@@ -857,7 +857,7 @@ export function SponsorsHubView({ profile }) {
           >
             <option value="all">Tous les statuts</option>
             {STATUTS.map((s) => (
-              <option key={s.value} value={s.value}>
+              <option key={s.value} value={s.value} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {s.label}
               </option>
             ))}
@@ -867,9 +867,9 @@ export function SponsorsHubView({ profile }) {
             value={filterSecteur}
             onChange={(e) => setFilterSecteur(e.target.value)}
           >
-            <option value="">Tous les secteurs</option>
+            <option value="" style={{background:"#1e293b",color:"#f1f5f9"}}>Tous les secteurs</option>
             {(settings?.secteurs || DEFAULT_SECTEURS).map((s) => (
-              <option key={s} value={s}>
+              <option key={s} value={s} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {s}
               </option>
             ))}
@@ -879,9 +879,9 @@ export function SponsorsHubView({ profile }) {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
-            <option value="">Tous les types</option>
+            <option value="" style={{background:"#1e293b",color:"#f1f5f9"}}>Tous les types</option>
             {(settings?.types_partenariat || DEFAULT_TYPES).map((t) => (
-              <option key={t} value={t}>
+              <option key={t} value={t} style={{background:"#1e293b",color:"#f1f5f9"}}>
                 {t}
               </option>
             ))}
