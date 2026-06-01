@@ -15,7 +15,7 @@ const ROLE_META = {
 // - Badge de rôle (clic = ouvre RoleSwitcher)
 // - Roue crantée (organizer uniquement) qui toggle l'écran settings
 // ============================================================
-export function TopBar({ tournament, role, view, setView, profile }) {
+export function TopBar({ tournament, role, view, setView, profile, accessCode }) {
   const canEditTournament = role === 'organizer';
 
   return (
@@ -28,7 +28,12 @@ export function TopBar({ tournament, role, view, setView, profile }) {
         </div>
       </div>
       <div style={styles.topbarRight}>
-        <RoleBadge role={role} onClick={() => setView('roles')} />
+        {accessCode
+          ? <button onClick={() => setView('info')} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#94a3b8', cursor:'pointer', fontSize:11, fontWeight:700 }}>
+              <span>ℹ️</span> INFO
+            </button>
+          : <RoleBadge role={role} onClick={() => setView('roles')} />
+        }
         {canEditTournament && (
           <button
             onClick={() => setView(view === 'settings' ? 'dashboard' : 'settings')}

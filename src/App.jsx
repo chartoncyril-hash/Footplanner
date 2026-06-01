@@ -41,6 +41,7 @@ import { AccountView } from './components/AccountView';
 import { LandingPage } from './components/LandingPage';
 import { RegistrationPage } from './components/RegistrationPage';
 import { PosterView } from './components/PosterView';
+import { InfoView } from './components/InfoView';
 import { PrivacyPage, CGUPage } from './components/LegalPage';
 import { RegistrationManager } from './components/RegistrationManager';
 import { CheckInView } from './components/CheckInView';
@@ -509,7 +510,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
           existingTournament={tournament}
         />
       )}
-      <TopBar {...ctx} profile={profile} />
+      <TopBar {...ctx} profile={profile} accessCode={accessCode} />
       <AnnouncementBar tournamentId={tournament.id} />
 
       <main className="main">
@@ -529,6 +530,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         {view === 'registrations' && <RegistrationManager tournament={tournament} onUpdateTournament={updateTournament} />}
         {view === 'checkin' && <CheckInView teams={teams} tournament={tournament} />}
         {view === 'poster' && <PosterView tournament={tournament} profile={profile} onBack={() => setView('dashboard')} />}
+        {view === 'info' && <InfoView tournament={tournament} onBack={() => setView('dashboard')} />}
         {view === 'archives' && <ArchivesView {...ctx} setActiveTournament={(id) => { setActiveTournamentId(id); setView('dashboard'); }} />}
       </main>
 
