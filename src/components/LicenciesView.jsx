@@ -1376,5 +1376,6 @@ export function LicenciesView() {
           })}
         </div>
       )}
+    </div>
   );
 }
