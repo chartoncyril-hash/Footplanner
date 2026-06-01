@@ -169,8 +169,8 @@ export function PresentationView({ tournament, teams, matches, standings, active
                 padding: '0 32px',
                 flexShrink: 0,
               }}>
-                {s.logoUrl ? (
-                  <img src={s.logoUrl} alt="" style={{ height: 64, maxWidth: 140, objectFit: 'contain', filter: 'brightness(1.1)' }} />
+                {s.logo || s.logoUrl ? (
+                  <img src={s.logo || s.logoUrl} alt="" style={{ height: 64, maxWidth: 140, objectFit: 'contain', filter: 'brightness(1.1)' }} />
                 ) : (
                   <div style={{
                     height: 36,
