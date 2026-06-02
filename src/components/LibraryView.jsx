@@ -367,11 +367,18 @@ export function LibraryView(props) {
                     <div style={{ fontSize:11, color:'#475569' }}>{club.location} {club.postal_code ? '('+club.postal_code+')' : ''} · {club.district_short}</div>
                   </div>
                   {isInLib ? (
-                    <span style={{ fontSize:11, color:'#a3e635', fontWeight:700 }}>✓ Dans mes clubs</span>
+                    <span style={{ fontSize:11, color:'#a3e635', fontWeight:700, display:'flex', alignItems:'center', gap:4 }}>✓ Dans mes clubs</span>
                   ) : (
-                    <button onClick={async () => {
+                    <button onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      btn.disabled = true;
+                      btn.textContent = '⏳';
                       await onAddToLibrary({ name: club.name, short: club.short_name || club.name.substring(0,4).toUpperCase(), color: '#818cf8', isHost: false, fff_cl_no: club.cl_no, logo: club.logo_url, district: club.district, city: club.location });
-                    }} style={{ padding:'6px 12px', background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.2)', borderRadius:8, color:'#a3e635', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                      btn.textContent = '✓ Ajouté';
+                      btn.style.background = 'rgba(52,211,153,0.1)';
+                      btn.style.color = '#34d399';
+                      btn.style.borderColor = 'rgba(52,211,153,0.2)';
+                    }} style={{ padding:'6px 12px', background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.2)', borderRadius:8, color:'#a3e635', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all 0.2s' }}>
                       + Ajouter
                     </button>
                   )}
