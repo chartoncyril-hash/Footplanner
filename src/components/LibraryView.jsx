@@ -23,13 +23,21 @@ export function LibraryView(props) {
   const [fffResults, setFffResults] = useState([]);
   const [fffLoading, setFffLoading] = useState(false);
   const [fffDistrict, setFffDistrict] = useState('');
+  const [fffCity, setFffCity] = useState('');
+  const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
 
-  const searchFff = useCallback(async (q, district) => {
-    if (!q || q.length < 2) { setFffResults([]); return; }
+  const searchFff = useCallback(async (q, district, city) => {
+    const hasFilter = (q && q.length >= 2) || district || city;
+    if (!hasFilter) { setFffResults([]); return; }
     setFffLoading(true);
-    let query = supabase.from('clubs_fff').select('*').ilike('name', `%${q}%`).limit(30);
+    let query = supabase.from('clubs_fff').select('*').limit(50);
+    if (q && q.length >= 2) {
+      const normalized = q.replace(/[.\s]+/g, '');
+      query = query.or(`name.ilike.%${q}%,name.ilike.%${normalized}%`);
+    }
     if (district) query = query.eq('district_short', district);
+    if (city) query = query.ilike('location', `%${city}%`);
     const { data } = await query.order('name');
     setFffResults(data || []);
     setFffLoading(false);
@@ -41,7 +49,13 @@ export function LibraryView(props) {
   }, []);
 
   React.useEffect(() => { if (tab === 'fff') loadDistricts(); }, [tab]);
-  React.useEffect(() => { searchFff(fffSearch, fffDistrict); }, [fffSearch, fffDistrict]);
+  const loadCities = useCallback(async (district) => {
+    const { data } = await supabase.rpc('get_distinct_cities', { p_district: district || null });
+    setCities(data || []);
+  }, []);
+  React.useEffect(() => { if (tab === 'fff') { loadDistricts(); } }, [tab]);
+  React.useEffect(() => { loadCities(fffDistrict); setFffCity(''); }, [fffDistrict]);
+  React.useEffect(() => { searchFff(fffSearch, fffDistrict, fffCity); }, [fffSearch, fffDistrict, fffCity]);
 
   const startEdit = (team) => {
     setEditingId(team.libraryId);
