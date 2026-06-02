@@ -305,25 +305,33 @@ export function LibraryView(props) {
 
       {tab === 'fff' && (
         <div>
-          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-            <input
-              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, fontFamily:'inherit' }}
-              placeholder="🔍 Rechercher un club (min 2 lettres)..."
+          <input
+              style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box', marginBottom:8 }}
+              placeholder="🔍 Rechercher un club (ex: US Feillens, Feillens, Bourg...)"
               value={fffSearch}
               onChange={e => setFffSearch(e.target.value)}
             />
+          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
             <select
-              style={{ padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit', maxWidth:160 }}
+              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}
               value={fffDistrict}
               onChange={e => setFffDistrict(e.target.value)}
             >
-              <option value="">Tous les districts</option>
+              <option value="" style={{background:'#1e293b'}}>Tous les districts</option>
               {districts.map(d => <option key={d.district_short} value={d.district_short} style={{background:'#1e293b'}}>{d.district_short}</option>)}
+            </select>
+            <select
+              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}
+              value={fffCity}
+              onChange={e => setFffCity(e.target.value)}
+            >
+              <option value="" style={{background:'#1e293b'}}>{fffDistrict ? 'Toutes les villes' : 'Toutes les villes'}</option>
+              {cities.map(d => <option key={d.city} value={d.city} style={{background:'#1e293b'}}>{d.city} {d.postal_code ? '('+d.postal_code+')' : ''}</option>)}
             </select>
           </div>
           {fffLoading && <div style={{ color:'#64748b', fontSize:13, padding:8 }}>Recherche...</div>}
-          {!fffLoading && fffSearch.length >= 2 && fffResults.length === 0 && <div style={{ color:'#475569', fontSize:13, padding:8 }}>Aucun club trouvé</div>}
-          {!fffSearch && <div style={{ color:'#475569', fontSize:13, padding:'20px 8px', textAlign:'center' }}>Tapez le nom d'un club pour le rechercher parmi les 14 966 clubs FFF</div>}
+          {!fffLoading && fffResults.length === 0 && (fffSearch.length >= 2 || fffDistrict || fffCity) && <div style={{ color:'#475569', fontSize:13, padding:8 }}>Aucun club trouvé</div>}
+          {!fffSearch && !fffDistrict && !fffCity && <div style={{ color:'#475569', fontSize:13, padding:'20px 8px', textAlign:'center' }}>Sélectionnez un district, une ville ou tapez le nom d'un club</div>}
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {fffResults.map(club => {
               const isInLib = teamsLibrary.some(t => t.fff_cl_no === club.cl_no);
