@@ -19,14 +19,21 @@ export function LandingPage({ onLogin }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeFeature, setActiveFeature] = useState(0);
   const [authMode, setAuthMode] = useState(null);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', emailConfirm: '', password: '', clubName: '', tournoiCount: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
-    setLoading(true); setError('');
+    setError('');
+    if (authMode === 'signup') {
+      if (!form.clubName.trim()) return setError('Le nom du club est obligatoire.');
+      if (!form.email.trim()) return setError('Email obligatoire.');
+      if (form.email.trim() !== form.emailConfirm.trim()) return setError('Les emails ne correspondent pas.');
+      if (form.password.length < 6) return setError('Mot de passe minimum 6 caractères.');
+    }
+    setLoading(true);
     try {
-      if (authMode === 'signup') await signUp({ email: form.email.trim(), password: form.password });
+      if (authMode === 'signup') await signUp({ email: form.email.trim(), password: form.password, clubName: form.clubName.trim() });
       else await signIn({ email: form.email.trim(), password: form.password });
     } catch(e) { setError(e.message); }
     setLoading(false);
@@ -68,7 +75,7 @@ export function LandingPage({ onLogin }) {
 
       {/* HERO */}
       <section style={{ padding: isMobile ? '60px 24px 40px' : '100px 40px 80px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 80, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr', gap: isMobile ? 40 : 80, alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'rgba(163,230,53,0.1)', border: '1px solid rgba(163,230,53,0.2)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: '#a3e635', letterSpacing: 1, marginBottom: 24 }}>
               ⚽ BETA GRATUITE — TOUTES FONCTIONNALITÉS INCLUSES
@@ -98,8 +105,8 @@ export function LandingPage({ onLogin }) {
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -20, background: 'radial-gradient(ellipse at center, rgba(163,230,53,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', transform: 'perspective(1000px) rotateY(-2deg) rotateX(2deg)' }}>
-              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/dashboard%20dournois.png" alt="Dashboard FootPlanner" style={{ width: '100%', display: 'block', borderRadius: 16 }} />
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
+              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/dashboard%20dournois.png" alt="Dashboard FootPlanner" style={{ width: '100%', display: 'block' }} />
             </div>
           </div>
         </div>
@@ -478,8 +485,35 @@ export function LandingPage({ onLogin }) {
                 ))}
               </div>
               {error && <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: 8, fontSize: 13, color: '#fb7185', marginBottom: 16 }}>{error}</div>}
-              <input type="email" placeholder="Email" value={form.email} onChange={e => setForm(p => ({...p, email: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
-              <input type="password" placeholder="Mot de passe" value={form.password} onChange={e => setForm(p => ({...p, password: e.target.value}))} onKeyDown={e => e.key === 'Enter' && handleAuth()} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              {authMode === 'signup' && (
+                <>
+                  <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Nom du club *</div>
+                  <input type="text" placeholder="Ex: US Feillens, FC Lyon..." value={form.clubName} onChange={e => setForm(p => ({...p, clubName: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 12, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </>
+              )}
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Email *</div>
+              <input type="email" placeholder="contact@monclub.fr" value={form.email} onChange={e => setForm(p => ({...p, email: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 12, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              {authMode === 'signup' && (
+                <>
+                  <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Confirmer l'email *</div>
+                  <input type="email" placeholder="contact@monclub.fr" value={form.emailConfirm} onChange={e => setForm(p => ({...p, emailConfirm: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 12, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                </>
+              )}
+              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Mot de passe *</div>
+              <input type="password" placeholder="Minimum 6 caractères" value={form.password} onChange={e => setForm(p => ({...p, password: e.target.value}))} onKeyDown={e => e.key === 'Enter' && handleAuth()} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 12, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              {authMode === 'signup' && (
+                <>
+                  <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Tournois organisés par an <span style={{ color: '#334155' }}>(facultatif)</span></div>
+                  <select value={form.tournoiCount} onChange={e => setForm(p => ({...p, tournoiCount: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: form.tournoiCount ? '#f1f5f9' : '#475569', fontSize: 14, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }}>
+                    <option value="" style={{background:'#1e293b'}}>Sélectionner...</option>
+                    <option value="0" style={{background:'#1e293b'}}>Aucun pour l'instant</option>
+                    <option value="1" style={{background:'#1e293b'}}>1 tournoi</option>
+                    <option value="2-3" style={{background:'#1e293b'}}>2 à 3 tournois</option>
+                    <option value="4-5" style={{background:'#1e293b'}}>4 à 5 tournois</option>
+                    <option value="6+" style={{background:'#1e293b'}}>6 tournois et plus</option>
+                  </select>
+                </>
+              )}
               <button onClick={handleAuth} disabled={loading} style={{ width: '100%', padding: '14px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
                 {loading ? 'Chargement...' : authMode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
               </button>
