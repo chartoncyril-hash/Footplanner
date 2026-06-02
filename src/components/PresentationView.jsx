@@ -571,11 +571,11 @@ function SlideStandings({ pool, rows }) {
           <span style={{ width: 55, textAlign: 'center', color: '#94a3b8', fontSize: 20 }}>{r.won || 0}</span>
           <span style={{ width: 55, textAlign: 'center', color: '#94a3b8', fontSize: 20 }}>{r.drawn || 0}</span>
           <span style={{ width: 55, textAlign: 'center', color: '#94a3b8', fontSize: 20 }}>{r.lost || 0}</span>
-          <span style={{ width: 65, textAlign: 'center', color: (r.gf || 0) - (r.ga || 0) >= 0 ? '#22c55e' : '#ef4444', fontSize: 20, fontWeight: 700 }}>
-            {(r.gf || 0) - (r.ga || 0) >= 0 ? '+' : ''}{(r.gf || 0) - (r.ga || 0)}
+          <span style={{ width: 65, textAlign: 'center', color: (r.goalDiff || 0) >= 0 ? '#22c55e' : '#ef4444', fontSize: 20, fontWeight: 700 }}>
+            {(r.goalDiff || 0) >= 0 ? '+' : ''}{r.goalDiff || 0}
           </span>
           <span style={{ width: 65, textAlign: 'center', color: '#facc15', fontSize: 22, fontWeight: 900 }}>
-            {r.pts || 0}
+            {r.points || 0}
           </span>
         </div>
       ))}
