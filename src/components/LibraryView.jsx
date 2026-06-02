@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 import { Users, Briefcase, Edit3, Trash2, X, Save, Crown, Plus } from 'lucide-react';
 import { Crest } from './Crest';
 
@@ -18,6 +19,30 @@ export function LibraryView(props) {
   const [tab, setTab] = useState('teams');
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState({});
+  const [fffSearch, setFffSearch] = useState('');
+  const [fffResults, setFffResults] = useState([]);
+  const [fffLoading, setFffLoading] = useState(false);
+  const [fffDistrict, setFffDistrict] = useState('');
+  const [districts, setDistricts] = useState([]);
+
+  const searchFff = useCallback(async (q, district) => {
+    if (!q || q.length < 2) { setFffResults([]); return; }
+    setFffLoading(true);
+    let query = supabase.from('clubs_fff').select('*').ilike('name', `%${q}%`).limit(30);
+    if (district) query = query.eq('district_short', district);
+    const { data } = await query.order('name');
+    setFffResults(data || []);
+    setFffLoading(false);
+  }, []);
+
+  const loadDistricts = useCallback(async () => {
+    const { data } = await supabase.from('clubs_fff').select('district_short, district').not('district_short', 'is', null).order('district_short');
+    const unique = [...new Map((data||[]).map(d => [d.district_short, d])).values()];
+    setDistricts(unique);
+  }, []);
+
+  React.useEffect(() => { if (tab === 'fff') loadDistricts(); }, [tab]);
+  React.useEffect(() => { searchFff(fffSearch, fffDistrict); }, [fffSearch, fffDistrict]);
 
   const startEdit = (team) => {
     setEditingId(team.libraryId);
@@ -276,6 +301,52 @@ export function LibraryView(props) {
         </div>
       )}
 
+      {tab === 'fff' && (
+        <div>
+          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+            <input
+              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, fontFamily:'inherit' }}
+              placeholder="🔍 Rechercher un club (min 2 lettres)..."
+              value={fffSearch}
+              onChange={e => setFffSearch(e.target.value)}
+            />
+            <select
+              style={{ padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit', maxWidth:160 }}
+              value={fffDistrict}
+              onChange={e => setFffDistrict(e.target.value)}
+            >
+              <option value="">Tous les districts</option>
+              {districts.map(d => <option key={d.district_short} value={d.district_short} style={{background:'#1e293b'}}>{d.district_short}</option>)}
+            </select>
+          </div>
+          {fffLoading && <div style={{ color:'#64748b', fontSize:13, padding:8 }}>Recherche...</div>}
+          {!fffLoading && fffSearch.length >= 2 && fffResults.length === 0 && <div style={{ color:'#475569', fontSize:13, padding:8 }}>Aucun club trouvé</div>}
+          {!fffSearch && <div style={{ color:'#475569', fontSize:13, padding:'20px 8px', textAlign:'center' }}>Tapez le nom d'un club pour le rechercher parmi les 14 966 clubs FFF</div>}
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {fffResults.map(club => {
+              const isInLib = teamsLibrary.some(t => t.fff_cl_no === club.cl_no);
+              return (
+                <div key={club.cl_no} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10 }}>
+                  {club.logo_url ? <img src={club.logo_url} alt="" style={{ width:36, height:36, objectFit:'contain', borderRadius:6 }} /> : <div style={{ width:36, height:36, borderRadius:6, background:'rgba(163,230,53,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚽</div>}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{club.name}</div>
+                    <div style={{ fontSize:11, color:'#475569' }}>{club.location} {club.postal_code ? '('+club.postal_code+')' : ''} · {club.district_short}</div>
+                  </div>
+                  {isInLib ? (
+                    <span style={{ fontSize:11, color:'#a3e635', fontWeight:700 }}>✓ Dans mes clubs</span>
+                  ) : (
+                    <button onClick={async () => {
+                      await onAddToLibrary({ name: club.name, short: club.short_name || club.name.substring(0,4).toUpperCase(), color: '#818cf8', isHost: false, fff_cl_no: club.cl_no, logo: club.logo_url, district: club.district, city: club.location });
+                    }} style={{ padding:'6px 12px', background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.2)', borderRadius:8, color:'#a3e635', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                      + Ajouter
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {tab === 'sponsors_disabled' && (
         <div>
           {sponsors.length === 0 && (
