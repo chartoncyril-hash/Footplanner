@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 const SCREENSHOTS = {
   dashboard: 'https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/dashboard_tournois_2.png',
@@ -14,8 +15,27 @@ const SCREENSHOTS = {
 };
 
 export function LandingPage({ onLogin }) {
+  const { signIn, signUp } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [authMode, setAuthMode] = useState(null);
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async () => {
+    setLoading(true); setError('');
+    try {
+      if (authMode === 'signup') await signUp({ email: form.email.trim(), password: form.password });
+      else await signIn({ email: form.email.trim(), password: form.password });
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const openAuth = (mode) => {
+    setAuthMode(mode);
+    setTimeout(() => document.getElementById('auth')?.scrollIntoView({ behavior: 'smooth' }), 50);
+  };
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -41,7 +61,7 @@ export function LandingPage({ onLogin }) {
             <a onClick={() => scrollTo('mobile')} style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', textDecoration: 'none' }}>Mobile</a>
           </div>
         )}
-        <button onClick={onLogin} style={{ padding: '9px 20px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+        <button onClick={() => openAuth('signup')} style={{ padding: '9px 20px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
           Commencer gratuitement
         </button>
       </nav>
@@ -61,7 +81,7 @@ export function LandingPage({ onLogin }) {
               FootPlanner réunit tout ce dont un club de football a besoin : gestion des licenciés, sponsors, compositions tactiques, et organisation complète de tournois avec classements en direct.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={onLogin} style={{ padding: '14px 28px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
+              <button onClick={() => openAuth('signup')} style={{ padding: '14px 28px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
                 Créer mon espace club →
               </button>
               <button onClick={() => scrollTo('tournois')} style={{ padding: '14px 28px', background: 'rgba(255,255,255,0.06)', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
@@ -79,14 +99,7 @@ export function LandingPage({ onLogin }) {
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -20, background: 'radial-gradient(ellipse at center, rgba(163,230,53,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', transform: 'perspective(1000px) rotateY(-2deg) rotateX(2deg)' }}>
-              <img src="/screenshots/dashboard_tournois_2.png" alt="Dashboard FootPlanner" style={{ width: '100%', display: 'block' }} onError={e => { e.target.style.display = 'none'; }} />
-              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🏆</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>Dashboard Tournoi</div>
-                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Gestion en temps réel</div>
-                </div>
-              </div>
+              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/dashboard%20dournois.png" alt="Dashboard FootPlanner" style={{ width: '100%', display: 'block', borderRadius: 16 }} />
             </div>
           </div>
         </div>
@@ -393,58 +406,7 @@ export function LandingPage({ onLogin }) {
           <div style={{ order: isMobile ? 2 : 1, display: 'flex', justifyContent: 'center' }}>
             <div style={{ position: 'relative', width: 280 }}>
               <div style={{ position: 'absolute', inset: -30, background: 'radial-gradient(ellipse at center, rgba(163,230,53,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
-              <div style={{ background: '#0f172a', borderRadius: 40, border: '6px solid rgba(255,255,255,0.1)', overflow: 'hidden', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', padding: '12px 0' }}>
-                <div style={{ background: '#060a12', margin: '0 12px', borderRadius: 28, overflow: 'hidden' }}>
-                  {/* Mock mobile UI */}
-                  <div style={{ padding: '20px 16px', background: '#0f172a' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#a3e635', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#060a12' }}>USF</div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>US FEILLENS</div>
-                        <div style={{ fontSize: 10, color: '#64748b' }}>Tournois de printemps</div>
-                      </div>
-                      <div style={{ marginLeft: 'auto', fontSize: 10, color: '#94a3b8', background: 'rgba(255,255,255,0.06)', padding: '4px 8px', borderRadius: 10 }}>SPECTATEUR</div>
-                    </div>
-                    <div style={{ background: 'rgba(163,230,53,0.08)', border: '1px solid rgba(163,230,53,0.15)', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
-                      <div style={{ fontSize: 10, color: '#a3e635', fontWeight: 700, marginBottom: 4 }}>⚡ EN COURS</div>
-                      <div style={{ fontSize: 16, fontWeight: 900, color: '#f1f5f9', marginBottom: 2 }}>Tournois de printemps</div>
-                      <div style={{ fontSize: 10, color: '#64748b' }}>Vendredi 5 juin · Stade Moulin</div>
-                      <div style={{ marginTop: 8, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
-                        <div style={{ width: '94%', height: '100%', background: '#a3e635', borderRadius: 2 }} />
-                      </div>
-                      <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>30/32 matchs · 94%</div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                      {[{v:'2',l:'EN DIRECT',c:'#a3e635'},{v:'30',l:'TERMINÉS',c:'#34d399'}].map(s => (
-                        <div key={s.l} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
-                          <div style={{ fontSize: 20, fontWeight: 900, color: s.c }}>{s.v}</div>
-                          <div style={{ fontSize: 9, color: '#475569' }}>{s.l}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>⚡ MATCHS EN DIRECT</div>
-                    {[{h:'ASM (1)',sh:1,sa:0,a:'PSG (2)'},{h:'AS MONACO (2)',sh:1,sa:1,a:'RC MTP (1)'}].map((m,i) => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(163,230,53,0.1)', borderRadius: 8, padding: '10px 12px', marginBottom: 6 }}>
-                        <div style={{ fontSize: 9, color: '#fb7185', fontWeight: 700, marginBottom: 4 }}>● EN DIRECT</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11 }}>
-                          <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{m.h}</span>
-                          <span style={{ color: '#a3e635', fontWeight: 900, fontSize: 16 }}>{m.sh} — {m.sa}</span>
-                          <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{m.a}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {/* Bottom nav */}
-                    <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      {[{i:'⚡',l:'LIVE',a:true},{i:'📅',l:'MATCHS'},{i:'🏅',l:'CLASSEMENT'},{i:'⭐',l:'MES ÉQUIPES'}].map(n => (
-                        <div key={n.l} style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 16 }}>{n.i}</div>
-                          <div style={{ fontSize: 8, color: n.a ? '#a3e635' : '#475569', fontWeight: n.a ? 700 : 400 }}>{n.l}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/Capture%20decran.png" alt="FootPlanner mobile" style={{ width: '100%', borderRadius: 32, boxShadow: '0 40px 80px rgba(0,0,0,0.6)', border: '4px solid rgba(255,255,255,0.1)' }} />
             </div>
           </div>
           <div style={{ order: isMobile ? 1 : 2 }}>
@@ -503,10 +465,26 @@ export function LandingPage({ onLogin }) {
               </div>
             ))}
           </div>
-          <button onClick={onLogin} style={{ padding: '18px 40px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 40px rgba(163,230,53,0.2)' }}>
+          <button onClick={() => openAuth('signup')} style={{ padding: '18px 40px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 40px rgba(163,230,53,0.2)' }}>
             Créer mon espace club gratuitement →
           </button>
           <div style={{ marginTop: 16, fontSize: 13, color: '#475569' }}>Aucune carte bancaire · Accès immédiat · Support réactif</div>
+
+          {authMode && (
+            <div style={{ marginTop: 40, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 32, maxWidth: 400, margin: '40px auto 0' }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                {[{v:'signup',l:'Créer un compte'},{v:'signin',l:'Se connecter'}].map(m => (
+                  <button key={m.v} onClick={() => { setAuthMode(m.v); setError(''); }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: authMode === m.v ? '#a3e635' : 'rgba(255,255,255,0.06)', color: authMode === m.v ? '#060a12' : '#94a3b8', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{m.l}</button>
+                ))}
+              </div>
+              {error && <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: 8, fontSize: 13, color: '#fb7185', marginBottom: 16 }}>{error}</div>}
+              <input type="email" placeholder="Email" value={form.email} onChange={e => setForm(p => ({...p, email: e.target.value}))} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 10, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              <input type="password" placeholder="Mot de passe" value={form.password} onChange={e => setForm(p => ({...p, password: e.target.value}))} onKeyDown={e => e.key === 'Enter' && handleAuth()} style={{ width: '100%', padding: '12px 14px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 16, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              <button onClick={handleAuth} disabled={loading} style={{ width: '100%', padding: '14px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
+                {loading ? 'Chargement...' : authMode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
