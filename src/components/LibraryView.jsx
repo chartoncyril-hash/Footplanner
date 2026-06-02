@@ -214,7 +214,7 @@ export function LibraryView(props) {
               Ta bibliotheque est vide. Les clubs que tu crees sont ajoutes automatiquement.
             </div>
           )}
-          {teamsLibrary.map(team => (
+          {(teamsLibrary || []).filter(t => t && t.libraryId).map(team => (
             <div
               key={team.libraryId}
               style={{
