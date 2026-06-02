@@ -361,7 +361,7 @@ export function LibraryView(props) {
           {!fffSearch && !fffDistrict && !fffCity && <div style={{ color:'#475569', fontSize:13, padding:'20px 8px', textAlign:'center' }}>Sélectionnez un district, une ville ou tapez le nom d'un club</div>}
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {fffResults.map(club => {
-              const isInLib = teamsLibrary.some(t => t.fff_cl_no === club.cl_no);
+              const isInLib = teamsLibrary.some(t => t && t.fffClNo === club.cl_no);
               return (
                 <div key={club.cl_no} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10 }}>
                   {club.logo_url ? <img src={club.logo_url} alt="" style={{ width:36, height:36, objectFit:'contain', borderRadius:6 }} /> : <div style={{ width:36, height:36, borderRadius:6, background:'rgba(163,230,53,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚽</div>}
