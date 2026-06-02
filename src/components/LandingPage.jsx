@@ -75,7 +75,7 @@ export function LandingPage({ onLogin }) {
 
       {/* HERO */}
       <section style={{ padding: isMobile ? '60px 24px 40px' : '100px 40px 80px', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr', gap: isMobile ? 40 : 80, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 80, alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'rgba(163,230,53,0.1)', border: '1px solid rgba(163,230,53,0.2)', borderRadius: 20, fontSize: 12, fontWeight: 700, color: '#a3e635', letterSpacing: 1, marginBottom: 24 }}>
               ⚽ BETA GRATUITE — TOUTES FONCTIONNALITÉS INCLUSES
@@ -105,8 +105,8 @@ export function LandingPage({ onLogin }) {
           </div>
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -20, background: 'radial-gradient(ellipse at center, rgba(163,230,53,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
-              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/dashboard%20dournois.png" alt="Dashboard FootPlanner" style={{ width: '100%', display: 'block' }} />
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', position: 'relative' }}>
+              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshoot/dashboard%20dournois.png" alt="Dashboard FootPlanner" style={{ width: '200%', maxWidth: 'none', display: 'block', borderRadius: 16 }} />
             </div>
           </div>
         </div>
