@@ -36,9 +36,8 @@ export function LibraryView(props) {
   }, []);
 
   const loadDistricts = useCallback(async () => {
-    const { data } = await supabase.from('clubs_fff').select('district_short, district').not('district_short', 'is', null).order('district_short');
-    const unique = [...new Map((data||[]).map(d => [d.district_short, d])).values()];
-    setDistricts(unique);
+    const { data } = await supabase.rpc('get_distinct_districts');
+    setDistricts(data || []);
   }, []);
 
   React.useEffect(() => { if (tab === 'fff') loadDistricts(); }, [tab]);
