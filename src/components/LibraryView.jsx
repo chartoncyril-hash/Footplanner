@@ -326,22 +326,35 @@ export function LibraryView(props) {
               onChange={e => setFffSearch(e.target.value)}
             />
           <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-            <select
-              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}
-              value={fffDistrict}
-              onChange={e => setFffDistrict(e.target.value)}
-            >
-              <option value="" style={{background:'#1e293b'}}>Tous les districts</option>
-              {districts.map(d => <option key={d.district_short} value={d.district_short} style={{background:'#1e293b'}}>{d.district_short}</option>)}
-            </select>
-            <select
-              style={{ flex:1, padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}
-              value={fffCity}
-              onChange={e => setFffCity(e.target.value)}
+            <div style={{ flex:1, position:'relative' }}>
+              <input
+                list="districts-list"
+                style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit', boxSizing:'border-box' }}
+                placeholder="🗺️ District..."
+                value={fffDistrict}
+                onChange={e => setFffDistrict(e.target.value)}
+              />
+              <datalist id="districts-list">
+                {districts.map(d => <option key={d.district_short} value={d.district_short} />)}
+              </datalist>
+              {fffDistrict && <button onClick={() => setFffDistrict('')} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:14 }}>×</button>}
+            </div>
+            <div style={{ flex:1, position:'relative' }}>
+              <input
+                list="cities-list"
+                style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:12, fontFamily:'inherit', boxSizing:'border-box' }}
+                placeholder="🏙️ Ville..."
+                value={fffCity}
+                onChange={e => setFffCity(e.target.value)}
             >
               <option value="" style={{background:'#1e293b'}}>{fffDistrict ? 'Toutes les villes' : 'Toutes les villes'}</option>
               {cities.map(d => <option key={d.city} value={d.city} style={{background:'#1e293b'}}>{d.city} {d.postal_code ? '('+d.postal_code+')' : ''}</option>)}
-            </select>
+              />
+              <datalist id="cities-list">
+                {cities.map(d => <option key={d.city} value={d.city} />)}
+              </datalist>
+              {fffCity && <button onClick={() => setFffCity('')} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:14 }}>×</button>}
+            </div>
           </div>
           {fffLoading && <div style={{ color:'#64748b', fontSize:13, padding:8 }}>Recherche...</div>}
           {!fffLoading && fffResults.length === 0 && (fffSearch.length >= 2 || fffDistrict || fffCity) && <div style={{ color:'#475569', fontSize:13, padding:8 }}>Aucun club trouvé</div>}
