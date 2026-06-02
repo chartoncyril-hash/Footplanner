@@ -346,9 +346,6 @@ export function LibraryView(props) {
                 placeholder="🏙️ Ville..."
                 value={fffCity}
                 onChange={e => setFffCity(e.target.value)}
-            >
-              <option value="" style={{background:'#1e293b'}}>{fffDistrict ? 'Toutes les villes' : 'Toutes les villes'}</option>
-              {cities.map(d => <option key={d.city} value={d.city} style={{background:'#1e293b'}}>{d.city} {d.postal_code ? '('+d.postal_code+')' : ''}</option>)}
               />
               <datalist id="cities-list">
                 {cities.map(d => <option key={d.city} value={d.city} />)}
