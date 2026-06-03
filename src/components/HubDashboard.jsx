@@ -189,7 +189,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
 
       if (hubView === 'compositions') {
         return (
-          <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
             <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:24}}>
               ← Retour au dashboard
             </button>
@@ -199,7 +199,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
       }
       if (hubView === 'licencies') {
         return (
-          <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
             <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:24}}>
               ← Retour au dashboard
             </button>
@@ -209,7 +209,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
       }
       if (hubView === 'sponsors') {
         return (
-          <div style={{maxWidth:900, margin:'0 auto', padding:'32px 24px'}}>
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
             <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:24}}>
               ← Retour au dashboard
             </button>
