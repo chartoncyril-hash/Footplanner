@@ -1127,6 +1127,36 @@ export function LicenciesView() {
               )}
             </div>
           </div>
+          {showInvitePanel && (
+            <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(129,140,248,0.3)', borderRadius:16, padding:24, marginBottom:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>✉️ Inviter les parents</div>
+                <button onClick={() => setShowInvitePanel(false)} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:18 }}>×</button>
+              </div>
+              {inviteSuccess ? (
+                <div style={{ padding:'12px 16px', background:'rgba(52,211,153,0.1)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, color:'#34d399', fontSize:13 }}>✓ Invitations enregistrées !</div>
+              ) : (
+                <>
+                  <div style={{ fontSize:12, color:'#64748b', marginBottom:16 }}>Entrez les emails des parents (plusieurs séparés par des virgules).</div>
+                  {selectedLicencies.map(id => {
+                    const lic = licencies.find(l => l.id === id);
+                    return (
+                      <div key={id} style={{ marginBottom:12 }}>
+                        <label style={{ fontSize:11, color:'#818cf8', fontWeight:700, marginBottom:4, display:'block', textTransform:'uppercase', letterSpacing:0.5 }}>{lic?.first_name} {lic?.last_name}</label>
+                        <input style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, boxSizing:'border-box', fontFamily:'inherit' }} placeholder="parent1@email.fr, parent2@email.fr" value={inviteEmails[id] || ''} onChange={e => setInviteEmails(p => ({...p, [id]: e.target.value}))} />
+                      </div>
+                    );
+                  })}
+                  <div style={{ display:'flex', gap:8, marginTop:8 }}>
+                    <button onClick={handleSendInvitations} disabled={inviteSending} style={{ padding:'10px 20px', background:'#a3e635', color:'#060a12', border:'none', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
+                      {inviteSending ? 'Envoi...' : '✉️ Enregistrer les invitations'}
+                    </button>
+                    <button onClick={() => setShowInvitePanel(false)} style={{ padding:'10px 20px', background:'rgba(255,255,255,0.05)', color:'#94a3b8', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Annuler</button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           {filtered.map((l) => {
             const licDocs = docs.filter((d) => d.licencie_id === l.id);
             const docsConformes = TYPES_DOCS.filter((type) =>
