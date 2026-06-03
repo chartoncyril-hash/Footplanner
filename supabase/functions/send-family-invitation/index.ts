@@ -1,6 +1,15 @@
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   const { email, token, licencie_name, club_name } = await req.json();
 
   const inviteUrl = `https://www.footplanner.fr/?invitation=${token}`;
@@ -41,5 +50,7 @@ Deno.serve(async (req) => {
   });
 
   const data = await res.json();
-  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(data), { 
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+  });
 });
