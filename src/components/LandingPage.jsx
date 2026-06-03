@@ -58,7 +58,7 @@ export function LandingPage({ onLogin }) {
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(6,10,18,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner" style={{ height: 36, width: 'auto' }} />
+          <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner" style={{ height:44, width:'auto', objectFit:'contain' }} />
           <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: -0.5 }}>FOOT<span style={{ color: '#a3e635' }}>PLANNER</span></span>
         </div>
         {!isMobile && (

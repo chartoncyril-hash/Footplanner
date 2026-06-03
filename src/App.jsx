@@ -385,9 +385,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         <aside style={{ width:240, flexShrink:0, background:'rgba(10,14,26,0.95)', borderRight:'1px solid rgba(34,211,238,0.12)', padding:'0', display:'flex', flexDirection:'column', position:'fixed', top:0, left:0, bottom:0, zIndex:50, overflowY:'auto' }}>
           {/* Logo FootPlanner */}
           <div style={{ padding:'20px 18px 16px', display:'flex', alignItems:'center', gap:10, borderBottom:'1px solid rgba(34,211,238,0.08)', cursor:'default' }}>
-            <div style={{ width:36, height:36, borderRadius:9, background:'linear-gradient(135deg, #a3e635, #67e8f9)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(34,211,238,0.4)', flexShrink:0 }}>
-              <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FP" style={{ width:22, height:22, objectFit:'contain' }} onError={e => { e.target.style.display='none'; }} />
-            </div>
+            <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner" style={{ width:40, height:40, objectFit:'contain', flexShrink:0 }} />
             <div>
               <div style={{ fontSize:14, fontWeight:800, color:'#a3e635', letterSpacing:2 }}>FOOTPLANNER</div>
               <div style={{ fontSize:9, color:'#64748b', letterSpacing:1 }}>ORGANISATEUR</div>

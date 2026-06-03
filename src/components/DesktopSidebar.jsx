@@ -67,18 +67,7 @@ export function DesktopSidebar(props) {
         }}
         title="Retour au hub"
       >
-        <div style={{
-          width: 36,
-          height: 36,
-          borderRadius: 9,
-          background: 'linear-gradient(135deg, #a3e635, #67e8f9)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 20px rgba(34,211,238,0.4)',
-        }}>
-          <Sparkles size={18} color="#0a0e1a" strokeWidth={2.5} />
-        </div>
+        <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner" style={{ width:40, height:40, objectFit:'contain', flexShrink:0 }} />
         <div>
           <div style={{ fontSize: 14, fontWeight: 800, color: '#a3e635', letterSpacing: 2 }}>
             FOOTPLANNER
