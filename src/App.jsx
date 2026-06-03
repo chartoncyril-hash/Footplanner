@@ -39,6 +39,7 @@ import { FormatView } from './components/FormatView';
 import { PresentationView } from './components/PresentationView';
 import { AccountView } from './components/AccountView';
 import { LandingPage } from './components/LandingPage';
+import { FamilyInvitationPage } from './components/FamilyInvitationPage';
 import { RegistrationPage } from './components/RegistrationPage';
 import { PosterView } from './components/PosterView';
 import { InfoView } from './components/InfoView';
@@ -68,6 +69,8 @@ export default function App() {
   const isRegistrationMode = urlParams?.get('register') === '1';
   const isPosterMode = urlParams?.get('poster') === '1';
   const isPrivacyMode = urlParams?.get('page') === 'privacy';
+  const isInvitationMode = urlParams?.get('invitation') !== null && urlParams?.get('invitation') !== undefined;
+  const invitationToken = urlParams?.get('invitation') || null;
   const isCGUMode = urlParams?.get('page') === 'cgu';
   const registrationCode = urlParams?.get('t') || null;
 
@@ -82,6 +85,7 @@ export default function App() {
   if (isPrivacyMode) return <PrivacyPage onBack={() => window.history.back()} />;
   if (isCGUMode) return <CGUPage onBack={() => window.history.back()} />;
   if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
+  if (isInvitationMode && invitationToken) return <FamilyInvitationPage token={invitationToken} />;
   // Spectateur via QR : bypass la landing même sans compte
   if (!user && !isPresentationMode && !spectatorCode) return <LandingPage />;
 
