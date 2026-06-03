@@ -21,7 +21,7 @@ export function TopBar({ tournament, role, view, setView, profile, accessCode, o
   return (
     <header style={styles.topbar}>
       <div style={styles.topbarLeft}>
-        {onGoToHub && (
+        {onGoToHub && role === 'organizer' && (
           <button onClick={onGoToHub} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'#64748b', cursor:'pointer', fontSize:11, fontWeight:600, marginRight:4, whiteSpace:'nowrap' }}>
             ← Retour au dashboard
           </button>
