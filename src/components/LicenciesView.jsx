@@ -883,6 +883,31 @@ export function LicenciesView() {
   const [filterCat, setFilterCat] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
   const [filterStatus, setFilterStatus] = useState("actif");
+  const [selectedLicencies, setSelectedLicencies] = useState([]);
+  const [showInvitePanel, setShowInvitePanel] = useState(false);
+  const [inviteEmails, setInviteEmails] = useState({});
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState([]);
+
+  const toggleSelect = (id) => setSelectedLicencies(prev =>
+    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+  );
+
+  const handleSendInvitations = async () => {
+    setInviteSending(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    for (const licId of selectedLicencies) {
+      const emails = (inviteEmails[licId] || '').split(',').map(e => e.trim()).filter(Boolean);
+      for (const email of emails) {
+        await supabase.from('family_invitations').insert({
+          licencie_id: licId, owner_id: user.id, email, status: 'pending'
+        });
+      }
+    }
+    setInviteSuccess(true);
+    setInviteSending(false);
+    setTimeout(() => { setShowInvitePanel(false); setSelectedLicencies([]); setInviteEmails({}); setInviteSuccess(false); }, 3000);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
