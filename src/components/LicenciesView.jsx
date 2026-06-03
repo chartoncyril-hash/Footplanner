@@ -903,13 +903,15 @@ export function LicenciesView() {
       const licName = lic ? lic.first_name + ' ' + lic.last_name : 'un licencié';
       const emails = (inviteEmails[licId] || '').split(',').map(e => e.trim()).filter(Boolean);
       for (const email of emails) {
-        const { data: inv } = await supabase.from('family_invitations').insert({
+        const { data: inv, error: invError } = await supabase.from('family_invitations').insert({
           licencie_id: licId, owner_id: user.id, email, status: 'pending'
         }).select().single();
+        console.log('inv:', inv, 'error:', invError);
         if (inv?.token) {
-          await supabase.functions.invoke('send-family-invitation', {
+          const { data: emailData, error: emailError } = await supabase.functions.invoke('send-family-invitation', {
             body: { email, token: inv.token, licencie_name: licName, club_name: clubName }
           });
+          console.log('email:', emailData, 'emailError:', emailError);
         }
       }
     }
