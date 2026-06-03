@@ -444,6 +444,334 @@ function Pitch({ format, formation, players, onMove }) {
     </div>
   );
 }
+function CompositionEditor({ licencies, onSave, onCancel, initial }) {
+  const [name, setName] = useState(initial?.name || "Composition J1");
+  const [format, setFormat] = useState(initial?.format || 11);
+  const [formation, setFormation] = useState(initial?.formation || "4-3-3");
+  const [selectedIds, setSelectedIds] = useState(
+    initial?.players?.map((p) => p.id) || [],
+  );
+  const [playerPositions, setPlayerPositions] = useState([]);
+  const [step, setStep] = useState("select");
+  const [filterCat, setFilterCat] = useState("");
+  const [filterTeam, setFilterTeam] = useState("");
+
+  const maxPlayers = format;
+  const categories = [
+    ...new Set(licencies.map((l) => l.category).filter(Boolean)),
+  ].sort();
+  const teams = [
+    ...new Set(licencies.map((l) => l.team).filter(Boolean)),
+  ].sort();
+
+  const filteredLicencies = licencies.filter((l) => {
+    const matchCat = !filterCat || l.category === filterCat;
+    const matchTeam = !filterTeam || l.team === filterTeam;
+    return matchCat && matchTeam;
+  });
+
+  function togglePlayer(id) {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : prev.length < maxPlayers
+          ? [...prev, id]
+          : prev,
+    );
+  }
+
+  function goToPlace() {
+    const slots = FORMATS[format]?.formations[formation] || [];
+    const selected = licencies.filter((l) => selectedIds.includes(l.id));
+    setPlayerPositions(
+      selected.map((p, i) => ({
+        ...p,
+        initials: p.first_name[0] + p.last_name[0],
+        short_name: p.last_name.substring(0, 8),
+        x: slots[i]?.x || 200,
+        y: slots[i]?.y || 280,
+      })),
+    );
+    setStep("place");
+  }
+
+  function handleSave() {
+    onSave({ name, format, formation, players: playerPositions });
+  }
+
+  if (step === "place")
+    return (
+      <div style={{ ...S.card, border: "1px solid rgba(163,230,53,0.2)" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>
+            {name}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button style={S.btnGhost} onClick={() => setStep("select")}>
+              ← Modifier la sélection
+            </button>
+            <button style={S.btnPrimary} onClick={handleSave}>
+              💾 Sauvegarder
+            </button>
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          {Object.keys(FORMATS[format]?.formations || {}).map((f) => (
+            <button
+              key={f}
+              onClick={() => {
+                setFormation(f);
+                const slots = FORMATS[format].formations[f];
+                setPlayerPositions((prev) =>
+                  prev.map((p, i) => ({
+                    ...p,
+                    x: slots[i]?.x || p.x,
+                    y: slots[i]?.y || p.y,
+                  })),
+                );
+              }}
+              style={{
+                ...S.btnGhost,
+                ...(formation === f
+                  ? { background: "#a3e635", color: "#060a12", border: "none" }
+                  : {}),
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <Pitch
+          format={format}
+          formation={formation}
+          players={playerPositions}
+          onMove={setPlayerPositions}
+        />
+        <div
+          style={{
+            fontSize: 11,
+            color: "#475569",
+            textAlign: "center",
+            marginTop: 8,
+          }}
+        >
+          Glissez les joueurs pour ajuster leur position
+        </div>
+      </div>
+    );
+
+  return (
+    <div style={{ ...S.card, border: "1px solid rgba(163,230,53,0.2)" }}>
+      <div
+        style={{
+          fontSize: 15,
+          fontWeight: 700,
+          color: "#f1f5f9",
+          marginBottom: 16,
+        }}
+      >
+        Nouvelle composition
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
+        <div>
+          <label style={S.label}>Nom</label>
+          <input
+            style={S.input}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={S.label}>Format</label>
+          <select
+            style={S.input}
+            value={format}
+            onChange={(e) => {
+              setFormat(parseInt(e.target.value));
+              setFormation(
+                Object.keys(
+                  FORMATS[parseInt(e.target.value)]?.formations || {},
+                )[0] || "",
+              );
+            }}
+          >
+            {Object.entries(FORMATS).map(([k, v]) => (
+              <option key={k} value={k} style={{ background: "#1e293b" }}>
+                {v.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={S.label}>Formation</label>
+          <select
+            style={S.input}
+            value={formation}
+            onChange={(e) => setFormation(e.target.value)}
+          >
+            {Object.keys(FORMATS[format]?.formations || {}).map((f) => (
+              <option key={f} value={f} style={{ background: "#1e293b" }}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <select
+          style={{ ...S.input, width: "auto", flex: 1 }}
+          value={filterCat}
+          onChange={(e) => setFilterCat(e.target.value)}
+        >
+          <option value="" style={{ background: "#1e293b" }}>
+            Toutes catégories
+          </option>
+          {categories.map((c) => (
+            <option key={c} value={c} style={{ background: "#1e293b" }}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
+          style={{ ...S.input, width: "auto", flex: 1 }}
+          value={filterTeam}
+          onChange={(e) => setFilterTeam(e.target.value)}
+        >
+          <option value="" style={{ background: "#1e293b" }}>
+            Toutes équipes
+          </option>
+          {teams.map((t) => (
+            <option key={t} value={t} style={{ background: "#1e293b" }}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div
+        style={{
+          fontSize: 12,
+          color: selectedIds.length === maxPlayers ? "#a3e635" : "#64748b",
+          marginBottom: 10,
+          fontWeight: 600,
+        }}
+      >
+        {selectedIds.length}/{maxPlayers} joueurs sélectionnés
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+          gap: 8,
+          maxHeight: 320,
+          overflowY: "auto",
+          marginBottom: 16,
+        }}
+      >
+        {filteredLicencies.map((l) => {
+          const isSelected = selectedIds.includes(l.id);
+          const isDisabled = !isSelected && selectedIds.length >= maxPlayers;
+          return (
+            <div
+              key={l.id}
+              onClick={() => !isDisabled && togglePlayer(l.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 10px",
+                background: isSelected
+                  ? "rgba(163,230,53,0.12)"
+                  : "rgba(255,255,255,0.03)",
+                border: `1px solid ${isSelected ? "rgba(163,230,53,0.3)" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: 10,
+                cursor: isDisabled ? "not-allowed" : "pointer",
+                opacity: isDisabled ? 0.4 : 1,
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: isSelected
+                    ? "rgba(163,230,53,0.2)"
+                    : "rgba(255,255,255,0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isSelected ? "#a3e635" : "#64748b",
+                  flexShrink: 0,
+                }}
+              >
+                {l.first_name[0]}
+                {l.last_name[0]}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: isSelected ? "#f1f5f9" : "#94a3b8",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {l.first_name} {l.last_name}
+                </div>
+                <div style={{ fontSize: 10, color: "#475569" }}>
+                  {l.category} {l.position && `· ${l.position}`}
+                </div>
+              </div>
+              {isSelected && (
+                <span
+                  style={{ color: "#a3e635", fontSize: 14, marginLeft: "auto" }}
+                >
+                  ✓
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          style={S.btnPrimary}
+          onClick={goToPlace}
+          disabled={selectedIds.length === 0}
+        >
+          Placer sur le terrain →
+        </button>
+        <button style={S.btnGhost} onClick={onCancel}>
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
 export function CompositionsView() {
   const [compositions, setCompositions] = useState([]);
   const [licencies, setLicencies] = useState([]);
