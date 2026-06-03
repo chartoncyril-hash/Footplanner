@@ -145,7 +145,7 @@ const S = {
     display: "inline-block",
   },
 };
-function Pitch({ format, formation, players, onMove }) {
+function Pitch({ format, formation, players, onMove, drawLayerExportRef, savedAnnotations }) {
   const svgRef = useRef(null);
   const drawLayerRef = useRef(null);
   const dragRef = useRef(null);
@@ -252,6 +252,12 @@ function Pitch({ format, formation, players, onMove }) {
     if (drawLayerRef.current) drawLayerRef.current.innerHTML = '';
     setHistory([]);
   };
+
+  useEffect(() => {
+    if (savedAnnotations && drawLayerRef.current) {
+      drawLayerRef.current.innerHTML = savedAnnotations;
+    }
+  }, [savedAnnotations]);
 
   const COLORS = ['#ffffff','#a3e635','#fb7185','#f59e0b','#818cf8','#34d399'];
   const isMobile = window.innerWidth < 768;
@@ -375,7 +381,7 @@ function Pitch({ format, formation, players, onMove }) {
               </g>
             );
           })}
-          <g ref={drawLayerRef} />
+          <g ref={el => { drawLayerRef.current = el; if(drawLayerExportRef) drawLayerExportRef.current = el; }} />
         </svg>
         {/* Toolbar mobile flottante */}
         {isMobile && (
@@ -406,6 +412,7 @@ function CompositionEditor({ licencies, onSave, onCancel, initial }) {
     initial?.players?.map((p) => p.id) || [],
   );
   const [playerPositions, setPlayerPositions] = useState([]);
+  const pitchRef = useRef(null);
   const [step, setStep] = useState("select");
   const [filterCat, setFilterCat] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
@@ -450,7 +457,8 @@ function CompositionEditor({ licencies, onSave, onCancel, initial }) {
   }
 
   function handleSave() {
-    onSave({ name, format, formation, players: playerPositions });
+    const annotations = pitchRef.current ? pitchRef.current.innerHTML : '';
+    onSave({ name, format, formation, players: playerPositions, annotations });
   }
 
   if (step === "place")
