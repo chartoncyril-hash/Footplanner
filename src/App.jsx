@@ -368,43 +368,65 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   // Niveau COMPTE : Hub Dashboard
   if (hubMode && !isPresentationMode) {
     const SIDEBAR_ITEMS = [
-      { id: 'home', icon: '🏠', label: 'Dashboard' },
-      { id: 'tournaments', icon: '🏆', label: 'Tournois' },
-      { id: 'inscriptions', icon: '📝', label: 'Inscriptions' },
-      { id: 'scoreboard', icon: '🏷️', label: 'Table de marque' },
-      { id: 'sponsors', icon: '🤝', label: 'Sponsors' },
-      { id: 'licencies', icon: '👥', label: 'Licenciés' },
-      { id: 'compositions', icon: '⚽', label: 'Compositions' },
+      { id: 'home', icon: 'LayoutDashboard', label: 'Dashboard', color: '#a3e635' },
+      { id: 'tournaments', icon: 'Trophy', label: 'Tournois', color: '#a3e635' },
+      { id: 'inscriptions', icon: 'ClipboardList', label: 'Inscriptions', color: '#818cf8' },
+      { id: 'scoreboard', icon: 'Monitor', label: 'Table de marque', color: '#34d399' },
+      { id: 'sponsors', icon: 'Handshake', label: 'Sponsors', color: '#f59e0b' },
+      { id: 'licencies', icon: 'Users', label: 'Licenciés', color: '#fb7185' },
+      { id: 'compositions', icon: 'GitBranch', label: 'Compositions', color: '#818cf8' },
     ];
+    const clubColor = profile?.club_color || '#a3e635';
+    const clubLogo = profile?.club_logo_url;
+    const clubName = profile?.club_name || 'Mon club';
     return (
       <div style={{ display:'flex', minHeight:'100vh', background:'#060a12' }}>
-        <div style={{ width:220, flexShrink:0, background:'rgba(255,255,255,0.02)', borderRight:'1px solid rgba(255,255,255,0.06)', padding:'16px 10px', display:'flex', flexDirection:'column', gap:2, position:'sticky', top:0, height:'100vh', overflowY:'auto' }}>
-          <div style={{ padding:'8px 10px', marginBottom:8 }}>
-            <div style={{ fontSize:16, fontWeight:900, color:'#f1f5f9' }}>FOOT<span style={{ color:'#a3e635' }}>PLANNER</span></div>
-            <div style={{ fontSize:11, color:'#475569', marginTop:2 }}>Espace club</div>
+        <aside style={{ width:240, flexShrink:0, background:'rgba(10,14,26,0.95)', borderRight:'1px solid rgba(34,211,238,0.12)', padding:'0', display:'flex', flexDirection:'column', position:'fixed', top:0, left:0, bottom:0, zIndex:50, overflowY:'auto' }}>
+          {/* Logo */}
+          <div style={{ padding:'20px 16px 12px', borderBottom:'1px solid rgba(255,255,255,0.06)', marginBottom:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+              {clubLogo
+                ? <img src={clubLogo} alt="" style={{ width:36, height:36, borderRadius:8, objectFit:'contain' }} />
+                : <div style={{ width:36, height:36, borderRadius:8, background: clubColor+'22', border:'1px solid '+clubColor+'44', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:900, color:clubColor }}>{clubName[0]?.toUpperCase()}</div>
+              }
+              <div>
+                <div style={{ fontSize:13, fontWeight:800, color:'#f1f5f9', lineHeight:1.2 }}>{clubName}</div>
+                <div style={{ fontSize:10, color:'#475569' }}>Espace club</div>
+              </div>
+            </div>
+            <div style={{ fontSize:10, fontWeight:700, color:'#334155', letterSpacing:1.5, textTransform:'uppercase', marginBottom:4 }}>MODULES</div>
           </div>
-          <div style={{ fontSize:10, color:'#334155', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'6px 10px', marginTop:8 }}>Modules</div>
-          {SIDEBAR_ITEMS.map(item => (
-            <button key={item.id} onClick={() => {
-              if (item.id === 'home') { setHubView('home'); }
-              else if (item.id === 'tournaments') { setHubMode(false); }
-              else { setHubView(item.id); }
-            }} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, border:'none', background: hubView === item.id || (item.id === 'home' && hubView === 'home') ? 'rgba(163,230,53,0.1)' : 'transparent', color: hubView === item.id || (item.id === 'home' && hubView === 'home') ? '#a3e635' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', fontFamily:'inherit', borderLeft: hubView === item.id || (item.id === 'home' && hubView === 'home') ? '2px solid #a3e635' : '2px solid transparent' }}>
-              <span style={{ fontSize:15 }}>{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-          <div style={{ marginTop:'auto', paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:10, color:'#334155', fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'6px 10px', marginBottom:4 }}>Général</div>
-            <button onClick={() => setHubView('account')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, border:'none', background: hubView === 'account' ? 'rgba(163,230,53,0.1)' : 'transparent', color: hubView === 'account' ? '#a3e635' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', fontFamily:'inherit', borderLeft: hubView === 'account' ? '2px solid #a3e635' : '2px solid transparent' }}>
+          {/* Nav items */}
+          <div style={{ padding:'4px 8px', flex:1 }}>
+            {SIDEBAR_ITEMS.map(item => {
+              const isActive = hubView === item.id || (item.id === 'home' && hubView === 'home');
+              return (
+                <button key={item.id} onClick={() => {
+                  if (item.id === 'home') setHubView('home');
+                  else if (item.id === 'tournaments') setHubMode(false);
+                  else setHubView(item.id);
+                }} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: isActive ? item.color+'18' : 'transparent', color: isActive ? item.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight: isActive ? 700 : 500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, transition:'all 0.15s', borderLeft: isActive ? '2px solid '+item.color : '2px solid transparent' }}>
+                  <span style={{ fontSize:15, opacity: isActive ? 1 : 0.7 }}>
+                    {item.id==='home'?'🏠':item.id==='tournaments'?'🏆':item.id==='inscriptions'?'📝':item.id==='scoreboard'?'🖥️':item.id==='sponsors'?'🤝':item.id==='licencies'?'👥':'⚽'}
+                  </span>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* Footer */}
+          <div style={{ padding:'12px 8px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize:10, fontWeight:700, color:'#334155', letterSpacing:1.5, textTransform:'uppercase', padding:'4px 12px', marginBottom:4 }}>GÉNÉRAL</div>
+            <button onClick={() => setHubView('account')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: hubView==='account' ? 'rgba(100,116,139,0.15)' : 'transparent', color: hubView==='account' ? '#94a3b8' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, borderLeft: hubView==='account' ? '2px solid #64748b' : '2px solid transparent' }}>
               <span style={{ fontSize:15 }}>👤</span> Mon compte
             </button>
-            <button style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, border:'none', background:'transparent', color:'#334155', cursor:'not-allowed', fontSize:13, fontWeight:600, textAlign:'left', width:'100%', fontFamily:'inherit', opacity:0.5 }}>
+            <button style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background:'transparent', color:'#334155', cursor:'not-allowed', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', opacity:0.4 }}>
               <span style={{ fontSize:15 }}>⚙️</span> Paramètres
-              <span style={{ fontSize:9, background:'rgba(255,255,255,0.06)', padding:'1px 5px', borderRadius:3, marginLeft:'auto' }}>Bientôt</span>
+              <span style={{ fontSize:9, background:'rgba(255,255,255,0.04)', padding:'1px 6px', borderRadius:3, marginLeft:'auto', color:'#334155' }}>Bientôt</span>
             </button>
           </div>
-        </div>
+        </aside>
+        <div style={{ flex:1, minWidth:0, marginLeft:240 }}>
         <div style={{ flex:1, minWidth:0 }}>
       <HubDashboard
         profile={profile}
