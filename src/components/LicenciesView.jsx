@@ -894,6 +894,7 @@ export function LicenciesView() {
   );
 
   const handleSendInvitations = async () => {
+    console.log('handleSendInvitations called, selected:', selectedLicencies, 'emails:', inviteEmails);
     setInviteSending(true);
     const { data: { user } } = await supabase.auth.getUser();
     const profile = await supabase.from('profiles').select('club_name').eq('id', user.id).single();
