@@ -1,3 +1,4 @@
+import { LayoutDashboard, Trophy, ClipboardList, Monitor, Handshake, Users, GitBranch, Settings, Sparkles } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
