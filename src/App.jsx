@@ -461,6 +461,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         signOut={signOut}
       />
         </div>
+        </div>
       </div>
     );
   }
