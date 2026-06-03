@@ -263,8 +263,11 @@ function Pitch({ format, formation, players, onMove }) {
   };
 
   const onSVGMouseUp = () => {
-    if (drawRef.current) {
-      setHistory(h => [...h, drawRef.current.path]);
+    if (drawRef.current && drawRef.current.path) {
+      const pathEl = drawRef.current.path;
+      drawRef.current = null;
+      setHistory(h => [...h, pathEl]);
+    } else {
       drawRef.current = null;
     }
     dragRef.current = null;
