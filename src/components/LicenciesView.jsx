@@ -1221,7 +1221,8 @@ export function LicenciesView() {
                       </span>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: 'center' }}>
+                    <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#a3e635' }} />
                     <button
                       style={S.btnGhost}
                       onClick={() => setExpandedId(isExpanded ? null : l.id)}
