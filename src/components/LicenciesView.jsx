@@ -1118,7 +1118,14 @@ export function LicenciesView() {
             </select>
           </div>
           <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
-            {filtered.length} licencié{filtered.length > 1 ? "s" : ""}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span>{filtered.length} licencié{filtered.length > 1 ? "s" : ""}</span>
+              {selectedLicencies.length > 0 && (
+                <button onClick={() => setShowInvitePanel(true)} style={{ padding:'8px 16px', background:'rgba(129,140,248,0.1)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:8, color:'#818cf8', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  ✉️ Inviter les parents ({selectedLicencies.length})
+                </button>
+              )}
+            </div>
           </div>
           {filtered.map((l) => {
             const licDocs = docs.filter((d) => d.licencie_id === l.id);
