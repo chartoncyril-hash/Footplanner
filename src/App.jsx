@@ -408,7 +408,13 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
                   else setHubView(item.id);
                 }} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: isActive ? item.color+'18' : 'transparent', color: isActive ? item.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight: isActive ? 700 : 500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, transition:'all 0.15s', borderLeft: isActive ? '2px solid '+item.color : '2px solid transparent' }}>
                   <span style={{ fontSize:15, opacity: isActive ? 1 : 0.7 }}>
-                    {item.id==='home'?'🏠':item.id==='tournaments'?'🏆':item.id==='inscriptions'?'📝':item.id==='scoreboard'?'🖥️':item.id==='sponsors'?'🤝':item.id==='licencies'?'👥':'⚽'}
+                    {item.id==='home' && <LayoutDashboard size={16} />}
+                    {item.id==='tournaments' && <Trophy size={16} />}
+                    {item.id==='inscriptions' && <ClipboardList size={16} />}
+                    {item.id==='scoreboard' && <Monitor size={16} />}
+                    {item.id==='sponsors' && <Handshake size={16} />}
+                    {item.id==='licencies' && <Users size={16} />}
+                    {item.id==='compositions' && <GitBranch size={16} />}
                   </span>
                   {item.label}
                 </button>
