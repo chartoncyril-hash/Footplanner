@@ -887,7 +887,7 @@ export function LicenciesView() {
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [inviteEmails, setInviteEmails] = useState({});
   const [inviteSending, setInviteSending] = useState(false);
-  const [inviteSuccess, setInviteSuccess] = useState([]);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const toggleSelect = (id) => setSelectedLicencies(prev =>
     prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -1145,7 +1145,7 @@ export function LicenciesView() {
                 <button onClick={() => setShowInvitePanel(false)} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:18 }}>×</button>
               </div>
               {inviteSuccess ? (
-                <div style={{ padding:'12px 16px', background:'rgba(52,211,153,0.1)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, color:'#34d399', fontSize:13 }}>✓ Invitations enregistrées !</div>
+                <div style={{ padding:'12px 16px', background:'rgba(52,211,153,0.1)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:8, color:'#34d399', fontSize:13 }}>✓ Invitation(s) envoyée(s) avec succès !</div>
               ) : (
                 <>
                   <div style={{ fontSize:12, color:'#64748b', marginBottom:16 }}>Entrez les emails des parents (plusieurs séparés par des virgules).</div>
