@@ -608,7 +608,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         {view === 'archives' && <ArchivesView {...ctx} setActiveTournament={(id) => { setActiveTournamentId(id); setView('dashboard'); }} />}
       </main>
 
-      <SponsorTicker tournamentId={tournament.id} />
+      {(role === 'spectator' || isPresentationMode) && <SponsorTicker tournamentId={tournament.id} />}
       <BottomNav {...ctx} />
 
       {confirmDialog && <ConfirmDialog {...confirmDialog} onCancel={closeConfirm} />}
