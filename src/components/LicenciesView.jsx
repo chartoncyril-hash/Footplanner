@@ -896,12 +896,21 @@ export function LicenciesView() {
   const handleSendInvitations = async () => {
     setInviteSending(true);
     const { data: { user } } = await supabase.auth.getUser();
+    const profile = await supabase.from('profiles').select('club_name').eq('id', user.id).single();
+    const clubName = profile?.data?.club_name || 'FootPlanner';
     for (const licId of selectedLicencies) {
+      const lic = licencies.find(l => l.id === licId);
+      const licName = lic ? lic.first_name + ' ' + lic.last_name : 'un licencié';
       const emails = (inviteEmails[licId] || '').split(',').map(e => e.trim()).filter(Boolean);
       for (const email of emails) {
-        await supabase.from('family_invitations').insert({
+        const { data: inv } = await supabase.from('family_invitations').insert({
           licencie_id: licId, owner_id: user.id, email, status: 'pending'
-        });
+        }).select().single();
+        if (inv?.token) {
+          await supabase.functions.invoke('send-family-invitation', {
+            body: { email, token: inv.token, licencie_name: licName, club_name: clubName }
+          });
+        }
       }
     }
     setInviteSuccess(true);
