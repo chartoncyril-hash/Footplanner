@@ -1132,7 +1132,16 @@ export function LicenciesView() {
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <span>{filtered.length} licencié{filtered.length > 1 ? "s" : ""}</span>
               {selectedLicencies.length > 0 && (
-                <button onClick={() => setShowInvitePanel(true)} style={{ padding:'8px 16px', background:'rgba(129,140,248,0.1)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:8, color:'#818cf8', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                <button onClick={() => {
+                  // Pré-remplir avec les emails des fiches
+                  const prefilled = {};
+                  selectedLicencies.forEach(id => {
+                    const lic = licencies.find(l => l.id === id);
+                    if (lic?.email) prefilled[id] = lic.email;
+                  });
+                  setInviteEmails(prefilled);
+                  setShowInvitePanel(true);
+                }} style={{ padding:'8px 16px', background:'rgba(129,140,248,0.1)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:8, color:'#818cf8', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
                   ✉️ Inviter les parents ({selectedLicencies.length})
                 </button>
               )}
@@ -1154,7 +1163,8 @@ export function LicenciesView() {
                     return (
                       <div key={id} style={{ marginBottom:12 }}>
                         <label style={{ fontSize:11, color:'#818cf8', fontWeight:700, marginBottom:4, display:'block', textTransform:'uppercase', letterSpacing:0.5 }}>{lic?.first_name} {lic?.last_name}</label>
-                        <input style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, boxSizing:'border-box', fontFamily:'inherit' }} placeholder="parent1@email.fr, parent2@email.fr" value={inviteEmails[id] || ''} onChange={e => setInviteEmails(p => ({...p, [id]: e.target.value}))} />
+                        <input style={{ width:'100%', padding:'9px 12px', background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#f1f5f9', fontSize:13, boxSizing:'border-box', fontFamily:'inherit' }} placeholder="email@parent.fr, email2@parent.fr" value={inviteEmails[id] || ''} onChange={e => setInviteEmails(p => ({...p, [id]: e.target.value}))} />
+                        <div style={{ fontSize:10, color:'#475569', marginTop:4 }}>Séparez plusieurs emails par des virgules. Pré-rempli depuis la fiche licencié.</div>
                       </div>
                     );
                   })}
