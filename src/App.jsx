@@ -586,7 +586,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
           existingTournament={tournament}
         />
       )}
-      <TopBar {...ctx} profile={profile} accessCode={accessCode} />
+      <TopBar {...ctx} profile={profile} accessCode={accessCode} onGoToHub={() => setHubMode(true)} />
       <AnnouncementBar tournamentId={tournament.id} />
 
       <main className="main">

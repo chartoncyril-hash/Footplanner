@@ -15,12 +15,17 @@ const ROLE_META = {
 // - Badge de rôle (clic = ouvre RoleSwitcher)
 // - Roue crantée (organizer uniquement) qui toggle l'écran settings
 // ============================================================
-export function TopBar({ tournament, role, view, setView, profile, accessCode }) {
+export function TopBar({ tournament, role, view, setView, profile, accessCode, onGoToHub }) {
   const canEditTournament = role === 'organizer';
 
   return (
     <header style={styles.topbar}>
       <div style={styles.topbarLeft}>
+        {onGoToHub && (
+          <button onClick={onGoToHub} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'#64748b', cursor:'pointer', fontSize:11, fontWeight:600, marginRight:4, whiteSpace:'nowrap' }}>
+            ← Retour au dashboard
+          </button>
+        )}
         {profile?.club_logo_url ? <img src={profile.club_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} /> : <div style={styles.logoMark}><Zap size={14} strokeWidth={2.5} color="#0a0a0a" /></div>}
         <div style={{ minWidth: 0 }}>
           <div style={{ ...styles.brandName, color: profile?.club_color || "#a3e635" }}>{profile?.club_name || "FOOTPLANNER"}</div>
