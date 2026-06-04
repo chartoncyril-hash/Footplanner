@@ -131,7 +131,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
       <div style={styles.liveScore}>
         <div style={styles.liveTeam}>
           <Crest team={home} size="md" />
-          <span style={styles.liveTeamName}>{home.short || makeShortName(home.name)}</span>
+          <span style={styles.liveTeamName}>{makeShortName(home.name)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {canEdit && (
@@ -164,7 +164,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
         </div>
         <div style={{ ...styles.liveTeam, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="md" />
-          <span style={styles.liveTeamName}>{away.short || makeShortName(away.name)}</span>
+          <span style={styles.liveTeamName}>{makeShortName(away.name)}</span>
         </div>
       </div>
       {canEdit && (
@@ -222,10 +222,10 @@ export function UpcomingMatchCard({ match, teams, matches, standings, onTap }) {
       <div style={styles.upcomingMid}>
         <div style={styles.upcomingTeams}>
           <Crest team={home} size="sm" />
-          <span style={styles.upcomingTeamName}>{home.short || makeShortName(home.name)}</span>
+          <span style={styles.upcomingTeamName}>{makeShortName(home.name)}</span>
           <span style={{ fontSize: 10, color: '#475569', margin: '0 4px' }}>vs</span>
           <Crest team={away} size="sm" />
-          <span style={styles.upcomingTeamName}>{away.short || makeShortName(away.name)}</span>
+          <span style={styles.upcomingTeamName}>{makeShortName(away.name)}</span>
         </div>
         <div style={styles.upcomingMeta}>
           <Hash size={9} /> {match.field}
@@ -328,7 +328,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
       <div style={{ ...styles.matchListMid }}>
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
-          <span style={styles.matchListName}>{home.short || makeShortName(home.name)}</span>
+          <span style={styles.matchListName}>{makeShortName(home.name)}</span>
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -337,7 +337,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         </div>
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
-          <span style={styles.matchListName}>{away.short || makeShortName(away.name)}</span>
+          <span style={styles.matchListName}>{makeShortName(away.name)}</span>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -436,7 +436,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
       <div style={styles.matchListMid}>
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
-          <span style={styles.matchListName}>{home.short || makeShortName(home.name)}</span>
+          <span style={styles.matchListName}>{makeShortName(home.name)}</span>
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -445,7 +445,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         </div>
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
-          <span style={styles.matchListName}>{away.short || makeShortName(away.name)}</span>
+          <span style={styles.matchListName}>{makeShortName(away.name)}</span>
         </div>
       </div>
       <div style={styles.matchListRight}>
