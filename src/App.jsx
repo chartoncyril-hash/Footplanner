@@ -100,6 +100,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   // hubMode désactivé d'emblée pour les accès QR spectateur
   const [hubMode, setHubMode] = useState(spectatorCode ? false : true);
   const [hubView, setHubView] = useState('home');
+  const [hubMenuOpen, setHubMenuOpen] = useState(false);
   const [pendingRegistrations, setPendingRegistrations] = useState(0);
 
   // Sélection du tournoi actif (côté UI uniquement — n'affecte pas la BDD)
@@ -380,9 +381,21 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
     const clubColor = profile?.club_color || '#a3e635';
     const clubLogo = profile?.club_logo_url;
     const clubName = profile?.club_name || 'Mon club';
+    const hubMobile = !isDesktop;
+    const closeMenu = () => setHubMenuOpen(false);
     return (
       <div style={{ display:'flex', minHeight:'100vh', background:'#060a12' }}>
-        <aside style={{ width:240, flexShrink:0, background:'rgba(10,14,26,0.95)', borderRight:'1px solid rgba(34,211,238,0.12)', padding:'0', display:'flex', flexDirection:'column', position:'fixed', top:0, left:0, bottom:0, zIndex:50, overflowY:'auto' }}>
+        {/* Bouton hamburger mobile */}
+        {hubMobile && (
+          <button onClick={() => setHubMenuOpen(true)} style={{ position:'fixed', top:12, left:12, zIndex:60, width:42, height:42, borderRadius:10, background:'rgba(10,14,26,0.95)', border:'1px solid rgba(34,211,238,0.2)', color:'#a3e635', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', backdropFilter:'blur(8px)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        )}
+        {/* Overlay mobile */}
+        {hubMobile && hubMenuOpen && (
+          <div onClick={closeMenu} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:55, backdropFilter:'blur(2px)' }} />
+        )}
+        <aside style={{ width:240, flexShrink:0, background:'rgba(10,14,26,0.98)', borderRight:'1px solid rgba(34,211,238,0.12)', padding:'0', display:'flex', flexDirection:'column', position:'fixed', top:0, left:0, bottom:0, zIndex:58, overflowY:'auto', transform: hubMobile ? (hubMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)', transition:'transform 0.25s ease' }}>
           {/* Logo FootPlanner */}
           <div style={{ padding:'20px 18px 16px', display:'flex', alignItems:'center', gap:10, borderBottom:'1px solid rgba(34,211,238,0.08)', cursor:'default' }}>
             <img src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/logo%20app/8891B8C3-D2AB-4CE4-AA8B-5A740A9FD062.png" alt="FootPlanner" style={{ width:40, height:40, objectFit:'contain', flexShrink:0 }} />
@@ -400,6 +413,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
                   if (item.id === 'home') setHubView('home');
                   else if (item.id === 'tournaments') setHubMode(false);
                   else setHubView(item.id);
+                  closeMenu();
                 }} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: isActive ? item.color+'18' : 'transparent', color: isActive ? item.color : '#64748b', cursor:'pointer', fontSize:13, fontWeight: isActive ? 700 : 500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, transition:'all 0.15s', borderLeft: isActive ? '2px solid '+item.color : '2px solid transparent' }}>
                   <span style={{ fontSize:15, opacity: isActive ? 1 : 0.7 }}>
                     {item.id==='home' && <LayoutDashboard size={16} />}
@@ -427,8 +441,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             </button>
           </div>
         </aside>
-        <div style={{ flex:1, minWidth:0, marginLeft:240 }}>
-        <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ flex:1, minWidth:0, marginLeft: hubMobile ? 0 : 240, paddingTop: hubMobile ? 56 : 0 }}>
       <HubDashboard
         profile={profile}
         myTournaments={myTournaments}
@@ -461,7 +474,6 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         onUpdateTournamentInList={updateTournamentInList}
         signOut={signOut}
       />
-        </div>
         </div>
       </div>
     );
