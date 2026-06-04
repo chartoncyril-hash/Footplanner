@@ -1715,6 +1715,7 @@ liveTeam: {
 liveTeamName: {
   fontSize: 13, fontWeight: 800, color: '#f1f5f9',
   fontFamily: "'JetBrains Mono', monospace",
+  maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 },
 liveScoreNum: {
   fontSize: 22, fontWeight: 800, color: '#a3e635',
