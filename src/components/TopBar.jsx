@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Zap, Crown, Flag, Shield, Eye, Settings, X, ChevronDown } from 'lucide-react';
 import { styles } from '../styles/styles';
 
@@ -22,14 +22,14 @@ export function TopBar({ tournament, role, view, setView, profile, accessCode, o
     <header style={styles.topbar}>
       <div style={styles.topbarLeft}>
         {onGoToHub && role === 'organizer' && (
-          <button onClick={onGoToHub} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'#64748b', cursor:'pointer', fontSize:11, fontWeight:600, marginRight:4, whiteSpace:'nowrap' }}>
-            ← Retour au dashboard
+          <button onClick={onGoToHub} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'#64748b', cursor:'pointer', fontSize:isMobile ? 16 : 11, fontWeight:600, marginRight:4, whiteSpace:'nowrap', minWidth:32, justifyContent:'center' }}>
+            {isMobile ? '←' : '← Retour au dashboard'}
           </button>
         )}
-        {profile?.club_logo_url ? <img src={profile.club_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} /> : <div style={styles.logoMark}><Zap size={14} strokeWidth={2.5} color="#0a0a0a" /></div>}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ ...styles.brandName, color: profile?.club_color || "#a3e635" }}>{profile?.club_name || "FOOTPLANNER"}</div>
-          <div style={styles.tournamentName}>{tournament?.name || 'Tournoi'}</div>
+        {profile?.club_logo_url ? <img src={profile.club_logo_url} alt="" style={{ width: isMobile ? 32 : 40, height: isMobile ? 32 : 40, borderRadius: 10, objectFit: "cover", flexShrink:0 }} /> : <div style={styles.logoMark}><Zap size={14} strokeWidth={2.5} color="#0a0a0a" /></div>}
+        <div style={{ minWidth:0, overflow:'hidden' }}>
+          {!isMobile && <div style={{ ...styles.brandName, color: profile?.club_color || "#a3e635" }}>{profile?.club_name || "FOOTPLANNER"}</div>}
+          <div style={{ ...styles.tournamentName, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth: isMobile ? 120 : 200 }}>{tournament?.name || 'Tournoi'}</div>
         </div>
       </div>
       <div style={styles.topbarRight}>
