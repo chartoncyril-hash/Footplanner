@@ -17,6 +17,12 @@ const ROLE_META = {
 // ============================================================
 export function TopBar({ tournament, role, view, setView, profile, accessCode, onGoToHub }) {
   const canEditTournament = role === 'organizer';
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
 
   return (
     <header style={styles.topbar}>
