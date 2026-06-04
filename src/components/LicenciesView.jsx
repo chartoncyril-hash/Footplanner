@@ -872,6 +872,7 @@ function DashboardTab({ licencies, docs }) {
   );
 }
 export function LicenciesView() {
+  const isMobile = window.innerWidth < 768;
   const [licencies, setLicencies] = useState([]);
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1007,26 +1008,13 @@ export function LicenciesView() {
 
   return (
     <div style={S.page}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 24,
-        }}
-      >
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems: isMobile ? "flex-start" : "flex-start", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 0, marginBottom: 24 }}>
         <div>
           <div style={S.title}>Licenciés & Équipes</div>
           <div style={S.sub}>Gérez vos licenciés, documents et conformité</div>
         </div>
         {tab === "licencies" && (
-          <button
-            style={S.btnPrimary}
-            onClick={() => {
-              setEditing(null);
-              setShowForm(true);
-            }}
-          >
+          <button style={{ ...S.btnPrimary, width: isMobile ? '100%' : 'auto' }} onClick={() => { setEditing(null); setShowForm(true); }}>
             + Nouveau licencié
           </button>
         )}
@@ -1217,14 +1205,7 @@ export function LicenciesView() {
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 3,
-                      }}
-                    >
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3, flexWrap:"wrap" }}>
                       <span
                         style={{
                           fontSize: 15,
@@ -1302,32 +1283,24 @@ export function LicenciesView() {
                       </span>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: 'center' }}>
-                    <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#a3e635' }} />
-                    <button
-                      style={S.btnGhost}
-                      onClick={() => setExpandedId(isExpanded ? null : l.id)}
-                    >
-                      📄 Docs
-                    </button>
-                    <button
-                      style={S.btnGhost}
-                      onClick={() => {
-                        setEditing(l);
-                        setShowForm(true);
-                      }}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      style={S.btnDanger}
-                      onClick={() => handleDelete(l.id)}
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  {!isMobile && (
+                    <div style={{ display:"flex", gap:6, alignItems:'center' }}>
+                      <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width:16, height:16, cursor:'pointer', accentColor:'#a3e635' }} />
+                      <button style={S.btnGhost} onClick={() => setExpandedId(isExpanded ? null : l.id)}>📄 Docs</button>
+                      <button style={S.btnGhost} onClick={() => { setEditing(l); setShowForm(true); }}>✏️</button>
+                      <button style={S.btnDanger} onClick={() => handleDelete(l.id)}>🗑️</button>
+                    </div>
+                  )}
                 </div>
-                {isExpanded && (
+                {isMobile && (
+                    <div style={{ display:'flex', gap:8, marginTop:12, paddingTop:10, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                      <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width:16, height:16, cursor:'pointer', accentColor:'#a3e635', marginRight:4 }} />
+                      <button style={{ ...S.btnGhost, flex:1 }} onClick={() => setExpandedId(isExpanded ? null : l.id)}>📄 Docs</button>
+                      <button style={{ ...S.btnGhost, flex:1 }} onClick={() => { setEditing(l); setShowForm(true); }}>✏️ Modifier</button>
+                      <button style={{ ...S.btnDanger }} onClick={() => handleDelete(l.id)}>🗑️</button>
+                    </div>
+                  )}
+              {isExpanded && (
                   <DocumentsPanel
                     licencie={l}
                     onClose={() => setExpandedId(null)}
