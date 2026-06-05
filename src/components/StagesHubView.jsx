@@ -614,10 +614,10 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data } = await supabase
       .from('licencies')
-      .select('id, first_name, last_name, email, category, team_name, status')
+      .select('id, first_name, last_name, email, category, team, status')
       .eq('owner_id', user.id)
-      .eq('status', 'actif')
       .order('last_name');
+    console.log('licencies loaded:', data?.length, data?.[0]);
     setLicencies(data || []);
     setLicenciesLoading(false);
   }, []);
@@ -814,7 +814,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
                       <div style={{ flex:1 }}>
                         <span style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{lic.first_name} {lic.last_name}</span>
                         {lic.category && <span style={{ fontSize:11, color:'#818cf8', marginLeft:8 }}>{lic.category}</span>}
-                        {lic.team_name && <span style={{ fontSize:11, color:'#64748b', marginLeft:6 }}>{lic.team_name}</span>}
+                        {lic.team && <span style={{ fontSize:11, color:'#64748b', marginLeft:6 }}>{lic.team}</span>}
                       </div>
                       <span style={{ fontSize:12, color: hasEmail ? '#64748b' : '#fb7185' }}>{hasEmail ? lic.email : "Pas d'email"}</span>
                     </label>
