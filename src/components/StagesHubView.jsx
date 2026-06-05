@@ -83,6 +83,7 @@ export function StagesHubView() {
   const [stages, setStages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   const [editStage, setEditStage] = useState(null);
   const [detailStage, setDetailStage] = useState(null);
   const [stats, setStats] = useState({ total: 0, open: 0, participants: 0, paid: 0 });
@@ -121,8 +122,10 @@ export function StagesHubView() {
     load();
   };
 
-  const copyLink = (code) => {
-    navigator.clipboard.writeText(`${window.location.origin}/?stage=${code}`);
+  const copyLink = (id, code) => {
+    navigator.clipboard.writeText(`https://www.footplanner.fr/?stage=${code}`);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (loading) return <div style={{ color: '#64748b', padding: 40 }}>Chargement...</div>;
@@ -202,10 +205,21 @@ export function StagesHubView() {
                   <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: pct >= 90 ? '#fb7185' : '#f97316', borderRadius: 4, transition: 'width 0.3s' }} />
                 </div>
               )}
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: '#475569', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  footplanner.fr/?stage={stage.access_code}
+                </span>
+                <button
+                  onClick={() => copyLink(stage.id, stage.access_code)}
+                  style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: copiedId === stage.id ? 'rgba(163,230,53,0.15)' : 'rgba(255,255,255,0.05)', color: copiedId === stage.id ? '#a3e635' : '#64748b', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all 0.2s' }}
+                >
+                  {copiedId === stage.id ? '✓ Copié !' : 'Copier le lien'}
+                </button>
+              </div>
             </div>
             {/* Actions */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <button title="Copier le lien d'inscription" style={S.btnGhost} onClick={() => copyLink(stage.access_code)}>
+              <button title="Copier le lien d'inscription" style={{ ...S.btnGhost, color: copiedId === stage.id ? '#a3e635' : '#64748b' }} onClick={() => copyLink(stage.id, stage.access_code)}>
                 <Copy size={14} />
               </button>
               <button title="Modifier" style={S.btnGhost} onClick={() => { setEditStage(stage); setWizardOpen(true); }}>
