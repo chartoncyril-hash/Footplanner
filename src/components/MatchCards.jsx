@@ -120,7 +120,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
   });
 
   return (
-    <div style={styles.liveCard}>
+    <div style={{ ...styles.liveCard, cursor: isMobile && canEdit ? 'pointer' : 'default' }} onClick={() => { if (isMobile && canEdit && onTap) onTap(); }}>
       <div style={styles.liveTopRow}>
         <div style={styles.livePill}>
           <span style={styles.livePulse} />
