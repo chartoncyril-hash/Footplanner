@@ -65,6 +65,8 @@ export function PageHeader({ title, subtitle, icon: Icon, accent = '#a3e635' }) 
 // LiveMatchCard — match en cours, gros score visible
 // ============================================================
 export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdateScore, onValidate, canEdit }) {
+  const isMobile = window.innerWidth < 768;
+  const canEditDesktop = canEdit && !isMobile;
   const home = getDisplayTeam('home', match, teams, matches, standings);
   const away = getDisplayTeam('away', match, teams, matches, standings);
   const [draftHome, setDraftHome] = React.useState(match.scoreHome ?? 0);
@@ -80,7 +82,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
   const updateHome = async (delta) => {
     const newVal = Math.max(0, Math.min(99, (draftHome || 0) + delta));
     setDraftHome(newVal);
-    if (onUpdateScore && canEdit) {
+    if (onUpdateScore && canEditDesktop) {
       try { await onUpdateScore(match.id, { scoreHome: newVal, scoreAway: draftAway }); }
       catch (e) { console.error('Score update failed', e); }
     }
@@ -89,7 +91,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
   const updateAway = async (delta) => {
     const newVal = Math.max(0, Math.min(99, (draftAway || 0) + delta));
     setDraftAway(newVal);
-    if (onUpdateScore && canEdit) {
+    if (onUpdateScore && canEditDesktop) {
       try { await onUpdateScore(match.id, { scoreHome: draftHome, scoreAway: newVal }); }
       catch (e) { console.error('Score update failed', e); }
     }
@@ -134,7 +136,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
           <span style={styles.liveTeamName}>{makeShortName(home.name)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {canEdit && (
+          {canEditDesktop && (
             <button onClick={(e) => { e.stopPropagation(); updateHome(-1); }} style={btnScore(-1)}>−</button>
           )}
           <div style={{
@@ -144,11 +146,11 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
           }}>
             {draftHome}
           </div>
-          {canEdit && (
+          {canEditDesktop && (
             <button onClick={(e) => { e.stopPropagation(); updateHome(1); }} style={btnScore(1)}>+</button>
           )}
           <span style={{ color: '#475569', fontSize: 18, fontWeight: 800, margin: '0 4px' }}>—</span>
-          {canEdit && (
+          {canEditDesktop && (
             <button onClick={(e) => { e.stopPropagation(); updateAway(-1); }} style={btnScore(-1)}>−</button>
           )}
           <div style={{
@@ -158,7 +160,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
           }}>
             {draftAway}
           </div>
-          {canEdit && (
+          {canEditDesktop && (
             <button onClick={(e) => { e.stopPropagation(); updateAway(1); }} style={btnScore(1)}>+</button>
           )}
         </div>
@@ -167,7 +169,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
           <span style={styles.liveTeamName}>{makeShortName(away.name)}</span>
         </div>
       </div>
-      {canEdit && (
+      {canEditDesktop && (
         <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
           <button
             onClick={handleValidate}
