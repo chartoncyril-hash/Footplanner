@@ -92,6 +92,26 @@ Deno.serve(async (req) => {
     ` + footer;
   }
 
+  // ── RELANCE ───────────────────────────────────────────────
+  else if (type === 'reminder') {
+    subject = `Rappel — Plus que ${days_left} jour${days_left > 1 ? 's' : ''} pour s'inscrire — ${stage_name}`;
+    html = header + `
+      <h2 style="font-size:20px;font-weight:800;margin:0 0 8px;">⏰ Plus que ${days_left} jour${days_left > 1 ? 's' : ''} !</h2>
+      <p style="color:#94a3b8;line-height:1.7;">Bonjour <strong style="color:#f1f5f9;">${participant_name}</strong>,</p>
+      <p style="color:#94a3b8;line-height:1.7;">Les inscriptions au stage <strong style="color:#f1f5f9;">${stage_name}</strong> se terminent dans <strong style="color:${accent};">${days_left} jour${days_left > 1 ? 's' : ''}</strong>.</p>
+      ${stageInfo}
+      ${registration_close ? `<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin:16px 0;text-align:center;">
+        <p style="color:#f59e0b;font-weight:800;font-size:14px;margin:0;">⏰ Clôture le ${registration_close}</p>
+      </div>` : ''}
+      <div style="text-align:center;margin:28px 0;">
+        <a href="${stage_url}" style="display:inline-block;padding:16px 36px;background:${accent};color:#fff;text-decoration:none;border-radius:12px;font-weight:800;font-size:16px;">
+          S'inscrire maintenant →
+        </a>
+      </div>
+      <p style="color:#64748b;font-size:12px;text-align:center;">Ne tardez plus, les places sont limitées !</p>
+    ` + footer;
+  }
+
   // ── REJET ─────────────────────────────────────────────────
   else if (type === 'rejection') {
     subject = `Inscription non retenue — ${stage_name}`;

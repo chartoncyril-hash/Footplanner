@@ -358,6 +358,7 @@ function StageWizard({ stage, onClose, onSaved }) {
     notify_on_registration: stage?.notify_on_registration ?? true,
     categories: stage?.categories || [],
     fields_config: stage?.fields_config?.fields ? stage.fields_config : { fields: DEFAULT_FIELDS, custom_fields: [] },
+    reminder_days: stage?.reminder_days || [7, 3, 1],
   });
 
   const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18','U19','Senior','Féminin'];
@@ -418,6 +419,7 @@ function StageWizard({ stage, onClose, onSaved }) {
       notify_on_registration: form.notify_on_registration,
       categories: form.categories,
       fields_config: form.fields_config,
+      reminder_days: form.reminder_days,
     };
     if (isEdit) {
       const { error } = await supabase.from('stages').update(payload).eq('id', stage.id);
@@ -585,6 +587,28 @@ function StageWizard({ stage, onClose, onSaved }) {
             <div style={{ padding:16, borderRadius:10, background:'rgba(249,115,22,0.08)', border:'1px solid rgba(249,115,22,0.2)' }}>
               <p style={{ color:'#f97316', fontSize:13, fontWeight:700, margin:'0 0 4px' }}>🔗 Lien d'inscription public</p>
               <p style={{ color:'#94a3b8', fontSize:12, margin:0 }}>Disponible après création. Format : {window.location.origin}/?stage=<span style={{ color:'#f97316' }}>CODE</span></p>
+            </div>
+            {/* Relances auto */}
+            <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:16 }}>
+              <p style={{ color:'#94a3b8', fontSize:13, fontWeight:700, marginBottom:10 }}>⏰ Relances automatiques avant clôture</p>
+              <p style={{ color:'#64748b', fontSize:12, marginBottom:12 }}>Emails envoyés automatiquement aux invités non encore inscrits.</p>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                {[7, 3, 1].map(d => (
+                  <label key={d} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px', borderRadius:8, border:'1px solid', cursor:'pointer',
+                    borderColor: form.reminder_days.includes(d) ? '#f97316' : 'rgba(255,255,255,0.1)',
+                    background: form.reminder_days.includes(d) ? 'rgba(249,115,22,0.1)' : 'rgba(255,255,255,0.03)',
+                  }}>
+                    <input type="checkbox" checked={form.reminder_days.includes(d)}
+                      onChange={() => set('reminder_days', form.reminder_days.includes(d)
+                        ? form.reminder_days.filter(x => x !== d)
+                        : [...form.reminder_days, d].sort((a,b) => b-a)
+                      )}
+                      style={{ accentColor:'#f97316' }}
+                    />
+                    <span style={{ fontSize:13, fontWeight:600, color: form.reminder_days.includes(d) ? '#f97316' : '#64748b' }}>J-{d}</span>
+                  </label>
+                ))}
+              </div>
             </div>
             <div style={{ padding:16, borderRadius:10, background:'rgba(100,116,139,0.08)', border:'1px solid rgba(100,116,139,0.2)' }}>
               <p style={{ color:'#94a3b8', fontSize:13, fontWeight:700, margin:'0 0 4px' }}>💳 Paiement Stripe</p>
