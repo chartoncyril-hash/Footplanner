@@ -88,6 +88,65 @@ export function StagesHubView() {
   const [detailStage, setDetailStage] = useState(null);
   const [stats, setStats] = useState({ total: 0, open: 0, participants: 0, paid: 0 });
 
+  const handleSendInvitesAnciens = async () => {
+    if (selectedAnciens.length === 0) return;
+    setInviteSending(true);
+    const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+    const now = new Date();
+    const openLic = stage.registration_open_licencies ? new Date(stage.registration_open_licencies) : null;
+    const openPublic = stage.registration_open_public ? new Date(stage.registration_open_public) : null;
+    const closeDate = stage.registration_close ? new Date(stage.registration_close).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : null;
+    const openingDate = openPublic ? openPublic.toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'bientôt';
+    let sent = 0;
+    for (const ancId of selectedAnciens) {
+      const anc = anciens.find(a => a.id === ancId);
+      if (!anc?.email) continue;
+      // Créer ou récupérer token dans stage_invites
+      let token = null;
+      const { data: existing } = await supabase.from('stage_invites').select('token').eq('stage_id', stage.id).eq('email', anc.email).single();
+      if (existing?.token) {
+        token = existing.token;
+      } else {
+        const { data: newInvite } = await supabase.from('stage_invites').insert({
+          stage_id: stage.id,
+          owner_id: stage.owner_id,
+          email: anc.email,
+          first_name: anc.first_name,
+          last_name: anc.last_name,
+          type: 'ancien_participant',
+        }).select('token').single();
+        token = newInvite?.token;
+      }
+      const stageUrl = `https://www.footplanner.fr/?stage=${stage.access_code}&token=${token}`;
+      const isPublicFutur = openPublic && now < openPublic;
+      await supabase.functions.invoke('send-stage-email', {
+        body: {
+          type: isPublicFutur ? 'announcement' : 'opening',
+          email: anc.email,
+          participant_name: `${anc.first_name} ${anc.last_name}`,
+          stage_name: stage.name,
+          stage_date_start: stage.date_start ? new Date(stage.date_start).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+          stage_date_end: stage.date_end ? new Date(stage.date_end).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+          stage_location: stage.location,
+          stage_price: stage.price,
+          payment_info: stage.payment_info,
+          registration_close: closeDate,
+          club_name: prof?.club_name,
+          club_color: prof?.club_color,
+          club_logo_url: prof?.club_logo_url,
+          stage_url: stageUrl,
+          opening_date: isPublicFutur ? openingDate : null,
+          is_priority: false,
+        }
+      });
+      sent++;
+    }
+    setInviteSending(false);
+    setSelectedAnciens([]);
+    setInviteToast(`✓ ${sent} ancien(s) participant(s) invité(s) !`);
+    setTimeout(() => setInviteToast(''), 3000);
+  };
+
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -574,8 +633,12 @@ function StageDetailView({ stage, onClose, onRefresh }) {
   const [filter, setFilter] = useState('all');
   const [addOpen, setAddOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('participants');
+  const [inviteSubTab, setInviteSubTab] = useState('licencies');
   const [licencies, setLicencies] = useState([]);
   const [licenciesLoading, setLicenciesLoading] = useState(false);
+  const [anciens, setAnciens] = useState([]);
+  const [anciensLoading, setAnciensLoading] = useState(false);
+  const [selectedAnciens, setSelectedAnciens] = useState([]);
   const [selectedLics, setSelectedLics] = useState([]);
   const [filterCat, setFilterCat] = useState('');
   const [inviteSending, setInviteSending] = useState(false);
@@ -635,6 +698,41 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     setLicencies(data || []);
     setLicenciesLoading(false);
   }, []);
+
+  const loadAnciens = useCallback(async () => {
+    setAnciensLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    // Récupérer tous les participants des autres stages du club
+    const { data: stagesData } = await supabase
+      .from('stages')
+      .select('id')
+      .eq('owner_id', user.id)
+      .neq('id', stage.id);
+    const stageIds = (stagesData || []).map(s => s.id);
+    if (stageIds.length === 0) { setAnciens([]); setAnciensLoading(false); return; }
+    const { data } = await supabase
+      .from('stage_participants')
+      .select('id, first_name, last_name, email, category, registered_at, stage_id')
+      .in('stage_id', stageIds)
+      .not('email', 'is', null)
+      .order('last_name');
+    // Dédupliquer par email — garder le plus récent
+    const seen = new Map();
+    for (const p of (data || [])) {
+      if (!seen.has(p.email) || new Date(p.registered_at) > new Date(seen.get(p.email).registered_at)) {
+        seen.set(p.email, p);
+      }
+    }
+    // Exclure ceux déjà inscrits à ce stage
+    const { data: dejInscrits } = await supabase
+      .from('stage_participants')
+      .select('email')
+      .eq('stage_id', stage.id);
+    const emailsInscrits = new Set((dejInscrits || []).map(p => p.email));
+    const result = [...seen.values()].filter(p => !emailsInscrits.has(p.email));
+    setAnciens(result);
+    setAnciensLoading(false);
+  }, [stage.id]);
 
   const handleSendInvites = async () => {
     if (selectedLics.length === 0) return;
@@ -757,9 +855,9 @@ function StageDetailView({ stage, onClose, onRefresh }) {
         <div style={{ display:'flex', gap:4, marginBottom:24, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0 }}>
           {[
             { key:'participants', label:'👥 Participants' },
-            { key:'invitations', label:'📣 Inviter des licenciés' },
+            { key:'invitations', label:'📣 Invitations' },
           ].map(tab => (
-            <button key={tab.key} onClick={() => { setActiveTab(tab.key); if (tab.key === 'invitations') loadLicencies(); }} style={{
+            <button key={tab.key} onClick={() => { setActiveTab(tab.key); if (tab.key === 'invitations') { loadLicencies(); loadAnciens(); } }} style={{
               padding:'10px 18px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit',
               fontSize:13, fontWeight:700,
               color: activeTab === tab.key ? '#f97316' : '#64748b',
@@ -772,11 +870,27 @@ function StageDetailView({ stage, onClose, onRefresh }) {
         {/* ── ONGLET INVITATIONS ── */}
         {activeTab === 'invitations' && (
           <div>
+            {/* Sous-onglets */}
+            <div style={{ display:'flex', gap:4, marginBottom:20 }}>
+              {[
+                { key:'licencies', label:'🎽 Licenciés du club' },
+                { key:'anciens',   label:`🔄 Anciens participants${anciens.length > 0 ? ` (${anciens.length})` : ''}` },
+              ].map(sub => (
+                <button key={sub.key} onClick={() => setInviteSubTab(sub.key)} style={{
+                  padding:'7px 16px', border:'1px solid', borderRadius:8, cursor:'pointer', fontFamily:'inherit',
+                  fontSize:12, fontWeight:700,
+                  borderColor: inviteSubTab === sub.key ? '#f97316' : 'rgba(255,255,255,0.1)',
+                  background: inviteSubTab === sub.key ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)',
+                  color: inviteSubTab === sub.key ? '#f97316' : '#64748b',
+                }}>{sub.label}</button>
+              ))}
+            </div>
             {inviteToast && (
               <div style={{ background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.3)', borderRadius:8, padding:'10px 16px', color:'#a3e635', fontSize:13, fontWeight:600, marginBottom:16 }}>
                 {inviteToast}
               </div>
             )}
+            {inviteSubTab === 'licencies' && <div>
             {/* Infos stage récap */}
             <div style={{ background:'rgba(249,115,22,0.06)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:10, padding:'14px 18px', marginBottom:20, display:'flex', flexWrap:'wrap', gap:16 }}>
               {stage.date_start && <span style={{ fontSize:12, color:'#94a3b8' }}>📅 {new Date(stage.date_start).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}{stage.date_end ? ` → ${new Date(stage.date_end).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}` : ''}</span>}
@@ -836,16 +950,65 @@ function StageDetailView({ stage, onClose, onRefresh }) {
                 })}
               </div>
             )}
-            {/* Bouton envoi */}
+            {/* Bouton envoi licenciés */}
             <div style={{ display:'flex', justifyContent:'flex-end' }}>
-              <button
-                onClick={handleSendInvites}
-                disabled={inviteSending || selectedLics.length === 0}
-                style={{ padding:'11px 24px', borderRadius:10, border:'none', background:'#f97316', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:'inherit', opacity: selectedLics.length === 0 ? 0.4 : 1 }}
-              >
+              <button onClick={handleSendInvites} disabled={inviteSending || selectedLics.length === 0}
+                style={{ padding:'11px 24px', borderRadius:10, border:'none', background:'#f97316', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:'inherit', opacity: selectedLics.length === 0 ? 0.4 : 1 }}>
                 {inviteSending ? 'Envoi en cours...' : `📣 Envoyer l'invitation (${selectedLics.length})`}
               </button>
             </div>
+            </div>}
+
+            {/* ── SOUS-ONGLET ANCIENS PARTICIPANTS ── */}
+            {inviteSubTab === 'anciens' && <div>
+              <p style={{ color:'#64748b', fontSize:13, marginBottom:16 }}>
+                Participants des stages précédents non encore inscrits à ce stage. Dédupliqués par email.
+              </p>
+              {anciensLoading ? (
+                <div style={{ color:'#64748b', padding:20, textAlign:'center' }}>Chargement...</div>
+              ) : anciens.length === 0 ? (
+                <div style={{ color:'#475569', padding:20, textAlign:'center', fontSize:13 }}>
+                  Aucun ancien participant trouvé, ou tous sont déjà inscrits à ce stage.
+                </div>
+              ) : (
+                <>
+                  <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:12, flexWrap:'wrap' }}>
+                    <button onClick={() => setSelectedAnciens(anciens.filter(a=>a.email).map(a=>a.id))}
+                      style={{ padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                      Tout sélectionner
+                    </button>
+                    {selectedAnciens.length > 0 && (
+                      <button onClick={() => setSelectedAnciens([])}
+                        style={{ padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#64748b', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                        Tout désélectionner
+                      </button>
+                    )}
+                    <span style={{ fontSize:12, color:'#64748b', marginLeft:'auto' }}>{selectedAnciens.length} sélectionné(s)</span>
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:320, overflowY:'auto', marginBottom:16 }}>
+                    {anciens.map(anc => {
+                      const isSelected = selectedAnciens.includes(anc.id);
+                      return (
+                        <label key={anc.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderRadius:8, border:'1px solid', borderColor: isSelected ? 'rgba(249,115,22,0.35)' : 'rgba(255,255,255,0.06)', background: isSelected ? 'rgba(249,115,22,0.06)' : 'rgba(255,255,255,0.02)', cursor:'pointer' }}>
+                          <input type="checkbox" checked={isSelected} onChange={() => setSelectedAnciens(prev => isSelected ? prev.filter(id => id !== anc.id) : [...prev, anc.id])} style={{ accentColor:'#f97316', width:15, height:15 }} />
+                          <div style={{ flex:1 }}>
+                            <span style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{anc.first_name} {anc.last_name}</span>
+                            {anc.category && <span style={{ fontSize:11, color:'#818cf8', marginLeft:8 }}>{anc.category}</span>}
+                          </div>
+                          <span style={{ fontSize:12, color:'#64748b' }}>{anc.email}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                    <button onClick={handleSendInvitesAnciens} disabled={inviteSending || selectedAnciens.length === 0}
+                      style={{ padding:'11px 24px', borderRadius:10, border:'none', background:'#f97316', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:'inherit', opacity: selectedAnciens.length === 0 ? 0.4 : 1 }}>
+                      {inviteSending ? 'Envoi en cours...' : `🔄 Inviter les anciens (${selectedAnciens.length})`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>}
           </div>
         )}
 
