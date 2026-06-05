@@ -2,6 +2,32 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tent, Plus, Users, CheckCircle, Clock, XCircle, CreditCard, Calendar, MapPin, ChevronRight, Edit2, Trash2, Copy, ToggleLeft, ToggleRight } from 'lucide-react';
 
+// Appel Edge Function email
+async function callStageEmail(type, participant, stage, profile, extra = {}) {
+  if (!participant?.email) return;
+  const stageUrl = `${window.location.origin}/?stage=${stage.access_code}`;
+  try {
+    await supabase.functions.invoke('send-stage-email', {
+      body: {
+        type,
+        email: participant.email,
+        participant_name: `${participant.first_name} ${participant.last_name}`,
+        stage_name: stage.name,
+        stage_date_start: stage.date_start ? new Date(stage.date_start).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+        stage_date_end: stage.date_end ? new Date(stage.date_end).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+        stage_location: stage.location,
+        stage_price: stage.price,
+        payment_info: stage.payment_info,
+        club_name: profile?.club_name,
+        club_color: profile?.club_color,
+        club_logo_url: profile?.club_logo_url,
+        stage_url: stageUrl,
+        ...extra,
+      }
+    });
+  } catch(e) { console.error('Email error:', e); }
+}
+
 const S = {
   page: { padding: '0 0 60px' },
   title: { fontSize: 22, fontWeight: 900, color: '#f1f5f9', marginBottom: 4 },
@@ -517,6 +543,38 @@ function StageDetailView({ stage, onClose, onRefresh }) {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('all');
   const [addOpen, setAddOpen] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState('');
+  const [emailToast, setEmailToast] = useState('');
+
+  const showToast = (msg) => { setEmailToast(msg); setTimeout(() => setEmailToast(''), 3000); };
+
+  const sendAnnouncement = async () => {
+    setSendingEmail('announcement');
+    const { data: participants_all } = await supabase.from('stage_participants').select('*').eq('stage_id', stage.id);
+    const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+    const openingDate = stage.registration_deadline
+      ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : 'bientôt';
+    // Envoyer à tous les participants existants
+    for (const p of (participants_all || [])) {
+      if (p.email) await callStageEmail('announcement', p, stage, prof, { opening_date: openingDate });
+    }
+    await supabase.from('stages').update({ announcement_sent_at: new Date().toISOString() }).eq('id', stage.id);
+    setSendingEmail('');
+    showToast(`📣 Annonce envoyée à ${(participants_all||[]).filter(p=>p.email).length} participant(s)`);
+  };
+
+  const sendOpening = async () => {
+    setSendingEmail('opening');
+    const { data: participants_all } = await supabase.from('stage_participants').select('*').eq('stage_id', stage.id);
+    const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+    for (const p of (participants_all || [])) {
+      if (p.email) await callStageEmail('opening', p, stage, prof);
+    }
+    await supabase.from('stages').update({ opening_sent_at: new Date().toISOString() }).eq('id', stage.id);
+    setSendingEmail('');
+    showToast(`📬 Email ouverture envoyé à ${(participants_all||[]).filter(p=>p.email).length} participant(s)`);
+  };
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -532,6 +590,13 @@ function StageDetailView({ stage, onClose, onRefresh }) {
 
   const updateStatus = async (id, status) => {
     await supabase.from('stage_participants').update({ status }).eq('id', id);
+    // Email automatique selon le statut
+    const p = participants.find(x => x.id === id);
+    if (p) {
+      const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+      if (status === 'approved') await callStageEmail('approval', p, stage, prof);
+      if (status === 'rejected') await callStageEmail('rejection', p, stage, prof);
+    }
     load();
     onRefresh();
   };
@@ -568,10 +633,31 @@ function StageDetailView({ stage, onClose, onRefresh }) {
               {stage.price > 0 ? ` · ${stage.price}€/participant` : ' · Gratuit'}
             </p>
           </div>
-          <div style={{ display:'flex', gap:8 }}>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            <button
+              style={{ ...S.btnGhost, color:'#818cf8', fontSize:12, opacity: sendingEmail === 'announcement' ? 0.5 : 1 }}
+              disabled={!!sendingEmail}
+              onClick={sendAnnouncement}
+              title="Envoyer une annonce aux licenciés"
+            >
+              {sendingEmail === 'announcement' ? '⏳' : '📣'} Annonce
+            </button>
+            <button
+              style={{ ...S.btnGhost, color:'#34d399', fontSize:12, opacity: sendingEmail === 'opening' ? 0.5 : 1 }}
+              disabled={!!sendingEmail}
+              onClick={sendOpening}
+              title="Envoyer email d'ouverture des inscriptions"
+            >
+              {sendingEmail === 'opening' ? '⏳' : '📬'} Ouverture
+            </button>
             <button style={S.btn} onClick={() => setAddOpen(true)}><Plus size={14} /> Ajouter</button>
             <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
           </div>
+          {emailToast && (
+            <div style={{ position:'fixed', bottom:24, right:24, background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 20px', color:'#f1f5f9', fontSize:13, fontWeight:600, zIndex:2000, boxShadow:'0 4px 24px rgba(0,0,0,0.4)' }}>
+              {emailToast}
+            </div>
+          )}
         </div>
 
         {/* Filtres */}

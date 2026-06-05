@@ -369,6 +369,30 @@ function StageForm({ stage, branding, S, accentColor, onSuccess }) {
       return;
     }
 
+    // Email confirmation automatique
+    if (form.email) {
+      try {
+        const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+        await supabase.functions.invoke('send-stage-email', {
+          body: {
+            type: 'confirmation',
+            email: form.email,
+            participant_name: `${form.first_name} ${form.last_name}`,
+            stage_name: stage.name,
+            stage_date_start: stage.date_start ? new Date(stage.date_start).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+            stage_date_end: stage.date_end ? new Date(stage.date_end).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+            stage_location: stage.location,
+            stage_price: stage.price,
+            payment_info: stage.payment_info,
+            club_name: prof?.club_name,
+            club_color: prof?.club_color,
+            club_logo_url: prof?.club_logo_url,
+            stage_url: window.location.href,
+          }
+        });
+      } catch(e) { console.error('Confirmation email error:', e); }
+    }
+
     onSuccess();
   };
 
