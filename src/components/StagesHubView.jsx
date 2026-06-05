@@ -559,6 +559,13 @@ function StageDetailView({ stage, onClose, onRefresh }) {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('all');
   const [addOpen, setAddOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('participants');
+  const [licencies, setLicencies] = useState([]);
+  const [licenciesLoading, setLicenciesLoading] = useState(false);
+  const [selectedLics, setSelectedLics] = useState([]);
+  const [filterCat, setFilterCat] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteToast, setInviteToast] = useState('');
   const [sendingEmail, setSendingEmail] = useState('');
   const [emailToast, setEmailToast] = useState('');
 
@@ -601,6 +608,62 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     if (data) setParticipants(data);
     setLoading(false);
   }, [stage.id]);
+
+  const loadLicencies = useCallback(async () => {
+    setLicenciesLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase
+      .from('licencies')
+      .select('id, first_name, last_name, email, category, team_name, status')
+      .eq('owner_id', user.id)
+      .eq('status', 'actif')
+      .order('last_name');
+    setLicencies(data || []);
+    setLicenciesLoading(false);
+  }, []);
+
+  const handleSendInvites = async () => {
+    if (selectedLics.length === 0) return;
+    setInviteSending(true);
+    const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
+    const stageUrl = `https://www.footplanner.fr/?stage=${stage.access_code}`;
+    const openingDate = stage.registration_deadline
+      ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : 'bientôt';
+    const placesRestantes = stage.max_participants
+      ? stage.max_participants - participants.filter(p => p.status !== 'rejected').length
+      : null;
+    let sent = 0;
+    for (const licId of selectedLics) {
+      const lic = licencies.find(l => l.id === licId);
+      if (!lic?.email) continue;
+      await supabase.functions.invoke('send-stage-email', {
+        body: {
+          type: stage.registration_open ? 'opening' : 'announcement',
+          email: lic.email,
+          participant_name: `${lic.first_name} ${lic.last_name}`,
+          stage_name: stage.name,
+          stage_date_start: stage.date_start ? new Date(stage.date_start).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+          stage_date_end: stage.date_end ? new Date(stage.date_end).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : null,
+          stage_location: stage.location,
+          stage_price: stage.price,
+          payment_info: stage.payment_info,
+          places_restantes: placesRestantes,
+          registration_deadline: stage.registration_deadline ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : null,
+          club_name: prof?.club_name,
+          club_color: prof?.club_color,
+          club_logo_url: prof?.club_logo_url,
+          stage_url: stageUrl,
+          opening_date: stage.registration_open ? null : openingDate,
+        }
+      });
+      sent++;
+    }
+    setInviteSending(false);
+    setSelectedLics([]);
+    setInviteToast(`✓ ${sent} invitation(s) envoyée(s) !`);
+    setTimeout(() => setInviteToast(''), 3000);
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -676,6 +739,104 @@ function StageDetailView({ stage, onClose, onRefresh }) {
           )}
         </div>
 
+        {/* Onglets */}
+        <div style={{ display:'flex', gap:4, marginBottom:24, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0 }}>
+          {[
+            { key:'participants', label:'👥 Participants' },
+            { key:'invitations', label:'📣 Inviter des licenciés' },
+          ].map(tab => (
+            <button key={tab.key} onClick={() => { setActiveTab(tab.key); if (tab.key === 'invitations') loadLicencies(); }} style={{
+              padding:'10px 18px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit',
+              fontSize:13, fontWeight:700,
+              color: activeTab === tab.key ? '#f97316' : '#64748b',
+              borderBottom: activeTab === tab.key ? '2px solid #f97316' : '2px solid transparent',
+              marginBottom:-1, transition:'all 0.15s',
+            }}>{tab.label}</button>
+          ))}
+        </div>
+
+        {/* ── ONGLET INVITATIONS ── */}
+        {activeTab === 'invitations' && (
+          <div>
+            {inviteToast && (
+              <div style={{ background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.3)', borderRadius:8, padding:'10px 16px', color:'#a3e635', fontSize:13, fontWeight:600, marginBottom:16 }}>
+                {inviteToast}
+              </div>
+            )}
+            {/* Infos stage récap */}
+            <div style={{ background:'rgba(249,115,22,0.06)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:10, padding:'14px 18px', marginBottom:20, display:'flex', flexWrap:'wrap', gap:16 }}>
+              {stage.date_start && <span style={{ fontSize:12, color:'#94a3b8' }}>📅 {new Date(stage.date_start).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}{stage.date_end ? ` → ${new Date(stage.date_end).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}` : ''}</span>}
+              {stage.location && <span style={{ fontSize:12, color:'#94a3b8' }}>📍 {stage.location}</span>}
+              {stage.max_participants && <span style={{ fontSize:12, color:'#f97316', fontWeight:700 }}>🎯 {stage.max_participants - participants.filter(p=>p.status!=='rejected').length} place(s) restante(s)</span>}
+              {stage.registration_deadline && <span style={{ fontSize:12, color:'#f59e0b', fontWeight:600 }}>⏰ Limite : {new Date(stage.registration_deadline).toLocaleString('fr-FR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>}
+              {stage.price > 0 && <span style={{ fontSize:12, color:'#f97316', fontWeight:700 }}>💶 {stage.price}€</span>}
+              <span style={{ fontSize:12, fontWeight:700, color: stage.registration_open ? '#34d399' : '#f59e0b' }}>
+                {stage.registration_open ? '🟢 Inscriptions ouvertes' : "🟡 Inscriptions fermées — email d'annonce"}
+              </span>
+            </div>
+            {/* Filtres + sélection */}
+            <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+              <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ padding:'7px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:13, fontFamily:'inherit' }}>
+                <option value="">Toutes catégories</option>
+                {[...new Set(licencies.map(l => l.category).filter(Boolean))].sort().map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <button onClick={() => {
+                const filtered = filterCat ? licencies.filter(l => l.category === filterCat) : licencies;
+                const withEmail = filtered.filter(l => l.email);
+                setSelectedLics(withEmail.map(l => l.id));
+              }} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                Tout sélectionner
+              </button>
+              {selectedLics.length > 0 && (
+                <button onClick={() => setSelectedLics([])} style={{ padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#64748b', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>
+                  Tout désélectionner
+                </button>
+              )}
+              <span style={{ fontSize:12, color:'#64748b', marginLeft:'auto' }}>
+                {selectedLics.length} sélectionné(s) · {licencies.filter(l=>l.email).length} avec email
+              </span>
+            </div>
+            {/* Liste licenciés */}
+            {licenciesLoading ? (
+              <div style={{ color:'#64748b', padding:20, textAlign:'center' }}>Chargement des licenciés...</div>
+            ) : licencies.length === 0 ? (
+              <div style={{ color:'#475569', padding:20, textAlign:'center', fontSize:13 }}>Aucun licencié actif trouvé. Ajoutez des licenciés dans le module Licenciés.</div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:320, overflowY:'auto', marginBottom:16 }}>
+                {(filterCat ? licencies.filter(l => l.category === filterCat) : licencies).map(lic => {
+                  const isSelected = selectedLics.includes(lic.id);
+                  const hasEmail = !!lic.email;
+                  return (
+                    <label key={lic.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderRadius:8, border:'1px solid', borderColor: isSelected ? 'rgba(249,115,22,0.35)' : 'rgba(255,255,255,0.06)', background: isSelected ? 'rgba(249,115,22,0.06)' : 'rgba(255,255,255,0.02)', cursor: hasEmail ? 'pointer' : 'not-allowed', opacity: hasEmail ? 1 : 0.4 }}>
+                      <input type="checkbox" checked={isSelected} disabled={!hasEmail} onChange={() => setSelectedLics(prev => isSelected ? prev.filter(id => id !== lic.id) : [...prev, lic.id])} style={{ accentColor:'#f97316', width:15, height:15 }} />
+                      <div style={{ flex:1 }}>
+                        <span style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{lic.first_name} {lic.last_name}</span>
+                        {lic.category && <span style={{ fontSize:11, color:'#818cf8', marginLeft:8 }}>{lic.category}</span>}
+                        {lic.team_name && <span style={{ fontSize:11, color:'#64748b', marginLeft:6 }}>{lic.team_name}</span>}
+                      </div>
+                      <span style={{ fontSize:12, color: hasEmail ? '#64748b' : '#fb7185' }}>{hasEmail ? lic.email : "Pas d'email"}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            {/* Bouton envoi */}
+            <div style={{ display:'flex', justifyContent:'flex-end' }}>
+              <button
+                onClick={handleSendInvites}
+                disabled={inviteSending || selectedLics.length === 0}
+                style={{ padding:'11px 24px', borderRadius:10, border:'none', background:'#f97316', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:'inherit', opacity: selectedLics.length === 0 ? 0.4 : 1 }}
+              >
+                {inviteSending ? 'Envoi en cours...' : `📣 Envoyer l'invitation (${selectedLics.length})`}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── ONGLET PARTICIPANTS ── */}
+        {activeTab === 'participants' && <div>
         {/* Filtres */}
         <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:20 }}>
           {[
@@ -748,6 +909,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
             })}
           </div>
         )}
+        </div>}
       </div>
 
       {/* Modal détail participant */}
