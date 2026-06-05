@@ -343,9 +343,11 @@ function StageWizard({ stage, onClose, onSaved }) {
       fields_config: form.fields_config,
     };
     if (isEdit) {
-      await supabase.from('stages').update(payload).eq('id', stage.id);
+      const { error } = await supabase.from('stages').update(payload).eq('id', stage.id);
+      if (error) { console.error('Update error:', error); alert('Erreur : ' + error.message); setSaving(false); return; }
     } else {
-      await supabase.from('stages').insert(payload);
+      const { error } = await supabase.from('stages').insert(payload);
+      if (error) { console.error('Insert error:', error); alert('Erreur : ' + error.message); setSaving(false); return; }
     }
     setSaving(false);
     onSaved();
