@@ -116,9 +116,13 @@ Deno.serve(async (req) => {
         <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">📅 Inscriptions ouvertes à partir du</div>
         <div style="font-size:18px;font-weight:900;color:${accent};">${opening_date}</div>
       </div>
+      ${is_priority ? `<div style="background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.3);border-radius:10px;padding:12px 16px;margin:16px 0;text-align:center;">
+        <p style="color:#818cf8;font-weight:800;font-size:13px;margin:0;">⭐ En tant que licencié, vous bénéficiez d'un accès prioritaire !</p>
+      </div>` : ''}
+      ${registration_close ? `<p style="color:#f59e0b;font-size:13px;text-align:center;">⏰ Date limite d'inscription : ${registration_close}</p>` : ''}
       <div style="text-align:center;margin:24px 0;">
         <a href="${stage_url}" style="display:inline-block;padding:14px 28px;background:${accent};color:#fff;text-decoration:none;border-radius:10px;font-weight:800;font-size:15px;">
-          Voir le stage →
+          ${is_priority ? 'Accéder en priorité →' : 'Voir le stage →'}
         </a>
       </div>
       <p style="color:#64748b;font-size:12px;text-align:center;">Le lien s'ouvrira automatiquement à la date d'inscription.</p>

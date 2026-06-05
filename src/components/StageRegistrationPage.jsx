@@ -66,7 +66,7 @@ export function StageRegistrationPage({ stageCode }) {
   const [branding, setBranding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pageState, setPageState] = useState('loading'); // loading|waiting|form|closed|success
-  const countdown = useCountdown(pageState === 'waiting' ? stage?.registration_deadline : null);
+
 
   // Charger stage + branding
   useEffect(() => {
@@ -150,7 +150,41 @@ export function StageRegistrationPage({ stageCode }) {
   );
 
   // ── ÉTAT : ATTENTE ──────────────────────────────────────
-  if (pageState === 'waiting') {
+  // ── ÉTAT : ATTENTE PUBLIQUE (accès licenciés ouvert) ────
+  if (pageState === 'waiting_public') {
+    return (
+      <div style={S.page}>
+        <Header />
+        <div style={S.container}>
+          <div style={{ ...S.card, textAlign:'center', borderColor:`${accentColor}33` }}>
+            <Tent size={48} style={{ color:accentColor, marginBottom:16 }} />
+            <h1 style={{ fontSize:22, fontWeight:900, color:'#f1f5f9', marginBottom:8 }}>{stage?.name}</h1>
+            <div style={{ background:`${accentColor}15`, border:`1px solid ${accentColor}33`, borderRadius:12, padding:'20px 24px', marginBottom:20 }}>
+              <p style={{ color:accentColor, fontWeight:700, fontSize:14, marginBottom:12 }}>
+                <Clock size={14} style={{ marginRight:6, verticalAlign:'middle' }} />
+                Ouverture au grand public le {new Date(stage.registration_open_public).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+              </p>
+              {countdown && !countdown.done && (
+                <div style={{ display:'flex', gap:12, justifyContent:'center' }}>
+                  {[{ val:countdown.d, lbl:'jours' },{ val:countdown.h, lbl:'heures' },{ val:countdown.m, lbl:'min' },{ val:countdown.s, lbl:'sec' }].map(({val,lbl}) => (
+                    <div key={lbl} style={{ textAlign:'center' }}>
+                      <div style={{ fontSize:28, fontWeight:900, color:'#f1f5f9', minWidth:50, background:'rgba(255,255,255,0.06)', borderRadius:10, padding:'6px 10px' }}>{String(val).padStart(2,'0')}</div>
+                      <div style={{ fontSize:11, color:'#64748b', marginTop:4, fontWeight:600, textTransform:'uppercase' }}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{ background:'rgba(129,140,248,0.08)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:10, padding:'12px 16px' }}>
+              <p style={{ color:'#818cf8', fontSize:13, margin:0 }}>🎯 Vous êtes licencié du club ? Utilisez le lien reçu par email pour vous inscrire dès maintenant.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageState === 'waiting_all') {
     return (
       <div style={S.page}>
         <Header />
@@ -171,7 +205,7 @@ export function StageRegistrationPage({ stageCode }) {
             <div style={{ background:`${accentColor}15`, border:`1px solid ${accentColor}33`, borderRadius:12, padding:'20px 24px', marginBottom:20 }}>
               <p style={{ color:accentColor, fontWeight:700, fontSize:14, marginBottom:16 }}>
                 <Clock size={14} style={{ marginRight:6, verticalAlign:'middle' }} />
-                Les inscriptions ouvriront le {formatDateTime(stage?.registration_deadline)}
+                Les inscriptions ouvriront le {formatDateTime(countdownTarget || stage?.registration_open_public || stage?.registration_open_licencies)}
               </p>
               {countdown && !countdown.done && (
                 <div style={{ display:'flex', gap:12, justifyContent:'center' }}>

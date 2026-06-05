@@ -290,7 +290,9 @@ function StageWizard({ stage, onClose, onSaved }) {
     location: stage?.location || '',
     date_start: stage?.date_start || '',
     date_end: stage?.date_end || '',
-    registration_deadline: stage?.registration_deadline ? stage.registration_deadline.slice(0,16) : '',
+    registration_open_licencies: stage?.registration_open_licencies ? stage.registration_open_licencies.slice(0,16) : '',
+    registration_open_public: stage?.registration_open_public ? stage.registration_open_public.slice(0,16) : '',
+    registration_close: stage?.registration_close ? stage.registration_close.slice(0,16) : '',
     max_participants: stage?.max_participants || '',
     price: stage?.price || 0,
     payment_info: stage?.payment_info || '',
@@ -348,7 +350,9 @@ function StageWizard({ stage, onClose, onSaved }) {
       location: form.location.trim(),
       date_start: form.date_start || null,
       date_end: form.date_end || null,
-      registration_deadline: form.registration_deadline || null,
+      registration_open_licencies: form.registration_open_licencies || null,
+      registration_open_public: form.registration_open_public || null,
+      registration_close: form.registration_close || null,
       max_participants: form.max_participants ? parseInt(form.max_participants) : null,
       price: parseFloat(form.price) || 0,
       payment_info: form.payment_info.trim(),
@@ -420,8 +424,18 @@ function StageWizard({ stage, onClose, onSaved }) {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <div>
-                <label style={lbl}>Date limite d'inscription</label>
-                <input type="datetime-local" style={inp} value={form.registration_deadline} onChange={e => set('registration_deadline', e.target.value)} />
+                <label style={lbl}>Ouverture licenciés <span style={{ color:'#64748b', fontSize:10, textTransform:'none', fontWeight:400 }}>(optionnel — accès anticipé)</span></label>
+                <input type="datetime-local" style={inp} value={form.registration_open_licencies} onChange={e => set('registration_open_licencies', e.target.value)} />
+              </div>
+              <div>
+                <label style={lbl}>Ouverture publique</label>
+                <input type="datetime-local" style={inp} value={form.registration_open_public} onChange={e => set('registration_open_public', e.target.value)} />
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div>
+                <label style={lbl}>Clôture des inscriptions</label>
+                <input type="datetime-local" style={inp} value={form.registration_close} onChange={e => set('registration_close', e.target.value)} />
               </div>
               <div>
                 <label style={lbl}>Nombre de places (vide = illimité)</label>
@@ -575,8 +589,8 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     setSendingEmail('announcement');
     const { data: participants_all } = await supabase.from('stage_participants').select('*').eq('stage_id', stage.id);
     const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
-    const openingDate = stage.registration_deadline
-      ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+    const openingDate = stage.registration_open_public
+      ? new Date(stage.registration_open_public).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
       : 'bientôt';
     // Envoyer à tous les participants existants
     for (const p of (participants_all || [])) {
@@ -627,8 +641,8 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     setInviteSending(true);
     const { data: prof } = await supabase.from('profiles').select('club_name,club_color,club_logo_url').eq('id', stage.owner_id).single();
     const stageUrl = `https://www.footplanner.fr/?stage=${stage.access_code}`;
-    const openingDate = stage.registration_deadline
-      ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+    const openingDate = stage.registration_open_public
+      ? new Date(stage.registration_open_public).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
       : 'bientôt';
     const placesRestantes = stage.max_participants
       ? stage.max_participants - participants.filter(p => p.status !== 'rejected').length
@@ -649,7 +663,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
           stage_price: stage.price,
           payment_info: stage.payment_info,
           places_restantes: placesRestantes,
-          registration_deadline: stage.registration_deadline ? new Date(stage.registration_deadline).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : null,
+          registration_close: stage.registration_close ? new Date(stage.registration_close).toLocaleString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : null,
           club_name: prof?.club_name,
           club_color: prof?.club_color,
           club_logo_url: prof?.club_logo_url,
@@ -768,7 +782,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
               {stage.date_start && <span style={{ fontSize:12, color:'#94a3b8' }}>📅 {new Date(stage.date_start).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}{stage.date_end ? ` → ${new Date(stage.date_end).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})}` : ''}</span>}
               {stage.location && <span style={{ fontSize:12, color:'#94a3b8' }}>📍 {stage.location}</span>}
               {stage.max_participants && <span style={{ fontSize:12, color:'#f97316', fontWeight:700 }}>🎯 {stage.max_participants - participants.filter(p=>p.status!=='rejected').length} place(s) restante(s)</span>}
-              {stage.registration_deadline && <span style={{ fontSize:12, color:'#f59e0b', fontWeight:600 }}>⏰ Limite : {new Date(stage.registration_deadline).toLocaleString('fr-FR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>}
+              {stage.registration_close && <span style={{ fontSize:12, color:'#f59e0b', fontWeight:600 }}>⏰ Clôture : {new Date(stage.registration_close).toLocaleString('fr-FR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>}
               {stage.price > 0 && <span style={{ fontSize:12, color:'#f97316', fontWeight:700 }}>💶 {stage.price}€</span>}
               <span style={{ fontSize:12, fontWeight:700, color: stage.registration_open ? '#34d399' : '#f59e0b' }}>
                 {stage.registration_open ? '🟢 Inscriptions ouvertes' : "🟡 Inscriptions fermées — email d'annonce"}
