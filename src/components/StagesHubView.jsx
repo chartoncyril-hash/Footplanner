@@ -344,10 +344,10 @@ function StageWizard({ stage, onClose, onSaved }) {
     };
     if (isEdit) {
       const { error } = await supabase.from('stages').update(payload).eq('id', stage.id);
-      if (error) { console.error('Update error:', error); alert('Erreur : ' + error.message); setSaving(false); return; }
+      if (error) { console.error('Update error:', error); setSaving(false); return; }
     } else {
       const { error } = await supabase.from('stages').insert(payload);
-      if (error) { console.error('Insert error:', error); alert('Erreur : ' + error.message); setSaving(false); return; }
+      if (error) { console.error('Insert error:', error); setSaving(false); return; }
     }
     setSaving(false);
     onSaved();
