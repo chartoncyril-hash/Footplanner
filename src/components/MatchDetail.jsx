@@ -8,6 +8,8 @@ import { Crest } from './Crest';
 import { getDisplayTeam } from '../utils/standings';
 import { knockoutRoundLabel } from '../utils/scheduling';
 import { styles } from '../styles/styles';
+import { supabase } from '../lib/supabase';
+import { ChronoBar, MatchEventsPanel } from './MatchEvents';
 
 // ============================================================
 // MatchDetail — fiche match avec saisie de score
@@ -110,7 +112,15 @@ export function MatchDetail({
     }, 'Fair-play mis à jour');
   };
 
-  const startMatch = () => persist({ status: 'live', scoreHome: 0, scoreAway: 0 }, false);
+  const startMatch = async () => {
+    const now = new Date().toISOString();
+    await persist({ status: 'live', scoreHome: 0, scoreAway: 0, kicked_off_at: now }, false);
+  };
+  const startChrono = async () => {
+    if (m.kicked_off_at) return;
+    const now = new Date().toISOString();
+    await updateMatch(m.id, { kicked_off_at: now });
+  };
   const closeMatch = () => persist({
     status: 'validated',
     scoreHome: home, scoreAway: away,
@@ -184,6 +194,15 @@ export function MatchDetail({
         )}
       </div>
 
+      {/* Chrono */}
+      {(m.status === 'live') && (
+        <ChronoBar
+          match={m}
+          canEdit={canModifyNow}
+          onKickoff={startChrono}
+        />
+      )}
+
       {canModifyNow && m.status !== 'scheduled' && (
         <section style={styles.detailCard}>
           <div style={styles.detailCardTitle}>
@@ -194,6 +213,19 @@ export function MatchDetail({
             <FpToggle team={awayTeam} value={fpAway} onChange={handleFpAwayChange} />
           </div>
           <div style={styles.fpHint}>+1 pt si fair-play respecté ce match</div>
+        </section>
+      )}
+
+      {/* Cartons */}
+      {m.status !== 'scheduled' && (
+        <section style={styles.detailCard}>
+          <MatchEventsPanel
+            match={m}
+            tournament={{ id: m.tournament_id }}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            canEdit={canModifyNow && m.status === 'live'}
+          />
         </section>
       )}
 
