@@ -1,4 +1,5 @@
 import React from 'react';
+import { Crest } from './Crest';
 import { GitBranch, Layers, Trophy } from 'lucide-react';
 import { filterTeamsByCategory } from '../utils/categoryHelpers';
 import { BracketView } from './BracketView';
@@ -250,12 +251,7 @@ export function FormatView(props) {
                         transition: 'opacity 0.15s',
                       }}
                     >
-                      <div style={{
-                        width: 10, height: 10,
-                        borderRadius: 3,
-                        background: team.color || '#a3e635',
-                        flexShrink: 0,
-                      }} />
+                      <Crest team={team} size="sm" />
                       <span style={{ flex: 1 }}>{team.name}</span>
                       {team.level > 0 && (
                         <span style={{
