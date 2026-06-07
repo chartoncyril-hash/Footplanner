@@ -238,7 +238,7 @@ function CardForm({ type, match, tournament, homeTeam, awayTeam, licencies, curr
     onSaved();
   };
 
-  const inp = { width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box' };
+  const inp = { width:'100%', padding:'9px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box' };
   const lbl = { fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:0.8, display:'block', marginBottom:5 };
   const typeColor = type === 'yellow' ? '#facc15' : '#fb7185';
   const typeLabel = type === 'yellow' ? '🟨 Carton Jaune' : '🟥 Carton Rouge';

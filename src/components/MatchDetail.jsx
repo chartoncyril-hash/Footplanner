@@ -114,12 +114,12 @@ export function MatchDetail({
 
   const startMatch = async () => {
     const now = new Date().toISOString();
-    await persist({ status: 'live', scoreHome: 0, scoreAway: 0, kicked_off_at: now }, false);
+    await persist({ status: 'live', scoreHome: 0, scoreAway: 0, kickedOffAt: now }, false);
   };
   const startChrono = async () => {
-    if (m.kicked_off_at) return;
+    if (m.kickedOffAt) return;
     const now = new Date().toISOString();
-    await updateMatch(m.id, { kicked_off_at: now });
+    await updateMatch(m.id, { kickedOffAt: now });
   };
   const closeMatch = () => persist({
     status: 'validated',
@@ -197,7 +197,7 @@ export function MatchDetail({
       {/* Chrono */}
       {(m.status === 'live') && (
         <ChronoBar
-          match={m}
+          match={{ ...m, kicked_off_at: m.kickedOffAt }}
           canEdit={canModifyNow}
           onKickoff={startChrono}
         />
@@ -220,7 +220,7 @@ export function MatchDetail({
       {m.status !== 'scheduled' && (
         <section style={styles.detailCard}>
           <MatchEventsPanel
-            match={m}
+            match={{ ...m, kicked_off_at: m.kickedOffAt }}
             tournament={{ id: m.tournament_id }}
             homeTeam={homeTeam}
             awayTeam={awayTeam}

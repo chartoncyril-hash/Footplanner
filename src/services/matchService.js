@@ -30,6 +30,7 @@ export function fromDb(row) {
     status: row.status,
     fairplayHome: row.fairplay_home,
     fairplayAway: row.fairplay_away,
+    kickedOffAt: row.kicked_off_at,
   };
 }
 
@@ -72,6 +73,7 @@ function toDb(m) {
   if (m.status !== undefined) out.status = m.status;
   if (m.fairplayHome !== undefined) out.fairplay_home = m.fairplayHome;
   if (m.fairplayAway !== undefined) out.fairplay_away = m.fairplayAway;
+  if (m.kickedOffAt !== undefined) out.kicked_off_at = m.kickedOffAt;
   return out;
 }
 
