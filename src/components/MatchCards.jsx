@@ -417,10 +417,13 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
   if (isOrganizer && isLive) {
     return (
       <div style={{ ...styles.matchListCard, flexDirection: 'column', alignItems: 'stretch', cursor: 'default', borderColor: 'rgba(163,230,53,0.2)' }}>
-        <button onClick={onTap} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#f1f5f9' }}>
+        <button
+          onClick={() => isMobile ? setShowControls(s => !s) : onTap()}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: '#f1f5f9', width: '100%' }}
+        >
           {topRow}
         </button>
-        {scoreControls()}
+        {(!isMobile || showControls) && scoreControls()}
       </div>
     );
   }
