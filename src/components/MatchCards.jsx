@@ -65,7 +65,13 @@ export function PageHeader({ title, subtitle, icon: Icon, accent = '#a3e635' }) 
 // LiveMatchCard — match en cours, gros score visible
 // ============================================================
 export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdateScore, onValidate, canEdit }) {
-  const isMobile = window.innerWidth < 768;
+  const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const isMobile = windowWidth < 768;
   const canEditDesktop = canEdit && !isMobile;
   const home = getDisplayTeam('home', match, teams, matches, standings);
   const away = getDisplayTeam('away', match, teams, matches, standings);
@@ -255,6 +261,8 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
   const [draftAway, setDraftAway] = React.useState(match.scoreAway ?? 0);
   const [editMode, setEditMode] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [showControls, setShowControls] = React.useState(false);
+  const isMobile = window.innerWidth < 768;
 
   React.useEffect(() => {
     setDraftHome(match.scoreHome ?? 0);
