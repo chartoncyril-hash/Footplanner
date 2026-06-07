@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Trophy, Users, Monitor, ShoppingCart, Heart, BarChart2,
-  MessageSquare, Image, ArrowRight, Clock, Plus, User
+  Tent, Image, ArrowRight, Clock, Plus, User
 } from 'lucide-react';
 import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
@@ -74,12 +74,12 @@ const MODULES = [
     available: true,
   },
   {
-    id: 'communication',
-    label: 'Communication',
-    icon: MessageSquare,
-    color: '#f472b6',
-    desc: 'Annonces, notifications et messagerie pour vos participants.',
-    available: false,
+    id: 'stages',
+    label: 'Stages & Vacances',
+    icon: Tent,
+    color: '#f97316',
+    desc: 'Créez vos stages, gérez les inscriptions et invitez vos licenciés.',
+    available: true,
   },
   {
     id: 'medias',
