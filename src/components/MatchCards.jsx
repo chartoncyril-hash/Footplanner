@@ -342,7 +342,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
-            ? <span style={{ color: stateColor, fontWeight: 800 }}>{match.scoreHome ?? 0} - {match.scoreAway ?? 0}</span>
+            ? <span style={{ color: stateColor, fontWeight: 800 }}>{draftHome} - {draftAway}</span>
             : <span style={{ color: '#475569' }}>vs</span>}
         </div>
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
@@ -370,19 +370,20 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
 
   // Contrôles inline pour live et edit mode
   const scoreControls = (onClose) => (
-    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Home score */}
-      <button onClick={adj('home', -1)} style={btnSm()}>−</button>
-      {scoreNum(draftHome)}
-      <button onClick={adj('home', +1)} style={btnSm('#a3e635')}>+</button>
-      <span style={{ color: '#334155', fontWeight: 800, margin: '0 4px' }}>—</span>
-      {/* Away score */}
-      <button onClick={adj('away', -1)} style={btnSm()}>−</button>
-      {scoreNum(draftAway)}
-      <button onClick={adj('away', +1)} style={btnSm('#a3e635')}>+</button>
-      {/* Action button */}
+    <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Ligne scores : − home + — − away + */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+        <button onClick={adj('home', -1)} style={btnSm()}>−</button>
+        {scoreNum(draftHome)}
+        <button onClick={adj('home', +1)} style={btnSm('#a3e635')}>+</button>
+        <span style={{ color: '#334155', fontWeight: 800, margin: '0 6px', fontSize: 18 }}>—</span>
+        <button onClick={adj('away', -1)} style={btnSm()}>−</button>
+        {scoreNum(draftAway)}
+        <button onClick={adj('away', +1)} style={btnSm('#a3e635')}>+</button>
+      </div>
+      {/* Bouton clôturer centré */}
       {isLive && (
-        <button onClick={handleValidate} disabled={saving} style={{ flex: 1, padding: '5px 8px', background: '#a3e635', border: 'none', borderRadius: 6, color: '#0a0e1a', fontSize: 10, fontWeight: 800, letterSpacing: 0.5, cursor: saving ? 'not-allowed' : 'pointer' }}>
+        <button onClick={handleValidate} disabled={saving} style={{ width: '100%', padding: '7px 8px', background: '#a3e635', border: 'none', borderRadius: 6, color: '#0a0e1a', fontSize: 11, fontWeight: 800, letterSpacing: 0.5, cursor: saving ? 'not-allowed' : 'pointer', textAlign: 'center' }}>
           {saving ? '...' : `CLÔTURER ${draftHome}-${draftAway}`}
         </button>
       )}
