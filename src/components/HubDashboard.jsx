@@ -371,35 +371,35 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
       </div>
 
       <div style={S.content}>
-        {/* WIDGETS APERÇU */}
-        {activeTournaments.length > 0 && (
-          <div style={S.section}>
-            <div style={S.sectionTitle}>
+        {/* WIDGETS APERÇU — 2 colonnes */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:24 }}>
+          {/* Colonne 1 — Tournois en cours */}
+          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'18px 20px' }}>
+            <div style={{ ...S.sectionTitle, marginBottom:12 }}>
               <Clock size={14} color={appColor} />
               Tournois en cours
             </div>
-            <div style={S.widgetGrid}>
-              {activeTournaments.map(t => (
-                <div
-                  key={t.id}
-                  onClick={() => onEnterModule('tournaments', t.id)}
-                  style={{...S.tournamentCard, borderColor: `${clubColor}33`}}
-                >
-                  <div style={{...S.tournamentDot, background: appColor}} />
-                  <div style={S.tournamentInfo}>
-                    <div style={S.tournamentName}>{t.name}</div>
-                    <div style={S.tournamentMeta}>
-                      {t.categories?.length > 0
-                        ? `${t.categories.length} catégorie${t.categories.length > 1 ? 's' : ''}`
-                        : 'Tournoi'}
-                    </div>
-                  </div>
-                  <ArrowRight size={14} color={appColor} />
+            {activeTournaments.length === 0 ? (
+              <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'20px 0' }}>Aucun tournoi en cours</div>
+            ) : activeTournaments.map(t => (
+              <div key={t.id} onClick={() => onEnterModule('tournaments', t.id)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, cursor:'pointer', marginBottom:6, background:'rgba(255,255,255,0.03)', border:`1px solid ${appColor}22`, transition:'all 0.15s' }}
+                onMouseEnter={e=>{e.currentTarget.style.background=`${appColor}12`}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)'}}
+              >
+                <div style={{ width:8, height:8, borderRadius:'50%', background:appColor, flexShrink:0 }} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.name}</div>
+                  <div style={{ fontSize:11, color:'#64748b' }}>{t.categories?.length > 0 ? `${t.categories.length} catégorie${t.categories.length>1?'s':''}` : 'Tournoi'}</div>
                 </div>
-              ))}
-            </div>
+                <ArrowRight size={14} color={appColor} />
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* Colonne 2 — Planning du jour */}
+          <TodayPlanning myTournaments={myTournaments} appColor={appColor} onNavigate={() => onEnterModule('planning')} />
+        </div>
 
         {/* GRILLE MODULES */}
         <div style={S.section}>
@@ -497,3 +497,81 @@ const S = {
   statValue: { fontSize: 36, fontWeight: 900, fontFamily: "'JetBrains Mono', monospace", letterSpacing: -1 },
   statLabel: { fontSize: 12, color: '#64748b', fontWeight: 600, marginTop: 4 },
 };
+// ── TODAY PLANNING ──────────────────────────────────────────
+function TodayPlanning({ myTournaments, appColor, onNavigate }) {
+  const [events, setEvents] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const TYPES = {
+    training:   { label:'Entraînement', color:'#34d399', emoji:'⚽' },
+    match:      { label:'Match',        color:'#f59e0b', emoji:'🏆' },
+    tournament: { label:'Tournoi',      color:'#f97316', emoji:'🥇' },
+    stage:      { label:'Stage',        color:'#a78bfa', emoji:'🏕️' },
+    meeting:    { label:'Réunion',      color:'#22d3ee', emoji:'📋' },
+    other:      { label:'Autre',        color:'#94a3b8', emoji:'📌' },
+    cancelled:  { label:'Annulé',       color:'#475569', emoji:'❌' },
+  };
+
+  React.useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const today = new Date().toISOString().slice(0, 10);
+
+      const [{ data: clubEvts }, { data: stagesData }] = await Promise.all([
+        supabase.from('club_events').select('*').eq('owner_id', user.id).eq('date', today),
+        supabase.from('stages').select('*').eq('owner_id', user.id).lte('date_start', today).gte('date_end', today),
+      ]);
+
+      const all = [];
+      for (const e of clubEvts || []) all.push({
+        type: e.status === 'cancelled' ? 'cancelled' : (e.type || 'other'),
+        title: e.title, time: e.time_start,
+      });
+      for (const s of stagesData || []) all.push({ type:'stage', title:s.name, time:null });
+      for (const t of myTournaments || []) {
+        if (t.date === today) all.push({ type:'tournament', title:t.name, time:null });
+      }
+
+      all.sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
+      setEvents(all);
+      setLoading(false);
+    })();
+  }, [myTournaments]);
+
+  const todayStr = new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' });
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'18px 20px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, fontWeight:800, color:'#64748b', textTransform:'uppercase', letterSpacing:1 }}>
+          <CalendarDays size={14} color={'#22d3ee'} />
+          Aujourd'hui
+        </div>
+        <button onClick={onNavigate} style={{ fontSize:11, color:'#22d3ee', background:'none', border:'none', cursor:'pointer', textDecoration:'underline', fontFamily:'inherit' }}>
+          Voir le planning →
+        </button>
+      </div>
+      <div style={{ fontSize:12, color:'#475569', marginBottom:12, fontWeight:600 }}>{todayStr}</div>
+      {loading ? (
+        <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'10px 0' }}>...</div>
+      ) : events.length === 0 ? (
+        <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'20px 0' }}>
+          <div style={{ fontSize:24, marginBottom:6 }}>🌟</div>
+          Rien au programme aujourd'hui
+        </div>
+      ) : events.map((evt, i) => {
+        const t = TYPES[evt.type] || TYPES.other;
+        return (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:8, marginBottom:6, background:`${t.color}10`, borderLeft:`3px solid ${t.color}` }}>
+            <span style={{ fontSize:14 }}>{t.emoji}</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
+              {evt.time && <div style={{ fontSize:10, color:`${t.color}99` }}>🕐 {evt.time.slice(0,5)}</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
