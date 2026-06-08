@@ -451,9 +451,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             <button onClick={() => setHubView('account')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: hubView==='account' ? 'rgba(100,116,139,0.15)' : 'transparent', color: hubView==='account' ? '#94a3b8' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, borderLeft: hubView==='account' ? '2px solid #64748b' : '2px solid transparent' }}>
               <span style={{ fontSize:15 }}>👤</span> Mon compte
             </button>
-            <button style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background:'transparent', color:'#334155', cursor:'not-allowed', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', opacity:0.4 }}>
+            <button onClick={() => setHubView('settings')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: hubView==='settings' ? 'rgba(100,116,139,0.15)' : 'transparent', color: hubView==='settings' ? '#94a3b8' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, borderLeft: hubView==='settings' ? '2px solid #64748b' : '2px solid transparent' }}>
               <span style={{ fontSize:15 }}>⚙️</span> Paramètres
-              <span style={{ fontSize:9, background:'rgba(255,255,255,0.04)', padding:'1px 6px', borderRadius:3, marginLeft:'auto', color:'#334155' }}>Bientôt</span>
             </button>
           </div>
         </aside>
