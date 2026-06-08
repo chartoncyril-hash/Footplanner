@@ -1,5 +1,82 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+
+// ── UPLOAD BUTTON ────────────────────────────────────────────
+function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const ref = useRef();
+
+  const compressImage = (file) => new Promise((resolve) => {
+    if (!compress || !file.type.startsWith('image/')) { resolve(file); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 800;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round(h * max / w); w = max; }
+        else { w = Math.round(w * max / h); h = max; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.82);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true); setError('');
+    try {
+      const compressed = await compressImage(file);
+      const ext = file.name.split('.').pop();
+      const finalPath = path.replace(/\.[^.]+$/, '') + '.' + ext;
+      const { error: upErr } = await supabase.storage.from(bucket).upload(finalPath, compressed, { upsert: true, contentType: compressed.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from(bucket).getPublicUrl(finalPath);
+      onUploaded(data.publicUrl);
+    } catch(err) {
+      setError('Erreur upload');
+      console.error(err);
+    }
+    setUploading(false);
+  };
+
+  const isImage = value && /\.(jpg|jpeg|png|gif|webp)/i.test(value);
+  const isPdf = value && /\.pdf/i.test(value);
+
+  return (
+    <div>
+      {value ? (
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          {isImage && <img src={value} alt="doc" style={{ width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid rgba(255,255,255,0.1)' }} />}
+          {isPdf && <div style={{ width:48, height:48, borderRadius:8, background:'rgba(251,113,133,0.1)', border:'1px solid rgba(251,113,133,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>📄</div>}
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:11, color:'#34d399', fontWeight:600 }}>✓ Fichier uploadé</div>
+            <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#64748b', textDecoration:'underline' }}>Voir le fichier</a>
+          </div>
+          <button onClick={() => { onClear(); ref.current.value=''; }} style={{ background:'none', border:'none', color:'#fb7185', cursor:'pointer', fontSize:18, padding:'0 4px' }}>✕</button>
+        </div>
+      ) : (
+        <div onClick={() => ref.current?.click()} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 14px', borderRadius:8, border:'2px dashed rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.02)', cursor:'pointer', transition:'border-color 0.15s' }}
+          onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(163,230,53,0.3)'}
+          onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'}
+        >
+          {uploading
+            ? <span style={{ fontSize:13, color:'#64748b' }}>⏳ Upload en cours...</span>
+            : <><span style={{ fontSize:18 }}>📁</span><span style={{ fontSize:13, color:'#64748b' }}>Cliquez pour uploader {accept?.includes('image') ? '(image)' : '(PDF ou image)'}</span></>
+          }
+        </div>
+      )}
+      {error && <div style={{ fontSize:11, color:'#fb7185', marginTop:4 }}>{error}</div>}
+      <input ref={ref} type="file" accept={accept} style={{ display:'none' }} onChange={handleFile} />
+    </div>
+  );
+}
 
 const CATEGORIES = [
   "U6",
@@ -382,12 +459,15 @@ function LicencieForm({ initial, onSave, onCancel }) {
         </div>
       </div>
       <div style={{ marginBottom: 12 }}>
-        <label style={S.label}>URL Photo</label>
-        <input
-          style={S.input}
+        <label style={S.label}>Photo d'identité</label>
+        <UploadButton
           value={form.photo_url}
-          onChange={(e) => u("photo_url", e.target.value)}
-          placeholder="https://..."
+          accept="image/*"
+          bucket="licencies-docs"
+          path={`photos/${Date.now()}.jpg`}
+          compress={true}
+          onUploaded={(url) => u("photo_url", url)}
+          onClear={() => u("photo_url", "")}
         />
       </div>
 
@@ -633,12 +713,15 @@ function DocumentsPanel({ licencie, onClose }) {
                     />
                   </div>
                   <div>
-                    <label style={S.label}>URL doc</label>
-                    <input
-                      style={S.input}
+                    <label style={S.label}>Document</label>
+                    <UploadButton
                       value={doc?.url || ""}
-                      onChange={(e) => upsertDoc(type, "url", e.target.value)}
-                      placeholder="https://..."
+                      accept=".pdf,image/*"
+                      bucket="licencies-docs"
+                      path={`docs/${Date.now()}_${type}`}
+                      compress={false}
+                      onUploaded={(url) => upsertDoc(type, "url", url)}
+                      onClear={() => upsertDoc(type, "url", "")}
                     />
                   </div>
                 </div>
