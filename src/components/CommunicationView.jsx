@@ -143,6 +143,14 @@ export function CommunicationView() {
                       <span style={{ fontSize:15, fontWeight:800, color:'#f1f5f9' }}>{evt.title}</span>
                       <span style={{ fontSize:11, fontWeight:700, color:type.color, background:`${type.color}15`, padding:'2px 8px', borderRadius:10 }}>{type.label}</span>
                       {isPast && <span style={{ fontSize:10, color:'#475569', fontWeight:600 }}>PASSÉ</span>}
+                      {evt.recurrence && evt.recurrence !== 'none' && !evt.recurrence_parent_id && (
+                        <span style={{ fontSize:10, color:'#818cf8', fontWeight:700, background:'rgba(129,140,248,0.1)', padding:'2px 8px', borderRadius:10 }}>
+                          🔄 {evt.recurrence === 'weekly' ? 'Hebdo' : evt.recurrence === 'biweekly' ? '/2 sem' : 'Mensuel'}
+                        </span>
+                      )}
+                      {evt.recurrence_parent_id && (
+                        <span style={{ fontSize:10, color:'#475569', fontWeight:600, background:'rgba(100,116,139,0.1)', padding:'2px 8px', borderRadius:10 }}>🔄 Récurrent</span>
+                      )}
                     </div>
                     <div style={{ display:'flex', gap:14, flexWrap:'wrap', marginBottom:8 }}>
                       <span style={{ fontSize:12, color:'#94a3b8', display:'flex', alignItems:'center', gap:4 }}>
@@ -223,6 +231,8 @@ function EventWizard({ event, onClose, onSaved }) {
     description: event?.description || '',
     categories: event?.categories || [],
     reminder_hours: event?.reminder_hours || [48, 2],
+    recurrence: event?.recurrence || 'none',
+    recurrence_end: event?.recurrence_end || '',
   });
   const [survey, setSurvey] = React.useState({
     enabled: false,
@@ -315,6 +325,8 @@ function EventWizard({ event, onClose, onSaved }) {
       description: form.description.trim() || null,
       categories: form.categories,
       reminder_hours: form.reminder_hours,
+      recurrence: form.recurrence,
+      recurrence_end: form.recurrence_end || null,
     };
 
     if (isEdit) {
@@ -322,6 +334,34 @@ function EventWizard({ event, onClose, onSaved }) {
     } else {
       const { data: newEvt } = await supabase.from('club_events').insert(payload).select('id').single();
       eventId = newEvt.id;
+
+      // Générer les occurrences récurrentes
+      if (form.recurrence !== 'none' && form.recurrence_end && form.date) {
+        const occurrences = [];
+        let current = new Date(form.date);
+        const endDate = new Date(form.recurrence_end);
+        const deltaMap = { weekly: 7, biweekly: 14, monthly: 30 };
+        const delta = deltaMap[form.recurrence] || 7;
+
+        while (true) {
+          // Avancer à la prochaine occurrence
+          if (form.recurrence === 'monthly') {
+            current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate());
+          } else {
+            current = new Date(current.getTime() + delta * 24 * 60 * 60 * 1000);
+          }
+          if (current > endDate) break;
+          occurrences.push({
+            ...payload,
+            date: current.toISOString().slice(0, 10),
+            recurrence_parent_id: eventId,
+          });
+        }
+
+        if (occurrences.length > 0) {
+          await supabase.from('club_events').insert(occurrences);
+        }
+      }
     }
 
     // 2. Créer les réponses + envoyer emails
@@ -489,6 +529,31 @@ function EventWizard({ event, onClose, onSaved }) {
                 ))}
               </div>
             </div>
+            {/* Récurrence */}
+            <div>
+              <label style={S.lbl}>Récurrence</label>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom: form.recurrence !== 'none' ? 10 : 0 }}>
+                {[
+                  { val:'none',      label:'Aucune' },
+                  { val:'weekly',    label:'Chaque semaine' },
+                  { val:'biweekly',  label:'Toutes les 2 semaines' },
+                  { val:'monthly',   label:'Chaque mois' },
+                ].map(r => (
+                  <button key={r.val} onClick={() => set('recurrence', r.val)} style={{
+                    padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
+                    borderColor: form.recurrence === r.val ? '#f472b6' : 'rgba(255,255,255,0.1)',
+                    background: form.recurrence === r.val ? 'rgba(244,114,182,0.15)' : 'transparent',
+                    color: form.recurrence === r.val ? '#f472b6' : '#64748b',
+                  }}>{r.label}</button>
+                ))}
+              </div>
+              {form.recurrence !== 'none' && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:8, padding:'10px 14px', borderRadius:8, background:'rgba(244,114,182,0.06)', border:'1px solid rgba(244,114,182,0.15)' }}>
+                  <span style={{ fontSize:12, color:'#94a3b8', fontWeight:600 }}>Répéter jusqu'au</span>
+                  <input type="date" style={{ ...S.inp, width:'auto', flex:1 }} value={form.recurrence_end} onChange={e => set('recurrence_end', e.target.value)} min={form.date} />
+                </div>
+              )}
+            </div>
             <div>
               <label style={S.lbl}>Rappels automatiques</label>
               <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
@@ -605,6 +670,11 @@ function EventWizard({ event, onClose, onSaved }) {
                 {form.location && <span style={{ fontSize:12, color:'#64748b' }}>📍 {form.location}</span>}
                 <span style={{ fontSize:12, color:'#f472b6', fontWeight:700 }}>📧 {selectedLics.length} destinataire(s)</span>
                 {survey.enabled && survey.title && <span style={{ fontSize:12, color:'#818cf8' }}>📊 Sondage : {survey.title}</span>}
+                {form.recurrence !== 'none' && form.recurrence_end && (
+                  <span style={{ fontSize:12, color:'#818cf8', fontWeight:700 }}>
+                    🔄 {form.recurrence === 'weekly' ? 'Chaque semaine' : form.recurrence === 'biweekly' ? 'Toutes les 2 semaines' : 'Chaque mois'} jusqu'au {new Date(form.recurrence_end).toLocaleDateString('fr-FR')}
+                  </span>
+                )}
               </div>
             </div>
           </div>
