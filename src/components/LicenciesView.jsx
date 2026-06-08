@@ -46,33 +46,75 @@ function UploadButton({ value, accept, bucket, path, compress, onUploaded, onCle
     setUploading(false);
   };
 
+  const [dragOver, setDragOver] = useState(false);
   const isImage = value && /\.(jpg|jpeg|png|gif|webp)/i.test(value);
   const isPdf = value && /\.pdf/i.test(value);
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    // Simuler un event pour réutiliser handleFile
+    await handleFile({ target: { files: [file] } });
+  };
+
+  const handleDragOver = (e) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
 
   return (
     <div>
       {value ? (
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          {isImage && <img src={value} alt="doc" style={{ width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid rgba(255,255,255,0.1)' }} />}
-          {isPdf && <div style={{ width:48, height:48, borderRadius:8, background:'rgba(251,113,133,0.1)', border:'1px solid rgba(251,113,133,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>📄</div>}
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:11, color:'#34d399', fontWeight:600 }}>✓ Fichier uploadé</div>
-            <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#64748b', textDecoration:'underline' }}>Voir le fichier</a>
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:8, background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.2)' }}>
+          {isImage && <img src={value} alt="doc" style={{ width:48, height:48, borderRadius:8, objectFit:'cover', border:'1px solid rgba(255,255,255,0.1)', flexShrink:0 }} />}
+          {isPdf && <div style={{ width:48, height:48, borderRadius:8, background:'rgba(251,113,133,0.1)', border:'1px solid rgba(251,113,133,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>📄</div>}
+          {!isImage && !isPdf && <div style={{ width:48, height:48, borderRadius:8, background:'rgba(163,230,53,0.1)', border:'1px solid rgba(163,230,53,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>📁</div>}
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, color:'#34d399', fontWeight:700, marginBottom:2 }}>✓ Fichier uploadé</div>
+            <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#64748b', textDecoration:'underline', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>Voir le fichier →</a>
           </div>
-          <button onClick={() => { onClear(); ref.current.value=''; }} style={{ background:'none', border:'none', color:'#fb7185', cursor:'pointer', fontSize:18, padding:'0 4px' }}>✕</button>
+          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            <button onClick={() => ref.current?.click()} title="Remplacer" style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#94a3b8', cursor:'pointer', fontSize:11, padding:'3px 8px', fontFamily:'inherit' }}>🔄</button>
+            <button onClick={() => { onClear(); if(ref.current) ref.current.value=''; }} title="Supprimer" style={{ background:'rgba(251,113,133,0.08)', border:'1px solid rgba(251,113,133,0.2)', borderRadius:6, color:'#fb7185', cursor:'pointer', fontSize:11, padding:'3px 8px', fontFamily:'inherit' }}>✕</button>
+          </div>
         </div>
       ) : (
-        <div onClick={() => ref.current?.click()} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 14px', borderRadius:8, border:'2px dashed rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.02)', cursor:'pointer', transition:'border-color 0.15s' }}
-          onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(163,230,53,0.3)'}
-          onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'}
+        <div
+          onClick={() => ref.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          style={{
+            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+            gap:8, padding:'20px 16px', borderRadius:10,
+            border: `2px dashed ${dragOver ? 'rgba(163,230,53,0.6)' : 'rgba(255,255,255,0.12)'}`,
+            background: dragOver ? 'rgba(163,230,53,0.06)' : 'rgba(255,255,255,0.02)',
+            cursor:'pointer', transition:'all 0.15s',
+            transform: dragOver ? 'scale(1.01)' : 'scale(1)',
+          }}
         >
-          {uploading
-            ? <span style={{ fontSize:13, color:'#64748b' }}>⏳ Upload en cours...</span>
-            : <><span style={{ fontSize:18 }}>📁</span><span style={{ fontSize:13, color:'#64748b' }}>Cliquez pour uploader {accept?.includes('image') ? '(image)' : '(PDF ou image)'}</span></>
-          }
+          {uploading ? (
+            <>
+              <div style={{ fontSize:24 }}>⏳</div>
+              <span style={{ fontSize:13, color:'#64748b' }}>Upload en cours...</span>
+            </>
+          ) : dragOver ? (
+            <>
+              <div style={{ fontSize:28 }}>📂</div>
+              <span style={{ fontSize:13, color:'#a3e635', fontWeight:700 }}>Déposer le fichier ici</span>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize:24, opacity:0.5 }}>📁</div>
+              <span style={{ fontSize:13, color:'#64748b', textAlign:'center' }}>
+                Cliquer ou glisser-déposer<br/>
+                <span style={{ fontSize:11, color:'#475569' }}>{accept?.includes('image') && !accept?.includes('pdf') ? 'JPG, PNG, WEBP' : 'PDF, JPG, PNG'}</span>
+              </span>
+            </>
+          )}
         </div>
       )}
-      {error && <div style={{ fontSize:11, color:'#fb7185', marginTop:4 }}>{error}</div>}
+      {error && <div style={{ fontSize:11, color:'#fb7185', marginTop:4 }}>❌ {error}</div>}
       <input ref={ref} type="file" accept={accept} style={{ display:'none' }} onChange={handleFile} />
     </div>
   );
