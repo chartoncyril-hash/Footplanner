@@ -233,6 +233,34 @@ function EventWizard({ event, onClose, onSaved }) {
   });
 
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
+  const [defaults, setDefaults] = React.useState({ titles:[], locations:[] });
+
+  // Charger les favoris au montage
+  React.useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.from('profiles').select('communication_defaults').eq('id', user.id).single();
+      if (data?.communication_defaults) setDefaults(data.communication_defaults);
+    })();
+  }, []);
+
+  const saveDefault = async (field, value) => {
+    if (!value.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const key = field === 'title' ? 'titles' : 'locations';
+    if (defaults[key].includes(value.trim())) return;
+    const updated = { ...defaults, [key]: [...defaults[key], value.trim()] };
+    await supabase.from('profiles').update({ communication_defaults: updated }).eq('id', user.id);
+    setDefaults(updated);
+  };
+
+  const removeDefault = async (field, value) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const key = field === 'title' ? 'titles' : 'locations';
+    const updated = { ...defaults, [key]: defaults[key].filter(v => v !== value) };
+    await supabase.from('profiles').update({ communication_defaults: updated }).eq('id', user.id);
+    setDefaults(updated);
+  };
   const setSurveyField = (k,v) => setSurvey(f => ({...f,[k]:v}));
 
   const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18','U19','Senior','Féminin'];
@@ -405,15 +433,48 @@ function EventWizard({ event, onClose, onSaved }) {
               </div>
             </div>
             <div>
-              <label style={S.lbl}>Titre *</label>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                <label style={{ ...S.lbl, marginBottom:0 }}>Titre *</label>
+                {form.title.trim() && !defaults.titles.includes(form.title.trim()) && (
+                  <button onClick={() => saveDefault('title', form.title)} style={{ fontSize:11, color:'#f472b6', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>+ Sauvegarder en favori</button>
+                )}
+              </div>
               <input style={S.inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Entraînement U12 — Jeudi soir" />
+              {defaults.titles.length > 0 && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
+                  {defaults.titles.map(t => (
+                    <div key={t} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:16, overflow:'hidden', border:'1px solid rgba(244,114,182,0.25)' }}>
+                      <button onClick={() => set('title', t)} style={{ padding:'3px 10px', background:'rgba(244,114,182,0.1)', color:'#f472b6', border:'none', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}>{t}</button>
+                      <button onClick={() => removeDefault('title', t)} style={{ padding:'3px 6px', background:'rgba(244,114,182,0.08)', color:'#fb7185', border:'none', cursor:'pointer', fontSize:11, borderLeft:'1px solid rgba(244,114,182,0.15)' }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
               <div><label style={S.lbl}>Date *</label><input type="date" style={S.inp} value={form.date} onChange={e => set('date', e.target.value)} /></div>
               <div><label style={S.lbl}>Début</label><input type="time" style={S.inp} value={form.time_start} onChange={e => set('time_start', e.target.value)} /></div>
               <div><label style={S.lbl}>Fin</label><input type="time" style={S.inp} value={form.time_end} onChange={e => set('time_end', e.target.value)} /></div>
             </div>
-            <div><label style={S.lbl}>Lieu</label><input style={S.inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Terrain municipal..." /></div>
+            <div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                <label style={{ ...S.lbl, marginBottom:0 }}>Lieu</label>
+                {form.location.trim() && !defaults.locations.includes(form.location.trim()) && (
+                  <button onClick={() => saveDefault('location', form.location)} style={{ fontSize:11, color:'#f472b6', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>+ Sauvegarder en favori</button>
+                )}
+              </div>
+              <input style={S.inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Terrain municipal..." />
+              {defaults.locations.length > 0 && (
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
+                  {defaults.locations.map(l => (
+                    <div key={l} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:16, overflow:'hidden', border:'1px solid rgba(244,114,182,0.25)' }}>
+                      <button onClick={() => set('location', l)} style={{ padding:'3px 10px', background:'rgba(244,114,182,0.1)', color:'#f472b6', border:'none', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}>{l}</button>
+                      <button onClick={() => removeDefault('location', l)} style={{ padding:'3px 6px', background:'rgba(244,114,182,0.08)', color:'#fb7185', border:'none', cursor:'pointer', fontSize:11, borderLeft:'1px solid rgba(244,114,182,0.15)' }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <div><label style={S.lbl}>Description</label><textarea style={{ ...S.inp, minHeight:70, resize:'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Infos complémentaires..." /></div>
             <div>
               <label style={S.lbl}>Catégories concernées <span style={{ color:'#475569', fontWeight:400, textTransform:'none' }}>(filtre les destinataires étape suivante)</span></label>
