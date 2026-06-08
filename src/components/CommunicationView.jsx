@@ -35,18 +35,28 @@ export function CommunicationView() {
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
+    const { data: eventsData } = await supabase
       .from('club_events')
-      .select('*, event_responses(id, response)')
+      .select('*')
       .eq('owner_id', user.id)
       .order('date', { ascending: true });
-    if (data) {
-      setEvents(data);
+    if (eventsData) {
+      // Charger les réponses séparément
+      const eventIds = eventsData.map(e => e.id);
+      const { data: respData } = eventIds.length > 0
+        ? await supabase.from('event_responses').select('id, event_id, response').in('event_id', eventIds)
+        : { data: [] };
+      // Attacher les réponses à chaque événement
+      const events = eventsData.map(e => ({
+        ...e,
+        event_responses: (respData || []).filter(r => r.event_id === e.id),
+      }));
+      setEvents(events);
       const now = new Date();
       setStats({
-        total: data.length,
-        upcoming: data.filter(e => new Date(e.date) >= now).length,
-        responses: data.reduce((acc, e) => acc + (e.event_responses?.filter(r => r.response !== 'pending').length || 0), 0),
+        total: events.length,
+        upcoming: events.filter(e => new Date(e.date) >= now).length,
+        responses: (respData || []).filter(r => r.response !== 'pending').length,
       });
     }
     setLoading(false);
