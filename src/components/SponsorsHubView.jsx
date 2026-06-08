@@ -1,5 +1,87 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+
+// ── SPONSOR UPLOAD BUTTON ────────────────────────────────────
+function SponsorUploadButton({ value, accept, bucket, path, compress, onUploaded, onClear, label }) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState('');
+  const ref = useRef();
+
+  const compressImage = (file) => new Promise((resolve) => {
+    if (!compress || !file.type.startsWith('image/')) { resolve(file); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 400;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round(h * max / w); w = max; }
+        else { w = Math.round(w * max / h); h = max; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  const doUpload = async (file) => {
+    setUploading(true); setError('');
+    try {
+      const compressed = await compressImage(file);
+      const ext = file.name.split('.').pop();
+      const finalPath = path.replace(/\.[^.]+$/, '') + '.' + ext;
+      const { error: upErr } = await supabase.storage.from(bucket).upload(finalPath, compressed, { upsert: true, contentType: compressed.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from(bucket).getPublicUrl(finalPath);
+      onUploaded(data.publicUrl);
+    } catch(err) { setError('Erreur upload'); }
+    setUploading(false);
+  };
+
+  const handleFile = (e) => { const f = e.target.files[0]; if (f) doUpload(f); };
+  const handleDrop = (e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) doUpload(f); };
+
+  const isImage = value && /\.(jpg|jpeg|png|gif|webp)/i.test(value);
+
+  return (
+    <div>
+      {value ? (
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:8, background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.2)' }}>
+          {isImage
+            ? <img src={value} alt="logo" style={{ width:48, height:48, borderRadius:8, objectFit:'contain', background:'#fff', padding:2 }} />
+            : <div style={{ width:48, height:48, borderRadius:8, background:'rgba(251,113,133,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>📄</div>
+          }
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, color:'#34d399', fontWeight:700 }}>✓ {label || 'Fichier uploadé'}</div>
+            <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#64748b', textDecoration:'underline' }}>Voir →</a>
+          </div>
+          <div style={{ display:'flex', gap:4 }}>
+            <button onClick={() => ref.current?.click()} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#94a3b8', cursor:'pointer', fontSize:11, padding:'3px 8px' }}>🔄</button>
+            <button onClick={() => { onClear(); if(ref.current) ref.current.value=''; }} style={{ background:'rgba(251,113,133,0.08)', border:'1px solid rgba(251,113,133,0.2)', borderRadius:6, color:'#fb7185', cursor:'pointer', fontSize:11, padding:'3px 8px' }}>✕</button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => ref.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6, padding:'16px', borderRadius:10, border:`2px dashed ${dragOver?'rgba(163,230,53,0.6)':'rgba(255,255,255,0.12)'}`, background:dragOver?'rgba(163,230,53,0.06)':'rgba(255,255,255,0.02)', cursor:'pointer', transition:'all 0.15s', transform:dragOver?'scale(1.01)':'scale(1)' }}
+        >
+          {uploading ? <><div style={{fontSize:20}}>⏳</div><span style={{fontSize:12,color:'#64748b'}}>Upload...</span></>
+          : dragOver ? <><div style={{fontSize:24}}>📂</div><span style={{fontSize:12,color:'#a3e635',fontWeight:700}}>Déposer ici</span></>
+          : <><div style={{fontSize:20,opacity:0.5}}>📁</div><span style={{fontSize:12,color:'#64748b',textAlign:'center'}}>Cliquer ou glisser-déposer<br/><span style={{fontSize:10,color:'#475569'}}>{accept?.includes('image')&&!accept?.includes('pdf')?'JPG, PNG':'PDF, JPG, PNG'}</span></span></>}
+        </div>
+      )}
+      {error && <div style={{ fontSize:11, color:'#fb7185', marginTop:4 }}>❌ {error}</div>}
+      <input ref={ref} type="file" accept={accept} style={{ display:'none' }} onChange={handleFile} />
+    </div>
+  );
+}
 
 const DEFAULT_SECTEURS = [
   "Alimentation",
@@ -449,12 +531,16 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
           />
         </div>
         <div>
-          <label style={S.label}>URL Logo</label>
-          <input
-            style={S.input}
+          <label style={S.label}>Logo</label>
+          <SponsorUploadButton
             value={form.logo_url}
-            onChange={(e) => u("logo_url", e.target.value)}
-            placeholder="https://..."
+            accept="image/*"
+            bucket="sponsor-docs"
+            path={`logos/${Date.now()}`}
+            compress={true}
+            label="Logo uploadé"
+            onUploaded={(url) => u("logo_url", url)}
+            onClear={() => u("logo_url", "")}
           />
         </div>
       </div>
@@ -609,6 +695,7 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
 }
 export function SponsorsHubView({ profile }) {
   const [sponsors, setSponsors] = useState([]);
+  const [selectedSponsor, setSelectedSponsor] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -827,6 +914,12 @@ export function SponsorsHubView({ profile }) {
           settings={settings}
           onSave={handleSaveSettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+      {selectedSponsor && (
+        <SponsorDocumentsModal
+          sponsor={selectedSponsor}
+          onClose={() => setSelectedSponsor(null)}
         />
       )}
       {showForm && (
@@ -1048,6 +1141,13 @@ export function SponsorsHubView({ profile }) {
                   </a>
                 )}
                 <button
+                  style={{ ...S.btnGhost, color:'#818cf8' }}
+                  onClick={() => setSelectedSponsor(s)}
+                  title="Bibliothèque documentaire"
+                >
+                  📁
+                </button>
+                <button
                   style={S.btnGhost}
                   onClick={() => {
                     setEditing(s);
@@ -1097,6 +1197,184 @@ export function SponsorsHubView({ profile }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ============================================================
+// SPONSOR DOCUMENTS MODAL
+// ============================================================
+const DOC_TYPES = [
+  { val:'contrat', label:'Contrat', emoji:'📝' },
+  { val:'facture', label:'Facture', emoji:'🧾' },
+  { val:'devis',   label:'Devis',   emoji:'📋' },
+  { val:'logo',    label:'Logo',    emoji:'🎨' },
+  { val:'photo',   label:'Photo',   emoji:'📷' },
+  { val:'autre',   label:'Autre',   emoji:'📄' },
+];
+
+function SponsorDocumentsModal({ sponsor, onClose }) {
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [newDocName, setNewDocName] = useState('');
+  const [newDocType, setNewDocType] = useState('autre');
+  const [error, setError] = useState('');
+  const fileRef = useRef();
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('sponsor_documents')
+      .select('*')
+      .eq('sponsor_id', sponsor.id)
+      .order('created_at', { ascending: false });
+    setDocs(data || []);
+    setLoading(false);
+  }, [sponsor.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const uploadFile = async (file) => {
+    if (!file) return;
+    setUploading(true); setError('');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const ext = file.name.split('.').pop();
+      const path = `sponsors/${sponsor.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('sponsor-docs')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('sponsor-docs').getPublicUrl(path);
+      const sizeKb = Math.round(file.size / 1024);
+      await supabase.from('sponsor_documents').insert({
+        sponsor_id: sponsor.id,
+        owner_id: user.id,
+        name: newDocName.trim() || file.name,
+        type: newDocType,
+        url: urlData.publicUrl,
+        size_kb: sizeKb,
+      });
+      setNewDocName('');
+      load();
+    } catch(err) {
+      setError("Erreur lors de l'upload");
+    }
+    setUploading(false);
+  };
+
+  const handleFile = (e) => { const f = e.target.files[0]; if(f) uploadFile(f); };
+  const handleDrop = (e) => {
+    e.preventDefault(); setDragOver(false);
+    const f = e.dataTransfer.files[0]; if(f) uploadFile(f);
+  };
+
+  const deleteDoc = async (id, url) => {
+    if (!window.confirm('Supprimer ce document ?')) return;
+    await supabase.from('sponsor_documents').delete().eq('id', id);
+    load();
+  };
+
+  const inp = { padding:'8px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:13, fontFamily:'inherit' };
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', backdropFilter:'blur(4px)', zIndex:1000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:24, overflowY:'auto' }}>
+      <div style={{ background:'#0f172a', border:'1px solid rgba(129,140,248,0.25)', borderRadius:16, width:'100%', maxWidth:600, padding:28, marginTop:20 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+          {sponsor.logo_url
+            ? <img src={sponsor.logo_url} alt="" style={{ width:44, height:44, borderRadius:10, objectFit:'contain', background:'#fff', padding:2 }} />
+            : <div style={{ width:44, height:44, borderRadius:10, background:'rgba(129,140,248,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>🤝</div>
+          }
+          <div style={{ flex:1 }}>
+            <h3 style={{ color:'#f1f5f9', fontSize:16, fontWeight:800, margin:0 }}>{sponsor.name}</h3>
+            <p style={{ color:'#64748b', fontSize:12, margin:0 }}>Bibliothèque documentaire</p>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
+        </div>
+
+        {/* Zone upload */}
+        <div style={{ marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 120px', gap:8, marginBottom:8 }}>
+            <input style={{ ...inp, width:'100%', boxSizing:'border-box' }} value={newDocName} onChange={e=>setNewDocName(e.target.value)} placeholder="Nom du document (optionnel)" />
+            <select style={{ ...inp }} value={newDocType} onChange={e=>setNewDocType(e.target.value)}>
+              {DOC_TYPES.map(t => <option key={t.val} value={t.val}>{t.emoji} {t.label}</option>)}
+            </select>
+          </div>
+          <div
+            onClick={() => fileRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={(e)=>{e.preventDefault();setDragOver(true);}}
+            onDragLeave={()=>setDragOver(false)}
+            style={{
+              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8,
+              padding:'24px', borderRadius:12, cursor:'pointer', transition:'all 0.15s',
+              border: `2px dashed ${dragOver?'rgba(129,140,248,0.6)':'rgba(255,255,255,0.12)'}`,
+              background: dragOver?'rgba(129,140,248,0.08)':'rgba(255,255,255,0.02)',
+              transform: dragOver?'scale(1.01)':'scale(1)',
+            }}
+          >
+            {uploading ? (
+              <><div style={{fontSize:28}}>⏳</div><span style={{fontSize:13,color:'#64748b'}}>Upload en cours...</span></>
+            ) : dragOver ? (
+              <><div style={{fontSize:32}}>📂</div><span style={{fontSize:13,color:'#818cf8',fontWeight:700}}>Déposer le fichier ici</span></>
+            ) : (
+              <>
+                <div style={{fontSize:28,opacity:0.5}}>📁</div>
+                <span style={{fontSize:13,color:'#64748b',textAlign:'center'}}>
+                  Cliquer ou glisser-déposer un fichier<br/>
+                  <span style={{fontSize:11,color:'#475569'}}>PDF, JPG, PNG, DOCX...</span>
+                </span>
+              </>
+            )}
+          </div>
+          {error && <div style={{fontSize:11,color:'#fb7185',marginTop:6}}>❌ {error}</div>}
+          <input ref={fileRef} type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" style={{display:'none'}} onChange={handleFile} />
+        </div>
+
+        {/* Liste documents */}
+        <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:16 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:1, marginBottom:12 }}>
+            {docs.length} document{docs.length>1?'s':''}
+          </div>
+          {loading ? (
+            <div style={{color:'#64748b',textAlign:'center',padding:20}}>Chargement...</div>
+          ) : docs.length === 0 ? (
+            <div style={{color:'#334155',textAlign:'center',padding:'20px 0',fontSize:13}}>
+              <div style={{fontSize:28,marginBottom:8}}>📭</div>
+              Aucun document — ajoutez le premier !
+            </div>
+          ) : docs.map(doc => {
+            const docType = DOC_TYPES.find(t=>t.val===doc.type)||DOC_TYPES[5];
+            const isImage = doc.url && /\.(jpg|jpeg|png|gif|webp)/i.test(doc.url);
+            return (
+              <div key={doc.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:8 }}>
+                {isImage
+                  ? <img src={doc.url} alt="" style={{width:40,height:40,borderRadius:8,objectFit:'cover',flexShrink:0}} />
+                  : <div style={{width:40,height:40,borderRadius:8,background:`rgba(129,140,248,0.1)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{docType.emoji}</div>
+                }
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'#f1f5f9',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{doc.name}</div>
+                  <div style={{display:'flex',gap:8}}>
+                    <span style={{fontSize:11,color:'#818cf8',fontWeight:600}}>{docType.label}</span>
+                    {doc.size_kb && <span style={{fontSize:11,color:'#475569'}}>{doc.size_kb < 1024 ? `${doc.size_kb} KB` : `${(doc.size_kb/1024).toFixed(1)} MB`}</span>}
+                    <span style={{fontSize:11,color:'#334155'}}>{new Date(doc.created_at).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </div>
+                <div style={{display:'flex',gap:6,flexShrink:0}}>
+                  <a href={doc.url} target="_blank" rel="noreferrer" style={{display:'inline-flex',alignItems:'center',padding:'5px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.05)',color:'#94a3b8',fontSize:12,textDecoration:'none',fontWeight:600}}>
+                    ↗ Ouvrir
+                  </a>
+                  <button onClick={()=>deleteDoc(doc.id,doc.url)} style={{padding:'5px 8px',borderRadius:7,border:'1px solid rgba(251,113,133,0.2)',background:'rgba(251,113,133,0.08)',color:'#fb7185',cursor:'pointer',fontSize:12}}>
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
