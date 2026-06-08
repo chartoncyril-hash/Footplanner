@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, ClipboardList, Monitor, Handshake, Users, GitBranch, Settings, Sparkles, Tent } from 'lucide-react';
+import { LayoutDashboard, Trophy, ClipboardList, Monitor, Handshake, Users, GitBranch, Settings, Sparkles, Tent, MessageSquare } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
@@ -378,6 +378,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
       { id: 'tournaments', icon: 'Trophy', label: 'Tournois', color: '#a3e635' },
       { id: 'inscriptions', icon: 'ClipboardList', label: 'Inscriptions', color: '#818cf8' },
       { id: 'stages', icon: 'Tent', label: 'Stages', color: '#f97316' },
+      { id: 'communication', icon: 'MessageSquare', label: 'Communication', color: '#f472b6' },
       { id: 'scoreboard', icon: 'Monitor', label: 'Table de marque', color: '#34d399' },
       { id: 'sponsors', icon: 'Handshake', label: 'Sponsors', color: '#f59e0b' },
       { id: 'licencies', icon: 'Users', label: 'Licenciés', color: '#fb7185' },
@@ -425,6 +426,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
                     {item.id==='tournaments' && <Trophy size={16} />}
                     {item.id==='inscriptions' && <ClipboardList size={16} />}
                     {item.id==='stages' && <Tent size={16} />}
+                    {item.id==='communication' && <MessageSquare size={16} />}
                     {item.id==='scoreboard' && <Monitor size={16} />}
                     {item.id==='sponsors' && <Handshake size={16} />}
                     {item.id==='licencies' && <Users size={16} />}
@@ -462,6 +464,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             setHubView('inscriptions');
           } else if (moduleId === 'stages') {
             setHubView('stages');
+          } else if (moduleId === 'communication') {
+            setHubView('communication');
           } else if (moduleId === 'scoreboard') {
             setHubView('scoreboard');
           } else if (moduleId === 'sponsors') {
