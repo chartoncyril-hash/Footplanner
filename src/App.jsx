@@ -470,8 +470,6 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
             setHubMode(false);
           } else if (moduleId === 'inscriptions') {
             setHubView('inscriptions');
-          } else if (moduleId === 'team') {
-            setHubView('team');
           } else if (moduleId === 'planning') {
             setHubView('planning');
           } else if (moduleId === 'stages') {

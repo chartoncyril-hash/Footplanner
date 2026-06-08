@@ -11,6 +11,7 @@ import { StagesHubView } from './StagesHubView';
 import { CommunicationView } from './CommunicationView';
 import { PlanningView } from './PlanningView';
 import { TeamView } from './TeamView';
+import { SettingsHubView } from './SettingsHubView';
 import { LicenciesView } from './LicenciesView';
 import { CompositionsView } from './CompositionsView';
 import { CheckInView } from './CheckInView';
@@ -216,13 +217,13 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         );
       }
 
-      if (hubView === 'team') {
+      if (hubView === 'settings') {
         return (
           <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
             <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:8}}>
               ← Retour au dashboard
             </button>
-            <TeamView />
+            <SettingsHubView signOut={signOut} />
           </div>
         );
       }
