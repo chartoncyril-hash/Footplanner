@@ -576,6 +576,8 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('presences');
   const [editOpen, setEditOpen] = useState(false);
+  const [relancing, setRelancing] = useState(false);
+  const [relanceToast, setRelanceToast] = useState('');
   const type = EVENT_TYPES[event.type] || EVENT_TYPES.other;
 
   const load = useCallback(async () => {
@@ -590,6 +592,53 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   }, [event.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleRelance = async () => {
+    setRelancing(true);
+    // Trouver les licenciés sans réponse ou en pending
+    const pendingIds = responses.filter(r => r.response === 'pending').map(r => r.licencie_id);
+    if (pendingIds.length === 0) {
+      setRelanceToast('Tous les licenciés ont déjà répondu !');
+      setTimeout(() => setRelanceToast(''), 3000);
+      setRelancing(false);
+      return;
+    }
+    // Récupérer leurs infos + emails
+    const { data: licsData } = await supabase.from('licencies').select('id, first_name, last_name, email').in('id', pendingIds);
+    const { data: prof } = await supabase.from('profiles').select('club_name, club_color, club_logo_url').eq('id', event.owner_id).single();
+    // Récupérer sondage attaché
+    const { data: surveyData } = await supabase.from('surveys').select('title').eq('event_id', event.id).single();
+    const eventDate = event.date ? new Date(event.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) : null;
+    let sent = 0;
+    for (const lic of (licsData || [])) {
+      if (!lic.email) continue;
+      const resp = responses.find(r => r.licencie_id === lic.id);
+      if (!resp?.token) continue;
+      const responseUrl = `https://www.footplanner.fr/?event=${resp.token}`;
+      await supabase.functions.invoke('send-event-email', {
+        body: {
+          email: lic.email,
+          participant_name: `${lic.first_name} ${lic.last_name}`,
+          event_title: event.title,
+          event_type: event.type,
+          event_date: eventDate,
+          event_time_start: event.time_start || null,
+          event_time_end: event.time_end || null,
+          event_location: event.location || null,
+          event_description: event.description || null,
+          club_name: prof?.club_name,
+          club_color: prof?.club_color,
+          club_logo_url: prof?.club_logo_url,
+          response_url: responseUrl,
+          survey_title: surveyData?.title || null,
+        }
+      });
+      sent++;
+    }
+    setRelancing(false);
+    setRelanceToast(`📣 Relance envoyée à ${sent} licencié(s) sans réponse`);
+    setTimeout(() => setRelanceToast(''), 3000);
+  };
 
   // Initialiser les réponses manquantes (pending) pour tous les licenciés
   const initResponses = async () => {
@@ -645,10 +694,18 @@ function EventDetailModal({ event, onClose, onRefresh }) {
               {event.location && <span style={{ fontSize:13, color:'#94a3b8' }}>📍 {event.location}</span>}
             </div>
           </div>
-          <div style={{ display:'flex', gap:6 }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            <button onClick={handleRelance} disabled={relancing} style={{ ...S.btnGhost, color:'#f472b6', fontSize:12, opacity: relancing ? 0.5 : 1 }}>
+              {relancing ? '⏳' : '📣'} Relancer ({responses.filter(r=>r.response==='pending').length})
+            </button>
             <button onClick={() => setEditOpen(true)} style={S.btnGhost}>✏️ Modifier</button>
             <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
           </div>
+          {relanceToast && (
+            <div style={{ position:'fixed', bottom:24, right:24, background:'#1e293b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px 20px', color:'#f1f5f9', fontSize:13, fontWeight:600, zIndex:2000, boxShadow:'0 4px 24px rgba(0,0,0,0.4)' }}>
+              {relanceToast}
+            </div>
+          )}
         </div>
 
         {/* Stats présences */}
