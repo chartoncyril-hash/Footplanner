@@ -286,18 +286,58 @@ function EventWizard({ event, onClose, onSaved }) {
       eventId = newEvt.id;
     }
 
-    // 2. Créer les réponses pour les licenciés sélectionnés
+    // 2. Créer les réponses + envoyer emails
     if (selectedLics.length > 0 && !isEdit) {
-      const existingResp = [];
-      const toInsert = selectedLics
-        .filter(licId => !existingResp.includes(licId))
-        .map(licId => ({
+      // Récupérer infos licenciés sélectionnés
+      const { data: licsData } = await supabase
+        .from('licencies')
+        .select('id, first_name, last_name, email')
+        .in('id', selectedLics);
+
+      // Récupérer branding club
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('club_name, club_color, club_logo_url')
+        .eq('id', user.id)
+        .single();
+
+      // Insérer les réponses et récupérer les tokens
+      const { data: insertedResp } = await supabase
+        .from('event_responses')
+        .insert(selectedLics.map(licId => ({
           event_id: eventId,
           club_owner_id: user.id,
           licencie_id: licId,
           response: 'pending',
-        }));
-      if (toInsert.length > 0) await supabase.from('event_responses').insert(toInsert);
+        })))
+        .select('licencie_id, token');
+
+      // Envoyer les emails
+      const eventDate = form.date ? new Date(form.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) : null;
+      for (const lic of (licsData || [])) {
+        if (!lic.email) continue;
+        const resp = insertedResp?.find(r => r.licencie_id === lic.id);
+        if (!resp?.token) continue;
+        const responseUrl = `https://www.footplanner.fr/?event=${resp.token}`;
+        await supabase.functions.invoke('send-event-email', {
+          body: {
+            email: lic.email,
+            participant_name: `${lic.first_name} ${lic.last_name}`,
+            event_title: form.title,
+            event_type: form.type,
+            event_date: eventDate,
+            event_time_start: form.time_start || null,
+            event_time_end: form.time_end || null,
+            event_location: form.location || null,
+            event_description: form.description || null,
+            club_name: prof?.club_name,
+            club_color: prof?.club_color,
+            club_logo_url: prof?.club_logo_url,
+            response_url: responseUrl,
+            survey_title: survey.enabled && survey.title ? survey.title : null,
+          }
+        });
+      }
     }
 
     // 3. Créer le sondage si activé
