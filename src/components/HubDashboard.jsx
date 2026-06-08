@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
   CircleUser, Dribbble, Handshake,
-  Tent, MessageSquare, CalendarDays, Image, ArrowRight, Clock, Plus, User
+  Tent, MessageSquare, CalendarDays, Users2, Image, ArrowRight, Clock, Plus, User
 } from 'lucide-react';
 import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
@@ -10,6 +10,7 @@ import { SponsorsHubView } from './SponsorsHubView';
 import { StagesHubView } from './StagesHubView';
 import { CommunicationView } from './CommunicationView';
 import { PlanningView } from './PlanningView';
+import { TeamView } from './TeamView';
 import { LicenciesView } from './LicenciesView';
 import { CompositionsView } from './CompositionsView';
 import { CheckInView } from './CheckInView';
@@ -82,6 +83,14 @@ const MODULES = [
     icon: Tent,
     color: '#f97316',
     desc: 'Créez vos stages, gérez les inscriptions et invitez vos licenciés.',
+    available: true,
+  },
+  {
+    id: 'team',
+    label: 'Équipe & Droits',
+    icon: Users2,
+    color: '#f472b6',
+    desc: 'Invitez des collaborateurs et gérez leurs accès aux modules.',
     available: true,
   },
   {
@@ -207,6 +216,16 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         );
       }
 
+      if (hubView === 'team') {
+        return (
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
+            <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:8}}>
+              ← Retour au dashboard
+            </button>
+            <TeamView />
+          </div>
+        );
+      }
       if (hubView === 'planning') {
         return (
           <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
