@@ -47,6 +47,7 @@ import { InfoView } from './components/InfoView';
 import { PrivacyPage, CGUPage } from './components/LegalPage';
 import { RegistrationManager } from './components/RegistrationManager';
 import { StageRegistrationPage } from './components/StageRegistrationPage';
+import { EventResponsePage } from './components/EventResponsePage';
 import { CheckInView } from './components/CheckInView';
 import { HubDashboard } from './components/HubDashboard';
 import { useProfile } from './hooks/useProfile';
@@ -76,6 +77,8 @@ export default function App() {
   const isCGUMode = urlParams?.get('page') === 'cgu';
   const isStageMode = urlParams?.get('stage') !== null && urlParams?.get('stage') !== undefined;
   const stageCode = urlParams?.get('stage') || null;
+  const isEventMode = urlParams?.get('event') !== null && urlParams?.get('event') !== undefined;
+  const eventToken = urlParams?.get('event') || null;
   const registrationCode = urlParams?.get('t') || null;
 
   // Lien QR spectateur : /?t=CODE (ni register, ni presentation)
@@ -90,6 +93,7 @@ export default function App() {
   if (isCGUMode) return <CGUPage onBack={() => window.history.back()} />;
   if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
   if (isStageMode && stageCode) return <StageRegistrationPage stageCode={stageCode} />;
+  if (isEventMode && eventToken) return <EventResponsePage token={eventToken} />;
   if (isInvitationMode && invitationToken) return <FamilyInvitationPage token={invitationToken} />;
   // Spectateur via QR : bypass la landing même sans compte
   if (!user && !isPresentationMode && !spectatorCode) return <LandingPage />;

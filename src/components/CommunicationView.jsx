@@ -192,10 +192,18 @@ export function CommunicationView() {
 // ============================================================
 // EVENT WIZARD — Création/édition événement
 // ============================================================
+// ============================================================
+// EVENT WIZARD — 3 étapes : Infos / Destinataires / Sondage
+// ============================================================
 function EventWizard({ event, onClose, onSaved }) {
   const isEdit = !!event;
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
+  const [step, setStep] = React.useState(1);
+  const [saving, setSaving] = React.useState(false);
+  const [licencies, setLicencies] = React.useState([]);
+  const [selectedLics, setSelectedLics] = React.useState([]);
+  const [filterCat, setFilterCat] = React.useState('');
+  const [filterTeam, setFilterTeam] = React.useState('');
+  const [form, setForm] = React.useState({
     title: event?.title || '',
     type: event?.type || 'training',
     date: event?.date || '',
@@ -206,15 +214,58 @@ function EventWizard({ event, onClose, onSaved }) {
     categories: event?.categories || [],
     reminder_hours: event?.reminder_hours || [48, 2],
   });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const [survey, setSurvey] = React.useState({
+    enabled: false,
+    title: '',
+    options: ['Oui', 'Non', 'Peut-être'],
+    multiple_choice: false,
+    anonymous: false,
+  });
+
+  const set = (k,v) => setForm(f => ({...f,[k]:v}));
+  const setSurveyField = (k,v) => setSurvey(f => ({...f,[k]:v}));
+
   const CATS = ['U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','U18','U19','Senior','Féminin'];
-  const toggleCat = (cat) => set('categories', form.categories.includes(cat) ? form.categories.filter(c => c !== cat) : [...form.categories, cat]);
-  const toggleReminder = (h) => set('reminder_hours', form.reminder_hours.includes(h) ? form.reminder_hours.filter(x => x !== h) : [...form.reminder_hours, h].sort((a,b) => b-a));
+  const TEAMS = ['Équipe 1','Équipe 2','Équipe 3','Équipe 4'];
+  const toggleCat = (cat) => set('categories', form.categories.includes(cat) ? form.categories.filter(c=>c!==cat) : [...form.categories,cat]);
+  const toggleReminder = (h) => set('reminder_hours', form.reminder_hours.includes(h) ? form.reminder_hours.filter(x=>x!==h) : [...form.reminder_hours,h].sort((a,b)=>b-a));
+
+  // Charger licenciés à l'étape 2
+  React.useEffect(() => {
+    if (step !== 2) return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.from('licencies').select('id,first_name,last_name,category,team,email').eq('owner_id', user.id).order('last_name');
+      setLicencies(data || []);
+      // Pré-sélectionner selon catégories choisies étape 1
+      if (form.categories.length > 0) {
+        const preselected = (data || []).filter(l => form.categories.includes(l.category) && l.email).map(l => l.id);
+        setSelectedLics(preselected);
+      } else {
+        setSelectedLics((data || []).filter(l => l.email).map(l => l.id));
+      }
+    })();
+  }, [step]);
+
+  const filteredLics = licencies.filter(l => {
+    const matchCat = !filterCat || l.category === filterCat;
+    const matchTeam = !filterTeam || l.team === filterTeam;
+    return matchCat && matchTeam;
+  });
+
+  const cats = [...new Set(licencies.map(l=>l.category).filter(Boolean))].sort();
+  const teams = [...new Set(licencies.map(l=>l.team).filter(Boolean))].sort();
+
+  const selectAll = () => setSelectedLics(filteredLics.filter(l=>l.email).map(l=>l.id));
+  const deselectAll = () => setSelectedLics(prev => prev.filter(id => !filteredLics.map(l=>l.id).includes(id)));
 
   const save = async () => {
     if (!form.title.trim() || !form.date) return;
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
+
+    // 1. Créer/modifier l'événement
+    let eventId = event?.id;
     const payload = {
       owner_id: user.id,
       title: form.title.trim(),
@@ -227,114 +278,248 @@ function EventWizard({ event, onClose, onSaved }) {
       categories: form.categories,
       reminder_hours: form.reminder_hours,
     };
+
     if (isEdit) {
-      await supabase.from('club_events').update(payload).eq('id', event.id);
+      await supabase.from('club_events').update(payload).eq('id', eventId);
     } else {
-      await supabase.from('club_events').insert(payload);
+      const { data: newEvt } = await supabase.from('club_events').insert(payload).select('id').single();
+      eventId = newEvt.id;
     }
+
+    // 2. Créer les réponses pour les licenciés sélectionnés
+    if (selectedLics.length > 0 && !isEdit) {
+      const existingResp = [];
+      const toInsert = selectedLics
+        .filter(licId => !existingResp.includes(licId))
+        .map(licId => ({
+          event_id: eventId,
+          club_owner_id: user.id,
+          licencie_id: licId,
+          response: 'pending',
+        }));
+      if (toInsert.length > 0) await supabase.from('event_responses').insert(toInsert);
+    }
+
+    // 3. Créer le sondage si activé
+    if (survey.enabled && survey.title.trim() && !isEdit) {
+      await supabase.from('surveys').insert({
+        owner_id: user.id,
+        event_id: eventId,
+        title: survey.title.trim(),
+        options: survey.options.filter(o=>o.trim()).map((o,i) => ({ id:i, label:o.trim() })),
+        multiple_choice: survey.multiple_choice,
+        anonymous: survey.anonymous,
+      });
+    }
+
     setSaving(false);
     onSaved();
   };
 
+  const canNext1 = form.title.trim() && form.date;
+
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
-      <div style={{ background:'#0f172a', border:'1px solid rgba(244,114,182,0.2)', borderRadius:16, width:'100%', maxWidth:560, maxHeight:'90vh', overflow:'auto', padding:32 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <h3 style={{ color:'#f1f5f9', fontSize:18, fontWeight:800, margin:0 }}>{isEdit ? 'Modifier' : 'Créer un événement'}</h3>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ background:'#0f172a', border:'1px solid rgba(244,114,182,0.2)', borderRadius:16, width:'100%', maxWidth:580, maxHeight:'92vh', overflow:'auto', padding:32 }}>
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <div>
+            <h3 style={{ color:'#f1f5f9', fontSize:18, fontWeight:800, margin:0 }}>{isEdit ? 'Modifier' : 'Créer un événement'}</h3>
+            <p style={{ color:'#64748b', fontSize:13, margin:'4px 0 0' }}>Étape {step}/3</p>
+          </div>
           <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
         </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          {/* Type */}
-          <div>
-            <label style={S.lbl}>Type</label>
-            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-              {Object.entries(EVENT_TYPES).map(([key, val]) => (
-                <button key={key} onClick={() => set('type', key)} style={{
-                  padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
-                  borderColor: form.type === key ? val.color : 'rgba(255,255,255,0.1)',
-                  background: form.type === key ? `${val.color}20` : 'transparent',
-                  color: form.type === key ? val.color : '#64748b',
-                }}>{val.emoji} {val.label}</button>
-              ))}
-            </div>
-          </div>
-          {/* Titre */}
-          <div>
-            <label style={S.lbl}>Titre *</label>
-            <input style={S.inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Entraînement U12 — Jeudi" />
-          </div>
-          {/* Date + Heures */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
-            <div>
-              <label style={S.lbl}>Date *</label>
-              <input type="date" style={S.inp} value={form.date} onChange={e => set('date', e.target.value)} />
-            </div>
-            <div>
-              <label style={S.lbl}>Début</label>
-              <input type="time" style={S.inp} value={form.time_start} onChange={e => set('time_start', e.target.value)} />
-            </div>
-            <div>
-              <label style={S.lbl}>Fin</label>
-              <input type="time" style={S.inp} value={form.time_end} onChange={e => set('time_end', e.target.value)} />
-            </div>
-          </div>
-          {/* Lieu */}
-          <div>
-            <label style={S.lbl}>Lieu</label>
-            <input style={S.inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Terrain municipal, salle..." />
-          </div>
-          {/* Description */}
-          <div>
-            <label style={S.lbl}>Description / Notes</label>
-            <textarea style={{ ...S.inp, minHeight:70, resize:'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Infos complémentaires..." />
-          </div>
-          {/* Catégories */}
-          <div>
-            <label style={S.lbl}>Catégories concernées</label>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {CATS.map(cat => (
-                <button key={cat} onClick={() => toggleCat(cat)} style={{
-                  padding:'4px 10px', borderRadius:16, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:600,
-                  borderColor: form.categories.includes(cat) ? '#f472b6' : 'rgba(255,255,255,0.1)',
-                  background: form.categories.includes(cat) ? 'rgba(244,114,182,0.15)' : 'transparent',
-                  color: form.categories.includes(cat) ? '#f472b6' : '#64748b',
-                }}>{cat}</button>
-              ))}
-            </div>
-          </div>
-          {/* Rappels */}
-          <div>
-            <label style={S.lbl}>Rappels automatiques</label>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              {[72, 48, 24, 2].map(h => (
-                <label key={h} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer',
-                  borderColor: form.reminder_hours.includes(h) ? '#f472b6' : 'rgba(255,255,255,0.1)',
-                  background: form.reminder_hours.includes(h) ? 'rgba(244,114,182,0.1)' : 'transparent',
-                }}>
-                  <input type="checkbox" checked={form.reminder_hours.includes(h)} onChange={() => toggleReminder(h)} style={{ accentColor:'#f472b6' }} />
-                  <span style={{ fontSize:12, fontWeight:600, color: form.reminder_hours.includes(h) ? '#f472b6' : '#64748b' }}>
-                    {h >= 24 ? `J-${h/24}` : `H-${h}`}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+
+        {/* Progress */}
+        <div style={{ display:'flex', gap:6, marginBottom:28 }}>
+          {[1,2,3].map(n => (
+            <div key={n} style={{ flex:1, height:4, borderRadius:4, background: step >= n ? '#f472b6' : 'rgba(255,255,255,0.08)', transition:'background 0.2s' }} />
+          ))}
         </div>
-        {/* Actions */}
-        <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:24 }}>
-          <button onClick={onClose} style={S.btnGhost}>Annuler</button>
-          <button onClick={save} disabled={saving || !form.title.trim() || !form.date} style={{ ...S.btn, opacity: saving || !form.title.trim() || !form.date ? 0.5 : 1 }}>
-            {saving ? 'Enregistrement...' : isEdit ? '✓ Mettre à jour' : '✓ Créer'}
+
+        {/* ── ÉTAPE 1 : INFOS ── */}
+        {step === 1 && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {/* Type */}
+            <div>
+              <label style={S.lbl}>Type d'événement</label>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {Object.entries(EVENT_TYPES).map(([key, val]) => (
+                  <button key={key} onClick={() => set('type', key)} style={{
+                    padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
+                    borderColor: form.type === key ? val.color : 'rgba(255,255,255,0.1)',
+                    background: form.type === key ? val.color+'20' : 'transparent',
+                    color: form.type === key ? val.color : '#64748b',
+                  }}>{val.emoji} {val.label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={S.lbl}>Titre *</label>
+              <input style={S.inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Entraînement U12 — Jeudi soir" />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+              <div><label style={S.lbl}>Date *</label><input type="date" style={S.inp} value={form.date} onChange={e => set('date', e.target.value)} /></div>
+              <div><label style={S.lbl}>Début</label><input type="time" style={S.inp} value={form.time_start} onChange={e => set('time_start', e.target.value)} /></div>
+              <div><label style={S.lbl}>Fin</label><input type="time" style={S.inp} value={form.time_end} onChange={e => set('time_end', e.target.value)} /></div>
+            </div>
+            <div><label style={S.lbl}>Lieu</label><input style={S.inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Terrain municipal..." /></div>
+            <div><label style={S.lbl}>Description</label><textarea style={{ ...S.inp, minHeight:70, resize:'vertical' }} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Infos complémentaires..." /></div>
+            <div>
+              <label style={S.lbl}>Catégories concernées <span style={{ color:'#475569', fontWeight:400, textTransform:'none' }}>(filtre les destinataires étape suivante)</span></label>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {CATS.map(cat => (
+                  <button key={cat} onClick={() => toggleCat(cat)} style={{
+                    padding:'4px 10px', borderRadius:16, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:600,
+                    borderColor: form.categories.includes(cat) ? '#f472b6' : 'rgba(255,255,255,0.1)',
+                    background: form.categories.includes(cat) ? 'rgba(244,114,182,0.15)' : 'transparent',
+                    color: form.categories.includes(cat) ? '#f472b6' : '#64748b',
+                  }}>{cat}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={S.lbl}>Rappels automatiques</label>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                {[72,48,24,2].map(h => (
+                  <label key={h} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer',
+                    borderColor: form.reminder_hours.includes(h) ? '#f472b6' : 'rgba(255,255,255,0.1)',
+                    background: form.reminder_hours.includes(h) ? 'rgba(244,114,182,0.1)' : 'transparent',
+                  }}>
+                    <input type="checkbox" checked={form.reminder_hours.includes(h)} onChange={() => toggleReminder(h)} style={{ accentColor:'#f472b6' }} />
+                    <span style={{ fontSize:12, fontWeight:600, color: form.reminder_hours.includes(h) ? '#f472b6' : '#64748b' }}>{h >= 24 ? `J-${h/24}` : `H-${h}`}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── ÉTAPE 2 : DESTINATAIRES ── */}
+        {step === 2 && (
+          <div>
+            <p style={{ color:'#64748b', fontSize:13, marginBottom:16 }}>Sélectionnez les licenciés à inviter. Seuls ceux avec un email recevront l'invitation.</p>
+            {/* Filtres */}
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14, alignItems:'center' }}>
+              <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ padding:'7px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}>
+                <option value="">Toutes catégories</option>
+                {cats.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ padding:'7px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}>
+                <option value="">Toutes équipes</option>
+                {teams.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <button onClick={selectAll} style={{ ...S.btnGhost, fontSize:11 }}>Tout sélectionner</button>
+              <button onClick={deselectAll} style={{ ...S.btnGhost, fontSize:11 }}>Tout désélectionner</button>
+              <span style={{ fontSize:12, color:'#64748b', marginLeft:'auto' }}>{selectedLics.length} sélectionné(s)</span>
+            </div>
+            {/* Liste */}
+            <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:320, overflowY:'auto', marginBottom:12 }}>
+              {filteredLics.map(lic => {
+                const isSelected = selectedLics.includes(lic.id);
+                const hasEmail = !!lic.email;
+                return (
+                  <label key={lic.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:8, border:'1px solid', cursor: hasEmail ? 'pointer' : 'not-allowed', opacity: hasEmail ? 1 : 0.4,
+                    borderColor: isSelected ? 'rgba(244,114,182,0.35)' : 'rgba(255,255,255,0.06)',
+                    background: isSelected ? 'rgba(244,114,182,0.06)' : 'rgba(255,255,255,0.02)',
+                  }}>
+                    <input type="checkbox" checked={isSelected} disabled={!hasEmail} onChange={() => setSelectedLics(prev => isSelected ? prev.filter(id=>id!==lic.id) : [...prev,lic.id])} style={{ accentColor:'#f472b6', width:15, height:15 }} />
+                    <div style={{ flex:1 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{lic.first_name} {lic.last_name}</span>
+                      {lic.category && <span style={{ fontSize:11, color:'#818cf8', marginLeft:8 }}>{lic.category}</span>}
+                      {lic.team && <span style={{ fontSize:11, color:'#64748b', marginLeft:6 }}>{lic.team}</span>}
+                    </div>
+                    <span style={{ fontSize:11, color: hasEmail ? '#475569' : '#fb7185' }}>{hasEmail ? lic.email : 'Pas d\'email'}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div style={{ padding:'10px 14px', borderRadius:8, background:'rgba(244,114,182,0.06)', border:'1px solid rgba(244,114,182,0.15)', fontSize:12, color:'#94a3b8' }}>
+              📧 {selectedLics.filter(id => licencies.find(l=>l.id===id)?.email).length} email(s) seront envoyés à la création
+            </div>
+          </div>
+        )}
+
+        {/* ── ÉTAPE 3 : SONDAGE ── */}
+        {step === 3 && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <label style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderRadius:10, border:'1px solid', cursor:'pointer',
+              borderColor: survey.enabled ? '#f472b6' : 'rgba(255,255,255,0.1)',
+              background: survey.enabled ? 'rgba(244,114,182,0.08)' : 'rgba(255,255,255,0.02)',
+            }}>
+              <input type="checkbox" checked={survey.enabled} onChange={e => setSurveyField('enabled', e.target.checked)} style={{ accentColor:'#f472b6', width:18, height:18 }} />
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9' }}>📊 Attacher un sondage à cet événement</div>
+                <div style={{ fontSize:12, color:'#64748b' }}>Les licenciés pourront répondre depuis leur lien personnel</div>
+              </div>
+            </label>
+
+            {survey.enabled && (
+              <div style={{ display:'flex', flexDirection:'column', gap:12, padding:'16px', borderRadius:10, border:'1px solid rgba(244,114,182,0.15)', background:'rgba(244,114,182,0.04)' }}>
+                <div>
+                  <label style={S.lbl}>Question *</label>
+                  <input style={S.inp} value={survey.title} onChange={e => setSurveyField('title', e.target.value)} placeholder="Ex: Disponible pour ce match ?" />
+                </div>
+                <div>
+                  <label style={S.lbl}>Options</label>
+                  {survey.options.map((opt,i) => (
+                    <div key={i} style={{ display:'flex', gap:6, marginBottom:6 }}>
+                      <input style={S.inp} value={opt} onChange={e => setSurvey(f => ({...f, options: f.options.map((o,idx) => idx===i ? e.target.value : o)}))} placeholder={`Option ${i+1}`} />
+                      {survey.options.length > 2 && (
+                        <button onClick={() => setSurvey(f => ({...f, options: f.options.filter((_,idx)=>idx!==i)}))} style={{ ...S.btnGhost, padding:'5px 8px', color:'#fb7185' }}><X size={12} /></button>
+                      )}
+                    </div>
+                  ))}
+                  <button onClick={() => setSurvey(f => ({...f, options:[...f.options,'']}))} style={{ ...S.btnGhost, fontSize:12 }}><Plus size={12} /> Ajouter une option</button>
+                </div>
+                <div style={{ display:'flex', gap:16 }}>
+                  <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#94a3b8', cursor:'pointer' }}>
+                    <input type="checkbox" checked={survey.multiple_choice} onChange={e => setSurveyField('multiple_choice', e.target.checked)} style={{ accentColor:'#f472b6' }} />
+                    Choix multiple
+                  </label>
+                  <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#94a3b8', cursor:'pointer' }}>
+                    <input type="checkbox" checked={survey.anonymous} onChange={e => setSurveyField('anonymous', e.target.checked)} style={{ accentColor:'#f472b6' }} />
+                    Anonyme
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Récap avant envoi */}
+            <div style={{ padding:'16px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
+              <p style={{ color:'#94a3b8', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>📋 Récapitulatif</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                <span style={{ fontSize:13, color:'#f1f5f9' }}>{EVENT_TYPES[form.type]?.emoji} {form.title}</span>
+                <span style={{ fontSize:12, color:'#64748b' }}>📅 {form.date && new Date(form.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' })}{form.time_start ? ` à ${form.time_start}` : ''}</span>
+                {form.location && <span style={{ fontSize:12, color:'#64748b' }}>📍 {form.location}</span>}
+                <span style={{ fontSize:12, color:'#f472b6', fontWeight:700 }}>📧 {selectedLics.length} destinataire(s)</span>
+                {survey.enabled && survey.title && <span style={{ fontSize:12, color:'#818cf8' }}>📊 Sondage : {survey.title}</span>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:28 }}>
+          <button style={S.btnGhost} onClick={() => step === 1 ? onClose() : setStep(s=>s-1)}>
+            {step === 1 ? 'Annuler' : '← Retour'}
           </button>
+          {step < 3 ? (
+            <button style={{ ...S.btn, opacity: (step===1 && !canNext1) ? 0.5 : 1 }} disabled={step===1 && !canNext1} onClick={() => setStep(s=>s+1)}>
+              Suivant →
+            </button>
+          ) : (
+            <button style={{ ...S.btn, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={save}>
+              {saving ? 'Création...' : isEdit ? '✓ Mettre à jour' : `✓ Créer & envoyer (${selectedLics.length})`}
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ============================================================
-// EVENT DETAIL MODAL — Gestion présences + tâches
-// ============================================================
+
 function EventDetailModal({ event, onClose, onRefresh }) {
   const [responses, setResponses] = useState([]);
   const [licencies, setLicencies] = useState([]);
