@@ -87,14 +87,6 @@ const MODULES = [
     available: true,
   },
   {
-    id: 'team',
-    label: 'Équipe & Droits',
-    icon: Users2,
-    color: '#f472b6',
-    desc: 'Invitez des collaborateurs et gérez leurs accès aux modules.',
-    available: true,
-  },
-  {
     id: 'planning',
     label: 'Planning',
     icon: CalendarDays,

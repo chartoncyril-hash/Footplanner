@@ -448,9 +448,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
           {/* Footer */}
           <div style={{ padding:'12px 8px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:10, fontWeight:700, color:'#334155', letterSpacing:1.5, textTransform:'uppercase', padding:'4px 12px', marginBottom:4 }}>GÉNÉRAL</div>
-            <button onClick={() => setHubView('account')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: hubView==='account' ? 'rgba(100,116,139,0.15)' : 'transparent', color: hubView==='account' ? '#94a3b8' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, borderLeft: hubView==='account' ? '2px solid #64748b' : '2px solid transparent' }}>
-              <span style={{ fontSize:15 }}>👤</span> Mon compte
-            </button>
+
             <button onClick={() => setHubView('settings')} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:8, border:'none', background: hubView==='settings' ? 'rgba(100,116,139,0.15)' : 'transparent', color: hubView==='settings' ? '#94a3b8' : '#64748b', cursor:'pointer', fontSize:13, fontWeight:500, textAlign:'left', width:'100%', fontFamily:'inherit', marginBottom:2, borderLeft: hubView==='settings' ? '2px solid #64748b' : '2px solid transparent' }}>
               <span style={{ fontSize:15 }}>⚙️</span> Paramètres
             </button>
