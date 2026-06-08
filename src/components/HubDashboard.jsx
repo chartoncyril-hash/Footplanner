@@ -83,6 +83,14 @@ const MODULES = [
     available: true,
   },
   {
+    id: 'communication',
+    label: 'Communication',
+    icon: MessageSquare,
+    color: '#f472b6',
+    desc: 'Événements, présences, sondages et messagerie du club.',
+    available: true,
+  },
+  {
     id: 'medias',
     label: 'Médias & Galerie',
     icon: Image,
