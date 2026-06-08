@@ -221,7 +221,7 @@ export function MatchDetail({
         <section style={styles.detailCard}>
           <MatchEventsPanel
             match={{ ...m, kicked_off_at: m.kickedOffAt }}
-            tournament={{ id: m.tournament_id }}
+            tournament={{ id: m.tournamentId }}
             homeTeam={homeTeam}
             awayTeam={awayTeam}
             canEdit={canModifyNow && m.status === 'live'}
