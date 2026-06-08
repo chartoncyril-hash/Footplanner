@@ -142,6 +142,7 @@ export function CommunicationView() {
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                       <span style={{ fontSize:15, fontWeight:800, color:'#f1f5f9' }}>{evt.title}</span>
                       <span style={{ fontSize:11, fontWeight:700, color:type.color, background:`${type.color}15`, padding:'2px 8px', borderRadius:10 }}>{type.label}</span>
+              {event.status === 'cancelled' && <span style={{ fontSize:11, fontWeight:700, color:'#fb7185', background:'rgba(251,113,133,0.15)', padding:'2px 8px', borderRadius:10 }}>❌ ANNULÉ</span>}
                       {isPast && <span style={{ fontSize:10, color:'#475569', fontWeight:600 }}>PASSÉ</span>}
                       {evt.recurrence && evt.recurrence !== 'none' && !evt.recurrence_parent_id && (
                         <span style={{ fontSize:10, color:'#818cf8', fontWeight:700, background:'rgba(129,140,248,0.1)', padding:'2px 8px', borderRadius:10 }}>
@@ -709,6 +710,9 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const [editOpen, setEditOpen] = useState(false);
   const [relancing, setRelancing] = useState(false);
   const [relanceToast, setRelanceToast] = useState('');
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   const type = EVENT_TYPES[event.type] || EVENT_TYPES.other;
 
   const load = useCallback(async () => {
@@ -723,6 +727,47 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   }, [event.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    // Mettre à jour le statut
+    await supabase.from('club_events')
+      .update({ status: 'cancelled', cancellation_reason: cancelReason.trim() || null })
+      .eq('id', event.id);
+    // Envoyer emails aux répondants (yes + maybe + pending)
+    const toNotify = responses.filter(r => ['yes','maybe','pending'].includes(r.response));
+    const licIds = toNotify.map(r => r.licencie_id).filter(Boolean);
+    if (licIds.length > 0) {
+      const { data: licsData } = await supabase.from('licencies').select('id, first_name, last_name, email').in('id', licIds);
+      const { data: prof } = await supabase.from('profiles').select('club_name, club_color, club_logo_url').eq('id', user.id).single();
+      const eventDate = event.date ? new Date(event.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) : null;
+      for (const lic of (licsData || [])) {
+        if (!lic.email) continue;
+        await supabase.functions.invoke('send-event-email', {
+          body: {
+            type: 'cancellation',
+            email: lic.email,
+            participant_name: `${lic.first_name} ${lic.last_name}`,
+            event_title: event.title,
+            event_type: event.type,
+            event_date: eventDate,
+            event_time_start: event.time_start || null,
+            event_location: event.location || null,
+            club_name: prof?.club_name,
+            club_color: prof?.club_color,
+            club_logo_url: prof?.club_logo_url,
+            cancellation_reason: cancelReason.trim() || null,
+          }
+        });
+      }
+    }
+    setCancelling(false);
+    setCancelOpen(false);
+    setRelanceToast(`❌ Événement annulé — ${toNotify.length} notification(s) envoyée(s)`);
+    setTimeout(() => setRelanceToast(''), 4000);
+    onRefresh();
+  };
 
   const handleRelance = async () => {
     setRelancing(true);
@@ -829,6 +874,11 @@ function EventDetailModal({ event, onClose, onRefresh }) {
             <button onClick={handleRelance} disabled={relancing} style={{ ...S.btnGhost, color:'#f472b6', fontSize:12, opacity: relancing ? 0.5 : 1 }}>
               {relancing ? '⏳' : '📣'} Relancer ({responses.filter(r=>r.response==='pending').length})
             </button>
+            {event.status !== 'cancelled' && (
+              <button onClick={() => setCancelOpen(true)} style={{ ...S.btnGhost, color:'#fb7185', fontSize:12 }}>
+                ❌ Annuler
+              </button>
+            )}
             <button onClick={() => setEditOpen(true)} style={S.btnGhost}>✏️ Modifier</button>
             <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
           </div>
@@ -911,6 +961,33 @@ function EventDetailModal({ event, onClose, onRefresh }) {
       </div>
 
       {editOpen && <EventWizard event={event} onClose={() => setEditOpen(false)} onSaved={() => { setEditOpen(false); onRefresh(); }} />}
+      {cancelOpen && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:1100, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <div style={{ background:'#0f172a', border:'1px solid rgba(251,113,133,0.3)', borderRadius:16, width:'100%', maxWidth:420, padding:28 }}>
+            <h4 style={{ color:'#fb7185', fontSize:16, fontWeight:800, margin:'0 0 8px' }}>❌ Annuler l'événement</h4>
+            <p style={{ color:'#94a3b8', fontSize:13, marginBottom:16 }}>
+              Un email sera envoyé à tous les participants ayant répondu. La récurrence n'est pas affectée.
+            </p>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ ...S.lbl }}>Motif (optionnel)</label>
+              <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)}
+                placeholder="Conditions météo défavorables, terrain indisponible..."
+                style={{ ...S.inp, minHeight:80, resize:'vertical', background:'#1e293b' }} />
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:8 }}>
+                {['Conditions météo', 'Terrain indisponible', 'Match reporté', 'Manque de joueurs'].map(r => (
+                  <button key={r} onClick={() => setCancelReason(r)} style={{ padding:'4px 10px', borderRadius:16, border:'1px solid rgba(251,113,133,0.2)', background: cancelReason === r ? 'rgba(251,113,133,0.15)' : 'transparent', color: cancelReason === r ? '#fb7185' : '#64748b', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}>{r}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+              <button onClick={() => setCancelOpen(false)} style={S.btnGhost}>Retour</button>
+              <button onClick={handleCancel} disabled={cancelling} style={{ ...S.btn, background:'#fb7185', opacity: cancelling ? 0.6 : 1 }}>
+                {cancelling ? 'Annulation...' : "❌ Confirmer l'annulation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

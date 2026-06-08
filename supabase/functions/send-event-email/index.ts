@@ -13,6 +13,7 @@ Deno.serve(async (req) => {
     event_location, event_description,
     club_name, club_color, club_logo_url,
     response_url, survey_title,
+    type, cancellation_reason,
   } = await req.json();
 
   const accent = club_color || '#f472b6';
@@ -20,6 +21,51 @@ Deno.serve(async (req) => {
     training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌'
   };
   const emoji = EVENT_EMOJIS[event_type] || '📌';
+
+  // Template annulation
+  if (type === 'cancellation') {
+    const cancelHtml = `
+    <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;background:#060a12;color:#f1f5f9;border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(251,113,133,0.2) 0%,#060a12 60%);padding:24px 28px;border-bottom:1px solid rgba(251,113,133,0.2);display:flex;align-items:center;gap:14px;">
+        ${club_logo_url ? `<img src="${club_logo_url}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;" />` : `<div style="width:44px;height:44px;border-radius:10px;background:rgba(251,113,133,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;">${emoji}</div>`}
+        <div>
+          <div style="font-weight:800;font-size:16px;color:#f1f5f9;">${club_name || 'FootPlanner'}</div>
+          <div style="font-size:12px;color:#fb7185;">Événement annulé</div>
+        </div>
+      </div>
+      <div style="padding:28px;">
+        <p style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px;">Bonjour ${participant_name} 👋</p>
+        <div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.25);border-radius:12px;padding:18px;margin-bottom:20px;">
+          <div style="font-size:24px;margin-bottom:8px;">❌</div>
+          <div style="font-size:18px;font-weight:900;color:#fb7185;margin-bottom:8px;">${event_title} — Annulé</div>
+          ${event_date ? `<div style="font-size:13px;color:#94a3b8;">📅 ${event_date}${event_time_start ? ` à ${event_time_start}` : ''}</div>` : ''}
+          ${event_location ? `<div style="font-size:13px;color:#94a3b8;margin-top:4px;">📍 ${event_location}</div>` : ''}
+        </div>
+        ${cancellation_reason ? `
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+          <p style="color:#f59e0b;font-weight:700;font-size:13px;margin:0 0 4px;">Motif</p>
+          <p style="color:#94a3b8;font-size:13px;margin:0;">${cancellation_reason}</p>
+        </div>` : ''}
+        <p style="font-size:13px;color:#64748b;text-align:center;">Nous vous tiendrons informés pour la suite.</p>
+      </div>
+      <div style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+        <p style="color:#334155;font-size:11px;margin:0;">FootPlanner · Gestion de clubs de football</p>
+      </div>
+    </div>`;
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: 'FootPlanner <contact@footplanner.fr>',
+        to: email,
+        subject: `❌ Annulé — ${event_title}`,
+        html: cancelHtml,
+      }),
+    });
+    const data = await res.json();
+    return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
 
   const html = `
     <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;background:#060a12;color:#f1f5f9;border-radius:16px;overflow:hidden;">
