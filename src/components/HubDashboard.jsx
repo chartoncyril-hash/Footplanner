@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Trophy, Users, Monitor, ShoppingCart, Heart, BarChart2,
+  Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
+  CircleUser, Dribbble, Handshake,
   Tent, MessageSquare, Image, ArrowRight, Clock, Plus, User
 } from 'lucide-react';
 import { AccountView } from './AccountView';
@@ -29,7 +30,7 @@ const MODULES = [
   {
     id: 'inscriptions',
     label: 'Inscriptions en ligne',
-    icon: Users,
+    icon: ClipboardCheck,
     color: '#818cf8',
     desc: 'Les équipes s\'inscrivent elles-mêmes via une page publique.',
     available: true,
@@ -45,7 +46,7 @@ const MODULES = [
   {
     id: 'licencies',
     label: 'Licenciés & Équipes',
-    icon: ShoppingCart,
+    icon: ClipboardList,
     color: '#34d399',
     desc: 'Gérez vos licenciés, documents, conformité et équipes.',
     available: true,
@@ -53,7 +54,7 @@ const MODULES = [
   {
     id: 'compositions',
     label: 'Compositions & Tactique',
-    icon: Users,
+    icon: Dribbble,
     color: '#818cf8',
     desc: "Créez vos compositions d'équipe et plans tactiques.",
     available: true,
@@ -69,7 +70,7 @@ const MODULES = [
   {
     id: 'sponsors',
     label: 'Sponsors & Partenaires',
-    icon: BarChart2,
+    icon: Handshake,
     color: '#facc15',
     desc: 'Gérez vos partenaires commerciaux et suivez vos contrats.',
     available: true,
