@@ -28,11 +28,9 @@ export function LicencieApp({ user, signOut }) {
     setFamilyProfile(fpData);
 
     // 2. Charger les licenciés liés
-    console.log('[LicencieApp] fpData.id:', fpData.id);
-    const { data: licsData, error: licsErr } = await supabase.rpc('get_licencies_for_parent', {
+    const { data: licsData } = await supabase.rpc('get_licencies_for_parent', {
       p_family_profile_id: fpData.id
     });
-    console.log('[LicencieApp] licsData:', licsData?.length, licsErr);
     setLicencies(licsData || []);
     if (licsData?.length > 0) setSelectedLicId(licsData[0].id);
 
@@ -116,7 +114,7 @@ export function LicencieApp({ user, signOut }) {
         {/* Sélecteur enfant si plusieurs */}
         {licencies.length > 1 && (
           <select value={selectedLicId || ''} onChange={e => setSelectedLicId(e.target.value)}
-            style={{ padding:'5px 10px', borderRadius:8, border:`1px solid ${accent}44`, background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', cursor:'pointer' }}>
+            style={{ padding:'6px 12px', borderRadius:8, border:`2px solid ${accent}`, background:'#1e293b', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', cursor:'pointer', fontWeight:700 }}>
             {licencies.map(l => (
               <option key={l.id} value={l.id} style={{ background:'#1e293b' }}>{l.first_name} {l.last_name}</option>
             ))}
