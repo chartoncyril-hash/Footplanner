@@ -28,9 +28,11 @@ export function LicencieApp({ user, signOut }) {
     setFamilyProfile(fpData);
 
     // 2. Charger les licenciés liés
-    const { data: licsData } = await supabase.rpc('get_licencies_for_parent', {
+    console.log('[LicencieApp] fpData.id:', fpData.id);
+    const { data: licsData, error: licsErr } = await supabase.rpc('get_licencies_for_parent', {
       p_family_profile_id: fpData.id
     });
+    console.log('[LicencieApp] licsData:', licsData?.length, licsErr);
     setLicencies(licsData || []);
     if (licsData?.length > 0) setSelectedLicId(licsData[0].id);
 
