@@ -105,13 +105,12 @@ export default function App() {
 
 // Routeur : détecte si l'utilisateur est organisateur ou licencié
 function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
-  const [profileType, setProfileType] = React.useState(null); // null|'organizer'|'licencie'|'both'
+  const [profileType, setProfileType] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
-  const { supabase: sb } = React.useMemo(() => ({ supabase: require('./lib/supabase').supabase }), []);
 
   React.useEffect(() => {
     (async () => {
-      const { default: { supabase: supabaseClient } } = await import('./lib/supabase');
+      const { supabase: supabaseClient } = await import('./lib/supabase');
       const [{ data: profile }, { data: family }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
         supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).single(),
