@@ -148,8 +148,8 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         }
         if (fpId) {
           await supabaseClient.from('family_licencies')
-            .upsert({ family_profile_id: fpId, licencie_id: licencie.id, relation: 'self' },
-              { onConflict: 'family_profile_id,licencie_id' });
+            .upsert({ family_user_id: fpId, licencie_id: licencie.id, relation: 'self', club_owner_id: licencie.owner_id },
+              { onConflict: 'family_user_id,licencie_id' });
         }
         setProfileType('licencie');
         setLoading(false);
