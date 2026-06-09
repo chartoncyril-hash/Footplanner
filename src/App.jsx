@@ -492,18 +492,21 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
 
   // Niveau COMPTE : Hub Dashboard
   if (hubMode && !isPresentationMode) {
-    const SIDEBAR_ITEMS = [
-      { id: 'home', icon: 'LayoutDashboard', label: 'Dashboard', color: '#a3e635' },
-      { id: 'tournaments', icon: 'Trophy', label: 'Tournois', color: '#a3e635' },
-      { id: 'inscriptions', icon: 'ClipboardList', label: 'Inscriptions', color: '#818cf8' },
-{ id: 'planning', icon: 'CalendarDays', label: 'Planning', color: '#22d3ee' },
-      { id: 'stages', icon: 'Tent', label: 'Stages', color: '#f97316' },
-      { id: 'communication', icon: 'MessageSquare', label: 'Communication', color: '#f472b6' },
-      { id: 'scoreboard', icon: 'Monitor', label: 'Table de marque', color: '#34d399' },
-      { id: 'sponsors', icon: 'Handshake', label: 'Sponsors', color: '#f59e0b' },
-      { id: 'licencies', icon: 'Users', label: 'Licenciés', color: '#fb7185' },
-      { id: 'compositions', icon: 'GitBranch', label: 'Compositions', color: '#818cf8' },
+    const ALL_ITEMS = [
+      { id: 'home',          icon: 'LayoutDashboard', label: 'Dashboard',       color: '#a3e635', perm: null },
+      { id: 'tournaments',   icon: 'Trophy',          label: 'Tournois',         color: '#a3e635', perm: 'tournaments' },
+      { id: 'inscriptions',  icon: 'ClipboardList',   label: 'Inscriptions',     color: '#818cf8', perm: 'inscriptions' },
+      { id: 'planning',      icon: 'CalendarDays',    label: 'Planning',         color: '#22d3ee', perm: 'planning' },
+      { id: 'stages',        icon: 'Tent',            label: 'Stages',           color: '#f97316', perm: 'stages' },
+      { id: 'communication', icon: 'MessageSquare',   label: 'Communication',    color: '#f472b6', perm: 'communication' },
+      { id: 'scoreboard',    icon: 'Monitor',         label: 'Table de marque',  color: '#34d399', perm: 'scoreboard' },
+      { id: 'sponsors',      icon: 'Handshake',       label: 'Sponsors',         color: '#f59e0b', perm: 'sponsors' },
+      { id: 'licencies',     icon: 'Users',           label: 'Licenciés',        color: '#fb7185', perm: 'licencies' },
+      { id: 'compositions',  icon: 'GitBranch',       label: 'Compositions',     color: '#818cf8', perm: 'compositions' },
     ];
+    const SIDEBAR_ITEMS = ALL_ITEMS.filter(item =>
+      !item.perm || !clubMember || clubMember.permissions?.[item.perm]
+    );
     const clubColor = profile?.club_color || '#a3e635';
     const clubLogo = profile?.club_logo_url;
     const clubName = profile?.club_name || 'Mon club';
