@@ -10,76 +10,52 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const { email, password, token } = await req.json();
+  console.log('create-member-account:', email, token);
 
-  // 1. Créer ou récupérer le compte via Admin API
-  const createRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
-    method: 'POST',
+  // Chercher si l'utilisateur existe déjà
+  const listRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}&per_page=1`, {
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
       'apikey': SERVICE_ROLE_KEY,
     },
-    body: JSON.stringify({
-      email,
-      password,
-      email_confirm: true, // confirme automatiquement l'email
-    }),
   });
+  const listData = await listRes.json();
+  console.log('listData:', JSON.stringify(listData));
+  const existingUser = listData.users?.[0];
 
-  const userData = await createRes.json();
+  let userId = existingUser?.id;
 
-  if (!createRes.ok && !userData.id) {
-    // Compte existe déjà — essayer de mettre à jour le mot de passe
-    if (userData.msg?.includes('already been registered') || createRes.status === 422) {
-      // Chercher l'user existant
-      const listRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
-        headers: {
-          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-          'apikey': SERVICE_ROLE_KEY,
-        },
-      });
-      const listData = await listRes.json();
-      const existingUser = listData.users?.[0];
-
-      if (existingUser) {
-        // Mettre à jour le mot de passe
-        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${existingUser.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-            'apikey': SERVICE_ROLE_KEY,
-          },
-          body: JSON.stringify({ password, email_confirm: true }),
-        });
-
-        // Mettre à jour club_members
-        await fetch(`${SUPABASE_URL}/rest/v1/club_members?invite_token=eq.${token}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-            'apikey': SERVICE_ROLE_KEY,
-            'Prefer': 'return=minimal',
-          },
-          body: JSON.stringify({ status: 'active', user_id: existingUser.id }),
-        });
-
-        return new Response(JSON.stringify({ success: true, user_id: existingUser.id }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-    return new Response(JSON.stringify({ error: userData }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  if (existingUser) {
+    // Mettre à jour le mot de passe + confirmer email
+    const updateRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${existingUser.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        'apikey': SERVICE_ROLE_KEY,
+      },
+      body: JSON.stringify({ password, email_confirm: true }),
     });
+    const updateData = await updateRes.json();
+    console.log('updateData:', JSON.stringify(updateData));
+  } else {
+    // Créer le compte
+    const createRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        'apikey': SERVICE_ROLE_KEY,
+      },
+      body: JSON.stringify({ email, password, email_confirm: true }),
+    });
+    const createData = await createRes.json();
+    console.log('createData:', JSON.stringify(createData));
+    userId = createData.id;
   }
 
-  const userId = userData.id;
-
-  // 2. Mettre à jour club_members avec user_id
-  await fetch(`${SUPABASE_URL}/rest/v1/club_members?invite_token=eq.${token}`, {
+  // Mettre à jour club_members
+  const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/club_members?invite_token=eq.${token}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -89,6 +65,7 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify({ status: 'active', user_id: userId }),
   });
+  console.log('patchRes status:', patchRes.status);
 
   return new Response(JSON.stringify({ success: true, user_id: userId }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
