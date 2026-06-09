@@ -215,7 +215,7 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 }
 
-// v2 - clubMember fix
+const _BUILD = 1781006990976; // v3 - build 1781006958703
 function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember = null }) {
   const isDesktop = useIsDesktop();
   // Si clubMember → charger le profil du club owner, pas le sien

@@ -13,4 +13,5 @@ export default defineConfig({
     allowedHosts: [".replit.dev", ".repl.co", "localhost"],
   },
   build: { outDir: "dist" },
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
 });
