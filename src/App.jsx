@@ -40,6 +40,7 @@ import { FormatView } from './components/FormatView';
 import { PresentationView } from './components/PresentationView';
 import { AccountView } from './components/AccountView';
 import { LandingPage } from './components/LandingPage';
+import { LicencieApp } from './components/LicencieApp';
 import { FamilyInvitationPage } from './components/FamilyInvitationPage';
 import { RegistrationPage } from './components/RegistrationPage';
 import { PosterView } from './components/PosterView';
@@ -99,7 +100,69 @@ export default function App() {
   if (!user && !isPresentationMode && !spectatorCode) return <LandingPage />;
 
   // key={user.id} force React à tout recréer quand l'utilisateur change
-  return <AuthenticatedApp key={user?.id || 'anon'} user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  return <AppRouter key={user?.id || 'anon'} user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+}
+
+// Routeur : détecte si l'utilisateur est organisateur ou licencié
+function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
+  const [profileType, setProfileType] = React.useState(null); // null|'organizer'|'licencie'|'both'
+  const [loading, setLoading] = React.useState(true);
+  const { supabase: sb } = React.useMemo(() => ({ supabase: require('./lib/supabase').supabase }), []);
+
+  React.useEffect(() => {
+    (async () => {
+      const { default: { supabase: supabaseClient } } = await import('./lib/supabase');
+      const [{ data: profile }, { data: family }] = await Promise.all([
+        supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
+        supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).single(),
+      ]);
+      const hasOrg = !!profile;
+      const hasFamily = !!family;
+      if (hasOrg && hasFamily) setProfileType('both');
+      else if (hasFamily) setProfileType('licencie');
+      else setProfileType('organizer');
+      setLoading(false);
+    })();
+  }, [user.id]);
+
+  if (loading) return (
+    <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ color:'#64748b', fontSize:14 }}>Chargement...</div>
+    </div>
+  );
+
+  if (profileType === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
+  if (profileType === 'both') return <SpaceSelector user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+}
+
+// Sélecteur d'espace (organisateur + licencié)
+function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
+  const [space, setSpace] = React.useState(null);
+  if (space === 'organizer') return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  if (space === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
+  return (
+    <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ maxWidth:400, width:'100%', textAlign:'center' }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>⚽</div>
+        <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:8 }}>Quel espace ?</h2>
+        <p style={{ color:'#64748b', fontSize:14, marginBottom:32 }}>Vous avez accès à plusieurs espaces FootPlanner</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <button onClick={() => setSpace('organizer')} style={{ padding:'18px 24px', borderRadius:14, border:'1px solid rgba(163,230,53,0.3)', background:'rgba(163,230,53,0.08)', cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'all 0.15s' }}>
+            <div style={{ fontSize:24, marginBottom:6 }}>🏆</div>
+            <div style={{ fontSize:16, fontWeight:800, color:'#a3e635', marginBottom:2 }}>Espace Club</div>
+            <div style={{ fontSize:12, color:'#64748b' }}>Gérez vos tournois, licenciés et modules</div>
+          </button>
+          <button onClick={() => setSpace('licencie')} style={{ padding:'18px 24px', borderRadius:14, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'all 0.15s' }}>
+            <div style={{ fontSize:24, marginBottom:6 }}>👤</div>
+            <div style={{ fontSize:16, fontWeight:800, color:'#22d3ee', marginBottom:2 }}>Espace Licencié</div>
+            <div style={{ fontSize:12, color:'#64748b' }}>Vos événements, planning et informations</div>
+          </button>
+        </div>
+        <button onClick={signOut} style={{ marginTop:20, background:'none', border:'none', color:'#334155', cursor:'pointer', fontFamily:'inherit', fontSize:12 }}>Se déconnecter</button>
+      </div>
+    </div>
+  );
 }
 
 function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {

@@ -1,0 +1,804 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { Calendar, Bell, User, MessageCircle, Home } from 'lucide-react';
+
+// ============================================================
+// LicencieApp — Espace licencié / parent
+// ============================================================
+
+export function LicencieApp({ user, signOut }) {
+  const [familyProfile, setFamilyProfile] = useState(null);
+  const [licencies, setLicencies] = useState([]);
+  const [selectedLicId, setSelectedLicId] = useState(null);
+  const [clubProfile, setClubProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('home');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingEvents, setPendingEvents] = useState(0);
+
+  const load = useCallback(async () => {
+    // 1. Charger le profil family
+    const { data: fpData } = await supabase
+      .from('family_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!fpData) { setLoading(false); return; }
+    setFamilyProfile(fpData);
+
+    // 2. Charger les licenciés liés
+    const { data: licsData } = await supabase.rpc('get_licencies_for_parent', {
+      p_family_profile_id: fpData.id
+    });
+    setLicencies(licsData || []);
+    if (licsData?.length > 0) setSelectedLicId(licsData[0].id);
+
+    // 3. Charger le profil du club
+    if (fpData.club_owner_id) {
+      const { data: cp } = await supabase
+        .from('profiles')
+        .select('club_name, club_color, club_logo_url, first_name, last_name')
+        .eq('id', fpData.club_owner_id)
+        .single();
+      setClubProfile(cp);
+    }
+
+    // 4. Compter messages non lus
+    const { count: unread } = await supabase
+      .from('chat_messages')
+      .select('*', { count:'exact', head:true })
+      .eq('family_profile_id', fpData.id)
+      .eq('sender_type', 'coach')
+      .is('read_at', null);
+    setUnreadCount(unread || 0);
+
+    // 5. Compter événements en attente de réponse
+    const { count: pending } = await supabase
+      .from('event_responses')
+      .select('*', { count:'exact', head:true })
+      .in('licencie_id', (licsData||[]).map(l=>l.id))
+      .eq('response', 'pending');
+    setPendingEvents(pending || 0);
+
+    setLoading(false);
+  }, [user.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const accent = clubProfile?.club_color || '#a3e635';
+  const selectedLic = licencies.find(l => l.id === selectedLicId);
+
+  if (loading) return (
+    <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
+      <div style={{ fontSize:32 }}>⚽</div>
+      <div style={{ color:'#64748b', fontSize:14 }}>Chargement...</div>
+    </div>
+  );
+
+  if (!familyProfile) return (
+    <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ textAlign:'center', color:'#64748b', maxWidth:320 }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+        <h2 style={{ color:'#f1f5f9', fontSize:18, fontWeight:800, marginBottom:8 }}>Accès non autorisé</h2>
+        <p style={{ fontSize:14, marginBottom:20 }}>Votre compte n'est pas lié à un espace licencié. Contactez votre club.</p>
+        <button onClick={signOut} style={{ padding:'10px 24px', borderRadius:10, border:'none', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontFamily:'inherit', fontSize:14 }}>
+          Se déconnecter
+        </button>
+      </div>
+    </div>
+  );
+
+  const TABS = [
+    { key:'home',    label:'Accueil',    icon:Home,          badge:0 },
+    { key:'events',  label:'Événements', icon:Bell,          badge:pendingEvents },
+    { key:'planning',label:'Planning',   icon:Calendar,      badge:0 },
+    { key:'profile', label:'Mon profil', icon:User,          badge:0 },
+    { key:'chat',    label:'Chat',       icon:MessageCircle, badge:unreadCount },
+  ];
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#0a0e1a', color:'#f1f5f9', fontFamily:'system-ui, sans-serif', paddingBottom:80 }}>
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg, ${accent}22 0%, #0a0e1a 60%)`, borderBottom:`1px solid ${accent}22`, padding:'14px 20px', display:'flex', alignItems:'center', gap:12, position:'sticky', top:0, zIndex:50, backdropFilter:'blur(10px)' }}>
+        {clubProfile?.club_logo_url
+          ? <img src={clubProfile.club_logo_url} alt="" style={{ width:36, height:36, borderRadius:10, objectFit:'cover', flexShrink:0 }} />
+          : <div style={{ width:36, height:36, borderRadius:10, background:`${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>⚽</div>
+        }
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:14, fontWeight:800, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{clubProfile?.club_name || 'Mon club'}</div>
+          <div style={{ fontSize:11, color:'#64748b' }}>
+            Bonjour {familyProfile.first_name} 👋
+          </div>
+        </div>
+        {/* Sélecteur enfant si plusieurs */}
+        {licencies.length > 1 && (
+          <select value={selectedLicId || ''} onChange={e => setSelectedLicId(e.target.value)}
+            style={{ padding:'5px 10px', borderRadius:8, border:`1px solid ${accent}44`, background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', cursor:'pointer' }}>
+            {licencies.map(l => (
+              <option key={l.id} value={l.id} style={{ background:'#1e293b' }}>{l.first_name} {l.last_name}</option>
+            ))}
+          </select>
+        )}
+        <button onClick={signOut} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer', fontSize:11, padding:'4px 8px', borderRadius:6, fontFamily:'inherit' }}>
+          Déco.
+        </button>
+      </div>
+
+      {/* Contenu */}
+      <div style={{ maxWidth:600, margin:'0 auto', padding:'20px 16px' }}>
+        {activeTab === 'home'    && <LicencieHome familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} clubProfile={clubProfile} accent={accent} pendingEvents={pendingEvents} unreadCount={unreadCount} onTabChange={setActiveTab} onRefresh={load} />}
+        {activeTab === 'events'  && <LicencieEvents familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} onRefresh={load} />}
+        {activeTab === 'planning'&& <LicienciePlanning familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} />}
+        {activeTab === 'profile' && <LicencieProfil familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} setSelectedLicId={setSelectedLicId} accent={accent} onRefresh={load} />}
+        {activeTab === 'chat'    && <LicencieChat familyProfile={familyProfile} accent={accent} onRefresh={load} />}
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'rgba(10,14,26,0.97)', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', backdropFilter:'blur(10px)', zIndex:50 }}>
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          return (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3, padding:'10px 4px', border:'none', background:'none', cursor:'pointer', position:'relative', transition:'all 0.15s' }}>
+              <div style={{ position:'relative' }}>
+                <Icon size={20} color={isActive ? accent : '#475569'} />
+                {tab.badge > 0 && (
+                  <div style={{ position:'absolute', top:-4, right:-6, width:16, height:16, borderRadius:'50%', background:'#fb7185', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#fff' }}>{tab.badge > 9 ? '9+' : tab.badge}</div>
+                )}
+              </div>
+              <span style={{ fontSize:10, fontWeight: isActive ? 700 : 500, color: isActive ? accent : '#475569' }}>{tab.label}</span>
+              {isActive && <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:24, height:2, borderRadius:2, background:accent }} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// LICENCIE HOME — Tableau de bord
+// ============================================================
+function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, accent, pendingEvents, unreadCount, onTabChange, onRefresh }) {
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [stages, setStages] = useState([]);
+
+  useEffect(() => {
+    if (!selectedLic) return;
+    (async () => {
+      const today = new Date().toISOString().slice(0,10);
+      // Événements à venir
+      const { data: evts } = await supabase
+        .from('event_responses')
+        .select('*, club_events(title, date, time_start, location, type)')
+        .eq('licencie_id', selectedLic.id)
+        .gte('club_events.date', today)
+        .order('club_events.date', { ascending:true })
+        .limit(3);
+      setUpcomingEvents((evts||[]).filter(e => e.club_events));
+
+      // Stages invités
+      const { data: stageInvites } = await supabase
+        .from('stage_invites')
+        .select('*, stages(name, date_start, date_end, location, price)')
+        .eq('email', selectedLic.email || familyProfile.email || '')
+        .eq('status', 'invited')
+        .limit(3);
+      setStages((stageInvites||[]).filter(s => s.stages));
+    })();
+  }, [selectedLic]);
+
+  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
+
+  return (
+    <div>
+      {/* Carte licencié sélectionné */}
+      {selectedLic && (
+        <div style={{ background:`linear-gradient(135deg, ${accent}15 0%, rgba(255,255,255,0.03) 100%)`, border:`1px solid ${accent}33`, borderRadius:16, padding:'18px 20px', marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            {selectedLic.photo_url
+              ? <img src={selectedLic.photo_url} alt="" style={{ width:56, height:56, borderRadius:14, objectFit:'cover', border:`2px solid ${accent}44` }} />
+              : <div style={{ width:56, height:56, borderRadius:14, background:`${accent}20`, border:`2px solid ${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:accent }}>{selectedLic.first_name[0]}{selectedLic.last_name[0]}</div>
+            }
+            <div>
+              <div style={{ fontSize:18, fontWeight:900, color:'#f1f5f9' }}>{selectedLic.first_name} {selectedLic.last_name}</div>
+              <div style={{ display:'flex', gap:8, marginTop:4 }}>
+                {selectedLic.category && <span style={{ fontSize:11, fontWeight:700, color:accent, background:`${accent}15`, padding:'2px 8px', borderRadius:10 }}>{selectedLic.category}</span>}
+                {selectedLic.team && <span style={{ fontSize:11, color:'#64748b' }}>{selectedLic.team}</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alertes */}
+      {pendingEvents > 0 && (
+        <button onClick={() => onTabChange('events')} style={{ width:'100%', marginBottom:12, padding:'12px 16px', borderRadius:12, border:'1px solid rgba(245,158,11,0.3)', background:'rgba(245,158,11,0.08)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:20 }}>🔔</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#f59e0b' }}>{pendingEvents} réponse{pendingEvents>1?'s':''} en attente</div>
+            <div style={{ fontSize:11, color:'#64748b' }}>Confirmez vos présences</div>
+          </div>
+          <span style={{ color:'#f59e0b', fontSize:16 }}>→</span>
+        </button>
+      )}
+      {unreadCount > 0 && (
+        <button onClick={() => onTabChange('chat')} style={{ width:'100%', marginBottom:12, padding:'12px 16px', borderRadius:12, border:'1px solid rgba(251,113,133,0.3)', background:'rgba(251,113,133,0.08)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:20 }}>💬</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#fb7185' }}>{unreadCount} message{unreadCount>1?'s':''} non lu{unreadCount>1?'s':''}</div>
+            <div style={{ fontSize:11, color:'#64748b' }}>Du coach</div>
+          </div>
+          <span style={{ color:'#fb7185', fontSize:16 }}>→</span>
+        </button>
+      )}
+
+      {/* Prochains événements */}
+      {upcomingEvents.length > 0 && (
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:12, fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Prochains événements</div>
+          {upcomingEvents.map(er => {
+            const evt = er.club_events;
+            const emoji = EVENT_EMOJIS[evt.type] || '📌';
+            const respColor = er.response==='yes'?'#34d399':er.response==='no'?'#fb7185':er.response==='maybe'?'#f59e0b':'#64748b';
+            return (
+              <div key={er.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:8 }}>
+                <span style={{ fontSize:20, flexShrink:0 }}>{emoji}</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
+                  <div style={{ fontSize:11, color:'#64748b' }}>📅 {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})}{evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}</div>
+                </div>
+                <span style={{ fontSize:11, fontWeight:700, color:respColor }}>
+                  {er.response==='yes'?'✅':er.response==='no'?'❌':er.response==='maybe'?'❓':'⏳'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Stages invités */}
+      {stages.length > 0 && (
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:12, fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Stages disponibles</div>
+          {stages.map(si => {
+            const stage = si.stages;
+            return (
+              <div key={si.id} style={{ padding:'12px 14px', borderRadius:10, background:'rgba(129,140,248,0.06)', border:'1px solid rgba(129,140,248,0.2)', marginBottom:8 }}>
+                <div style={{ fontSize:13, fontWeight:800, color:'#f1f5f9', marginBottom:4 }}>🏕️ {stage.name}</div>
+                <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                  {stage.date_start && <span style={{ fontSize:11, color:'#64748b' }}>📅 {new Date(stage.date_start).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span>}
+                  {stage.location && <span style={{ fontSize:11, color:'#64748b' }}>📍 {stage.location}</span>}
+                  {stage.price > 0 && <span style={{ fontSize:11, color:'#a78bfa', fontWeight:700 }}>{stage.price}€</span>}
+                </div>
+                <a href={`/?stage=${si.token}`} style={{ display:'inline-block', marginTop:8, padding:'5px 14px', borderRadius:8, background:'rgba(129,140,248,0.15)', color:'#a78bfa', fontSize:12, fontWeight:700, textDecoration:'none', border:'1px solid rgba(129,140,248,0.25)' }}>
+                  Voir le stage →
+                </a>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {upcomingEvents.length === 0 && stages.length === 0 && pendingEvents === 0 && (
+        <div style={{ textAlign:'center', padding:'40px 24px', color:'#334155' }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>🌟</div>
+          <p style={{ fontSize:15, color:'#475569' }}>Tout est à jour !</p>
+          <p style={{ fontSize:13 }}>Aucune action en attente</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// LICENCIE EVENTS — Présences + Sondages
+// ============================================================
+function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefresh }) {
+  const [responses, setResponses] = useState([]);
+  const [surveys, setSurveys] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('presences');
+
+  const load = useCallback(async () => {
+    if (!selectedLic) return;
+    // Réponses événements
+    const { data: resp } = await supabase
+      .from('event_responses')
+      .select('*, club_events(*)')
+      .eq('licencie_id', selectedLic.id)
+      .order('club_events.date', { ascending:false });
+    setResponses((resp||[]).filter(r => r.club_events));
+
+    // Sondages en cours
+    const { data: survs } = await supabase
+      .from('surveys')
+      .select('*, survey_responses(*)')
+      .eq('event_id', responses.map(r=>r.event_id).filter(Boolean)[0] || '00000000-0000-0000-0000-000000000000');
+    setSurveys(survs || []);
+    setLoading(false);
+  }, [selectedLic]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const updateResponse = async (responseId, newResp, canDrive=false, driveSeats=0, comment='') => {
+    await supabase.from('event_responses').update({
+      response: newResp, can_drive: canDrive,
+      drive_seats: driveSeats, comment: comment || null,
+    }).eq('id', responseId);
+    load(); onRefresh();
+  };
+
+  const pending = responses.filter(r => r.response === 'pending' && new Date(r.club_events?.date) >= new Date());
+  const upcoming = responses.filter(r => r.response !== 'pending' && new Date(r.club_events?.date) >= new Date());
+  const past = responses.filter(r => new Date(r.club_events?.date) < new Date());
+
+  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
+
+  const EventCard = ({ er, showActions=true }) => {
+    const evt = er.club_events;
+    if (!evt) return null;
+    const emoji = EVENT_EMOJIS[evt.type] || '📌';
+    const [expanded, setExpanded] = useState(false);
+    const [localResp, setLocalResp] = useState(er.response);
+    const [canDrive, setCanDrive] = useState(er.can_drive || false);
+    const [seats, setSeats] = useState(er.drive_seats || 3);
+    const [comment, setComment] = useState(er.comment || '');
+    const [saving, setSaving] = useState(false);
+
+    const doSave = async (resp) => {
+      setSaving(true);
+      setLocalResp(resp);
+      await updateResponse(er.id, resp, canDrive, seats, comment);
+      setSaving(false);
+      setExpanded(false);
+    };
+
+    const RESP_OPTS = [
+      { val:'yes',   label:'✅ Présent',   color:'#34d399', bg:'rgba(52,211,153,0.12)'  },
+      { val:'no',    label:'❌ Absent',    color:'#fb7185', bg:'rgba(251,113,133,0.12)' },
+      { val:'maybe', label:'❓ Peut-être', color:'#f59e0b', bg:'rgba(245,158,11,0.12)'  },
+    ];
+    const respColor = localResp==='yes'?'#34d399':localResp==='no'?'#fb7185':localResp==='maybe'?'#f59e0b':'#64748b';
+
+    return (
+      <div style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${localResp==='pending'?'rgba(245,158,11,0.3)':'rgba(255,255,255,0.08)'}`, background: localResp==='pending'?'rgba(245,158,11,0.04)':'rgba(255,255,255,0.02)', marginBottom:10 }}>
+        <button onClick={() => showActions && setExpanded(!expanded)} style={{ width:'100%', padding:'12px 16px', background:'none', border:'none', cursor: showActions?'pointer':'default', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:12 }}>
+          <span style={{ fontSize:20 }}>{emoji}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
+            <div style={{ fontSize:11, color:'#64748b' }}>
+              📅 {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'})}
+              {evt.time_start ? ` · ${evt.time_start.slice(0,5)}` : ''}
+              {evt.location ? ` · 📍 ${evt.location}` : ''}
+            </div>
+          </div>
+          <span style={{ fontSize:14, fontWeight:700, color:respColor }}>
+            {localResp==='yes'?'✅':localResp==='no'?'❌':localResp==='maybe'?'❓':'⏳'}
+          </span>
+        </button>
+        {expanded && showActions && (
+          <div style={{ padding:'0 16px 16px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+            <p style={{ fontSize:13, color:'#64748b', margin:'12px 0 10px' }}>Votre réponse :</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+              {RESP_OPTS.map(opt => (
+                <button key={opt.val} onClick={() => doSave(opt.val)} disabled={saving} style={{ padding:'11px 16px', borderRadius:10, border:`2px solid ${localResp===opt.val?opt.color:'rgba(255,255,255,0.08)'}`, background:localResp===opt.val?opt.bg:'transparent', color:localResp===opt.val?opt.color:'#64748b', cursor:'pointer', fontFamily:'inherit', fontSize:14, fontWeight:700, transition:'all 0.15s' }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {localResp === 'yes' && (
+              <label style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:8, background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.15)', cursor:'pointer', marginBottom:10 }}>
+                <input type="checkbox" checked={canDrive} onChange={e=>setCanDrive(e.target.checked)} style={{ accentColor:'#34d399' }} />
+                <span style={{ fontSize:13, color:'#94a3b8' }}>🚗 Je peux conduire ({seats} places)</span>
+              </label>
+            )}
+            <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Message pour le coach..." style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', resize:'vertical', minHeight:60, boxSizing:'border-box' }} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) return <div style={{ color:'#64748b', textAlign:'center', padding:40 }}>Chargement...</div>;
+
+  return (
+    <div>
+      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>📋 Événements</h3>
+      <div style={{ display:'flex', gap:4, marginBottom:20, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0 }}>
+        {[
+          { key:'presences', label:`⏳ En attente (${pending.length})` },
+          { key:'upcoming',  label:'📅 À venir' },
+          { key:'past',      label:'✓ Passés' },
+        ].map(t => (
+          <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding:'8px 14px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700, color: activeTab===t.key ? accent : '#64748b', borderBottom: activeTab===t.key ? `2px solid ${accent}` : '2px solid transparent', marginBottom:-1 }}>{t.label}</button>
+        ))}
+      </div>
+
+      {activeTab === 'presences' && (
+        pending.length === 0
+          ? <div style={{ textAlign:'center', padding:'40px 0', color:'#334155' }}>✅ Toutes vos présences sont confirmées !</div>
+          : pending.map(er => <EventCard key={er.id} er={er} showActions={true} />)
+      )}
+      {activeTab === 'upcoming' && (
+        upcoming.length === 0
+          ? <div style={{ textAlign:'center', padding:'40px 0', color:'#334155' }}>Aucun événement à venir</div>
+          : upcoming.map(er => <EventCard key={er.id} er={er} showActions={true} />)
+      )}
+      {activeTab === 'past' && (
+        past.length === 0
+          ? <div style={{ textAlign:'center', padding:'40px 0', color:'#334155' }}>Aucun événement passé</div>
+          : past.map(er => <EventCard key={er.id} er={er} showActions={false} />)
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// LICENCIE PLANNING — Vue semaine filtrée
+// ============================================================
+function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const getWeekStart = (offset=0) => {
+    const d = new Date();
+    const day = d.getDay();
+    d.setDate(d.getDate() - (day===0?6:day-1) + offset*7);
+    d.setHours(0,0,0,0);
+    return d;
+  };
+
+  useEffect(() => {
+    if (!selectedLic) return;
+    (async () => {
+      const ws = getWeekStart(weekOffset);
+      const we = new Date(ws); we.setDate(we.getDate()+6);
+      const { data } = await supabase
+        .from('event_responses')
+        .select('*, club_events(*)')
+        .eq('licencie_id', selectedLic.id)
+        .gte('club_events.date', ws.toISOString().slice(0,10))
+        .lte('club_events.date', we.toISOString().slice(0,10));
+      setEvents((data||[]).filter(e=>e.club_events).sort((a,b) => new Date(a.club_events.date)-new Date(b.club_events.date)));
+      setLoading(false);
+    })();
+  }, [selectedLic, weekOffset]);
+
+  const ws = getWeekStart(weekOffset);
+  const we = new Date(ws); we.setDate(we.getDate()+6);
+  const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const EVENT_COLORS = { training:'#34d399', match:'#f59e0b', tournament:'#f97316', stage:'#a78bfa', meeting:'#22d3ee', other:'#94a3b8' };
+  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
+
+  const weekDays = Array.from({length:7}, (_,i) => { const d=new Date(ws); d.setDate(d.getDate()+i); return d; });
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
+        <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', margin:0, flex:1 }}>📅 Planning</h3>
+        <button onClick={()=>setWeekOffset(w=>w-1)} style={{ width:32, height:32, borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+        <button onClick={()=>setWeekOffset(0)} style={{ padding:'4px 12px', borderRadius:8, border:`1px solid ${accent}44`, background:`${accent}15`, color:accent, cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:700 }}>Auj.</button>
+        <button onClick={()=>setWeekOffset(w=>w+1)} style={{ width:32, height:32, borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+      </div>
+      <div style={{ fontSize:12, color:'#475569', marginBottom:16, textAlign:'center' }}>
+        {ws.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} — {we.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}
+      </div>
+      {/* Grille semaine */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4, marginBottom:16 }}>
+        {weekDays.map((day,i) => {
+          const isToday = day.getTime()===today.getTime();
+          const dayEvts = events.filter(e => e.club_events?.date === day.toISOString().slice(0,10));
+          return (
+            <div key={i} style={{ textAlign:'center' }}>
+              <div style={{ fontSize:9, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1 }}>{DAYS[i]}</div>
+              <div style={{ width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'4px auto', background:isToday?accent:'transparent', border:isToday?'none':'1px solid rgba(255,255,255,0.08)', fontSize:12, fontWeight:isToday?900:500, color:isToday?'#0a0e1a':'#94a3b8' }}>{day.getDate()}</div>
+              {dayEvts.map(er => {
+                const c = EVENT_COLORS[er.club_events.type]||'#94a3b8';
+                return <div key={er.id} style={{ width:6, height:6, borderRadius:'50%', background:c, margin:'2px auto' }} />;
+              })}
+            </div>
+          );
+        })}
+      </div>
+      {/* Liste événements de la semaine */}
+      {loading ? <div style={{color:'#64748b',textAlign:'center',padding:20}}>Chargement...</div>
+      : events.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'30px 0', color:'#334155' }}>
+          <div style={{ fontSize:32, marginBottom:8 }}>📭</div>
+          <p style={{ fontSize:14 }}>Aucun événement cette semaine</p>
+        </div>
+      ) : events.map(er => {
+        const evt = er.club_events;
+        const color = EVENT_COLORS[evt.type]||'#94a3b8';
+        const emoji = EVENT_EMOJIS[evt.type]||'📌';
+        const respColor = er.response==='yes'?'#34d399':er.response==='no'?'#fb7185':er.response==='maybe'?'#f59e0b':'#64748b';
+        return (
+          <div key={er.id} style={{ display:'flex', alignItems:'stretch', gap:0, borderRadius:10, overflow:'hidden', border:`1px solid ${color}22`, marginBottom:8 }}>
+            <div style={{ width:4, background:color, flexShrink:0 }} />
+            <div style={{ flex:1, padding:'10px 14px' }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{emoji} {evt.title}</div>
+              <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>
+                {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'})}
+                {evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}{evt.location?` · ${evt.location}`:''}
+              </div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', padding:'0 12px', flexShrink:0 }}>
+              <span style={{ fontSize:16, color:respColor }}>{er.response==='yes'?'✅':er.response==='no'?'❌':er.response==='maybe'?'❓':'⏳'}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// LICENCIE PROFIL — Fiche modifiable + RGPD
+// ============================================================
+function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicId, accent, onRefresh }) {
+  const [form, setForm] = useState({
+    first_name: selectedLic?.first_name || '',
+    last_name: selectedLic?.last_name || '',
+    allergies: selectedLic?.allergies || '',
+    medical_notes: selectedLic?.medical_notes || '',
+    medical_consent: selectedLic?.medical_consent || false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileRef = React.useRef();
+
+  useEffect(() => {
+    if (selectedLic) setForm({
+      first_name: selectedLic.first_name || '',
+      last_name: selectedLic.last_name || '',
+      allergies: selectedLic.allergies || '',
+      medical_notes: selectedLic.medical_notes || '',
+      medical_consent: selectedLic.medical_consent || false,
+    });
+  }, [selectedLic?.id]);
+
+  const set = (k,v) => setForm(f => ({...f,[k]:v}));
+
+  const save = async () => {
+    if (!selectedLic) return;
+    setSaving(true);
+    const payload = {
+      allergies: form.allergies.trim() || null,
+      medical_notes: form.medical_notes.trim() || null,
+      medical_consent: form.medical_consent,
+      medical_consent_at: form.medical_consent ? new Date().toISOString() : null,
+      last_active_at: new Date().toISOString(),
+    };
+    await supabase.from('licencies').update(payload).eq('id', selectedLic.id);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+    onRefresh();
+  };
+
+  const uploadPhoto = async (file) => {
+    if (!file || !selectedLic) return;
+    setUploadingPhoto(true);
+    const ext = file.name.split('.').pop();
+    const path = `photos/${selectedLic.id}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('licencies-docs').upload(path, file, { upsert:true, contentType:file.type });
+    if (!error) {
+      const { data } = supabase.storage.from('licencies-docs').getPublicUrl(path);
+      await supabase.from('licencies').update({ photo_url: data.publicUrl }).eq('id', selectedLic.id);
+      onRefresh();
+    }
+    setUploadingPhoto(false);
+  };
+
+  const inp = { width:'100%', padding:'11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' };
+  const lbl = { fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:0.8, marginBottom:6, display:'block' };
+
+  return (
+    <div>
+      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>👤 Mon profil</h3>
+
+      {/* Sélecteur enfant */}
+      {licencies.length > 1 && (
+        <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
+          {licencies.map(l => (
+            <button key={l.id} onClick={() => setSelectedLicId(l.id)} style={{ padding:'6px 14px', borderRadius:20, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700, borderColor: selectedLic?.id===l.id ? accent : 'rgba(255,255,255,0.1)', background: selectedLic?.id===l.id ? `${accent}15` : 'transparent', color: selectedLic?.id===l.id ? accent : '#64748b' }}>
+              {l.first_name} {l.last_name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedLic && (
+        <>
+          {/* Photo */}
+          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:24 }}>
+            <div style={{ position:'relative', cursor:'pointer' }} onClick={() => fileRef.current?.click()}>
+              {selectedLic.photo_url
+                ? <img src={selectedLic.photo_url} alt="" style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:`2px solid ${accent}44` }} />
+                : <div style={{ width:72, height:72, borderRadius:16, background:`${accent}20`, border:`2px solid ${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, fontWeight:900, color:accent }}>{selectedLic.first_name[0]}{selectedLic.last_name[0]}</div>
+              }
+              <div style={{ position:'absolute', bottom:-4, right:-4, width:22, height:22, borderRadius:'50%', background:accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11 }}>📷</div>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>uploadPhoto(e.target.files[0])} />
+            </div>
+            <div>
+              <div style={{ fontSize:17, fontWeight:800, color:'#f1f5f9' }}>{selectedLic.first_name} {selectedLic.last_name}</div>
+              <div style={{ display:'flex', gap:6, marginTop:4 }}>
+                {selectedLic.category && <span style={{ fontSize:11, color:accent, fontWeight:700 }}>{selectedLic.category}</span>}
+                {selectedLic.team && <span style={{ fontSize:11, color:'#64748b' }}>{selectedLic.team}</span>}
+              </div>
+              {uploadingPhoto && <div style={{ fontSize:11, color:'#64748b', marginTop:4 }}>⏳ Upload...</div>}
+            </div>
+          </div>
+
+          {/* Infos lecture seule */}
+          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'14px 16px', marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Informations administratives</div>
+            {[
+              { label:'Date de naissance', val:selectedLic.birth_date ? new Date(selectedLic.birth_date).toLocaleDateString('fr-FR') : '—' },
+              { label:'Numéro de licence', val:selectedLic.licence_number || '—' },
+            ].map(row => (
+              <div key={row.label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontSize:13, color:'#64748b' }}>{row.label}</span>
+                <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{row.val}</span>
+              </div>
+            ))}
+            <div style={{ fontSize:11, color:'#334155', marginTop:8 }}>🔒 Ces informations sont gérées par le club</div>
+          </div>
+
+          {/* Données médicales — RGPD */}
+          <div style={{ background:'rgba(251,113,133,0.04)', border:'1px solid rgba(251,113,133,0.15)', borderRadius:12, padding:'16px', marginBottom:20 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:'#fb7185', marginBottom:12 }}>🏥 Données médicales</div>
+
+            {/* Consentement RGPD */}
+            <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 14px', borderRadius:8, border:'1px solid rgba(251,113,133,0.2)', background:'rgba(251,113,133,0.06)', cursor:'pointer', marginBottom:14 }}>
+              <input type="checkbox" checked={form.medical_consent} onChange={e => set('medical_consent', e.target.checked)} style={{ accentColor:'#fb7185', width:16, height:16, marginTop:1, flexShrink:0 }} />
+              <div>
+                <div style={{ fontSize:12, fontWeight:700, color:'#f1f5f9', marginBottom:2 }}>Consentement RGPD</div>
+                <div style={{ fontSize:11, color:'#94a3b8', lineHeight:1.5 }}>
+                  J'accepte que les données médicales de mon enfant soient conservées pour assurer sa sécurité lors des activités sportives. Je peux les supprimer à tout moment.
+                </div>
+                {selectedLic.medical_consent_at && <div style={{ fontSize:10, color:'#64748b', marginTop:4 }}>Consenti le {new Date(selectedLic.medical_consent_at).toLocaleDateString('fr-FR')}</div>}
+              </div>
+            </label>
+
+            {form.medical_consent ? (
+              <>
+                <div style={{ marginBottom:12 }}>
+                  <label style={lbl}>Allergies</label>
+                  <input style={inp} value={form.allergies} onChange={e=>set('allergies',e.target.value)} placeholder="Aucune ou préciser..." />
+                </div>
+                <div>
+                  <label style={lbl}>Contre-indications médicales</label>
+                  <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={form.medical_notes} onChange={e=>set('medical_notes',e.target.value)} placeholder="Aucune ou préciser..." />
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize:12, color:'#64748b', textAlign:'center', padding:'12px 0' }}>
+                Acceptez le consentement pour saisir les données médicales
+              </div>
+            )}
+          </div>
+
+          {/* Bouton sauvegarder */}
+          <button onClick={save} disabled={saving} style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:accent, color:'#0a0e1a', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit', opacity:saving?0.6:1 }}>
+            {saving ? 'Enregistrement...' : saved ? '✓ Sauvegardé !' : 'Sauvegarder'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// LICENCIE CHAT — Messagerie coach ↔ licencié
+// ============================================================
+function LicencieChat({ familyProfile, accent, onRefresh }) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState('');
+  const [sending, setSending] = useState(false);
+  const [senderName, setSenderName] = useState(`${familyProfile.first_name} ${familyProfile.last_name}`);
+  const bottomRef = React.useRef();
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('family_profile_id', familyProfile.id)
+      .order('created_at', { ascending:true });
+    setMessages(data || []);
+    // Marquer comme lus
+    await supabase.from('chat_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('family_profile_id', familyProfile.id)
+      .eq('sender_type', 'coach')
+      .is('read_at', null);
+    setLoading(false);
+    onRefresh();
+  }, [familyProfile.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior:'smooth' });
+  }, [messages]);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel(`chat_${familyProfile.id}`)
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_messages', filter:`family_profile_id=eq.${familyProfile.id}` }, () => load())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [familyProfile.id, load]);
+
+  const send = async () => {
+    if (!content.trim()) return;
+    setSending(true);
+    await supabase.from('chat_messages').insert({
+      club_owner_id: familyProfile.club_owner_id,
+      family_profile_id: familyProfile.id,
+      sender_type: 'licencie',
+      sender_name: senderName,
+      content: content.trim(),
+    });
+    setContent('');
+    setSending(false);
+    load();
+  };
+
+  const handleKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 200px)', minHeight:400 }}>
+      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:16, flexShrink:0 }}>💬 Chat avec le coach</h3>
+
+      {/* Messages */}
+      <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:10, paddingBottom:10 }}>
+        {loading ? (
+          <div style={{ color:'#64748b', textAlign:'center', padding:20 }}>Chargement...</div>
+        ) : messages.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'40px 0', color:'#334155' }}>
+            <div style={{ fontSize:32, marginBottom:8 }}>💬</div>
+            <p style={{ fontSize:14 }}>Aucun message — démarrez la conversation !</p>
+          </div>
+        ) : messages.map(msg => {
+          const isMe = msg.sender_type === 'licencie';
+          return (
+            <div key={msg.id} style={{ display:'flex', justifyContent: isMe?'flex-end':'flex-start' }}>
+              <div style={{ maxWidth:'80%', padding:'10px 14px', borderRadius: isMe?'16px 16px 4px 16px':'16px 16px 16px 4px', background: isMe?`${accent}20`:'rgba(255,255,255,0.06)', border:`1px solid ${isMe?accent+'33':'rgba(255,255,255,0.08)'}` }}>
+                {!isMe && <div style={{ fontSize:10, fontWeight:700, color:accent, marginBottom:4 }}>👤 {msg.sender_name || 'Coach'}</div>}
+                <div style={{ fontSize:14, color:'#f1f5f9', lineHeight:1.5 }}>{msg.content}</div>
+                <div style={{ fontSize:10, color:'#475569', marginTop:4, textAlign: isMe?'right':'left' }}>
+                  {new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+                  {isMe && msg.read_at && ' · Lu'}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Saisie */}
+      <div style={{ flexShrink:0, display:'flex', gap:8, paddingTop:12, borderTop:'1px solid rgba(255,255,255,0.08)' }}>
+        <textarea
+          value={content}
+          onChange={e=>setContent(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Votre message... (Entrée pour envoyer)"
+          style={{ flex:1, padding:'10px 14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:14, fontFamily:'inherit', resize:'none', minHeight:44, maxHeight:120 }}
+          rows={1}
+        />
+        <button onClick={send} disabled={sending||!content.trim()} style={{ width:44, height:44, borderRadius:12, border:'none', background: content.trim()?accent:'rgba(255,255,255,0.05)', color: content.trim()?'#0a0e1a':'#475569', cursor: content.trim()?'pointer':'not-allowed', fontSize:18, flexShrink:0, alignSelf:'flex-end' }}>
+          ↑
+        </button>
+      </div>
+    </div>
+  );
+}
