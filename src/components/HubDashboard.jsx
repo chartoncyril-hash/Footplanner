@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import {
   Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
   CircleUser, Dribbble, Handshake,
