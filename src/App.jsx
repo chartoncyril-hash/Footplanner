@@ -115,7 +115,6 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       // Lire le choix AVANT tout
       const savedSpace = localStorage.getItem('fp_space_mode');
       localStorage.removeItem('fp_space_mode');
-      console.log('[AppRouter] savedSpace:', savedSpace, 'user:', user.email);
 
       const [{ data: profile }, { data: family }, { data: licencie }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
@@ -123,7 +122,6 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email).limit(1).maybeSingle(),
       ]);
 
-      console.log('[AppRouter] profile:', !!profile, 'family:', !!family, 'licencie:', !!licencie);
 
       const hasOrg = !!profile;
       const hasFamily = !!family;
@@ -144,7 +142,6 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
             .select('id')
             .single();
           fpId = newFp?.id;
-          console.log('[AppRouter] family_profile créé:', fpId);
         }
         if (fpId) {
           await supabaseClient.from('family_licencies')
