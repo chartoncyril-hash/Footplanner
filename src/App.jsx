@@ -116,11 +116,12 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       const savedSpace = localStorage.getItem('fp_space_mode');
       localStorage.removeItem('fp_space_mode');
 
-      const [{ data: profile }, { data: family }, { data: licencie }] = await Promise.all([
+      const [{ data: profile }, { data: family }, { data: allLicencies }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
         supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).maybeSingle(),
-        supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email).limit(1).maybeSingle(),
+        supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email),
       ]);
+      const licencie = allLicencies?.[0] || null;
 
 
       const hasOrg = !!profile;
