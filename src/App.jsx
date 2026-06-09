@@ -218,8 +218,7 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
 const _BUILD = 1781006990976; // v3 - build 1781006958703
 function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
   const isDesktop = useIsDesktop();
-  // Si cm → charger le profil du club owner, pas le sien
-  const effectiveUserId = cm ? { id: cm.club_owner_id } : user;
+  const effectiveUserId = user;
   const { profile } = useProfile(effectiveUserId);
   // hubMode désactivé d'emblée pour les accès QR spectateur
   const [hubMode, setHubMode] = useState(spectatorCode ? false : true);
@@ -283,7 +282,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   }, [tournament?.id]);
 
   // Liste des tournois de l'organisateur connecté
-  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(cm?.club_owner_id || null);
+  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(null);
 
   // Bibliothèque persistante
   const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam, add: addToLibrary } = useTeamLibrary();
