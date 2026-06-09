@@ -173,16 +173,15 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
         .from('event_responses')
         .select('*, club_events(title, date, time_start, location, type)')
         .eq('licencie_id', selectedLic.id)
-        .gte('club_events.date', today)
-        .order('club_events.date', { ascending:true })
-        .limit(3);
-      setUpcomingEvents((evts||[]).filter(e => e.club_events));
+        .order('created_at', { ascending:false })
+        .limit(10);
+      setUpcomingEvents((evts||[]).filter(e => e.club_events && new Date(e.club_events.date) >= new Date()).slice(0,3));
 
       // Stages invités
       const { data: stageInvites } = await supabase
         .from('stage_invites')
         .select('*, stages(name, date_start, date_end, location, price)')
-        .eq('email', selectedLic.email || familyProfile.email || '')
+        .eq('licencie_id', selectedLic.id)
         .eq('status', 'invited')
         .limit(3);
       setStages((stageInvites||[]).filter(s => s.stages));
@@ -460,9 +459,8 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
         .from('event_responses')
         .select('*, club_events(*)')
         .eq('licencie_id', selectedLic.id)
-        .gte('club_events.date', ws.toISOString().slice(0,10))
-        .lte('club_events.date', we.toISOString().slice(0,10));
-      setEvents((data||[]).filter(e=>e.club_events).sort((a,b) => new Date(a.club_events.date)-new Date(b.club_events.date)));
+        .order('created_at', { ascending:false });
+      setEvents((data||[]).filter(e=>e.club_events && e.club_events.date >= ws.toISOString().slice(0,10) && e.club_events.date <= we.toISOString().slice(0,10)).sort((a,b) => new Date(a.club_events.date)-new Date(b.club_events.date)));
       setLoading(false);
     })();
   }, [selectedLic, weekOffset]);
