@@ -145,7 +145,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         }
         if (fpId) {
           const { error: flErr } = await supabaseClient.from('family_licencies')
-            .upsert({ family_user_id: fpId, licencie_id: licencie.id, relation: 'self', club_owner_id: licencie.owner_id },
+            .upsert({ family_user_id: user.id, licencie_id: licencie.id, relation: 'self', club_owner_id: licencie.owner_id },
               { onConflict: 'family_user_id,licencie_id', ignoreDuplicates: true });
           if (flErr) console.warn('family_licencies upsert:', flErr.message);
         }
