@@ -129,7 +129,24 @@ export function TeamView() {
           <p style={{ fontSize:15, marginBottom:4 }}>Aucun membre invité</p>
           <p style={{ fontSize:13 }}>Invitez des assistants, secrétaires ou bénévoles</p>
         </div>
-      ) : members.map(member => {
+      ) : <>
+      {/* Carte admin principal */}
+      <div style={{ ...S.card, borderColor:'rgba(163,230,53,0.25)', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:'rgba(163,230,53,0.15)', border:'1px solid rgba(163,230,53,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
+            {profile?.club_name?.[0]?.toUpperCase() || '👑'}
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+              <span style={{ fontSize:15, fontWeight:800, color:'#f1f5f9' }}>{profile?.club_name || 'Administrateur'}</span>
+              <span style={{ fontSize:11, fontWeight:700, color:'#a3e635', background:'rgba(163,230,53,0.15)', padding:'2px 8px', borderRadius:10 }}>Administrateur</span>
+              <span style={{ fontSize:11, fontWeight:700, color:'#34d399', background:'rgba(52,211,153,0.1)', padding:'2px 8px', borderRadius:10 }}>✓ Vous</span>
+            </div>
+            <div style={{ fontSize:12, color:'#64748b' }}>🔐 Accès complet à tous les modules</div>
+          </div>
+        </div>
+      </div>
+      {members.map(member => {
         const role = ROLES.find(r => r.val === member.role) || ROLES[1];
         const permCount = Object.values(member.permissions || {}).filter(Boolean).length;
         return (
@@ -183,6 +200,7 @@ export function TeamView() {
         );
       })}
 
+      </>}
       {wizardOpen && (
         <MemberWizard
           member={editMember}
