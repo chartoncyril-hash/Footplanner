@@ -215,7 +215,6 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 }
 
-const _BUILD = 1781006990976; // v3 - build 1781006958703
 function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
   const isDesktop = useIsDesktop();
   const effectiveUserId = user;
