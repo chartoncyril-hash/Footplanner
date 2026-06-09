@@ -183,7 +183,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
 
   if (profileType === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
   if (profileType === 'both') return <SpaceSelector user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
-  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={clubMember} />;
+  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={clubMember ?? null} />;
 }
 
 // Sélecteur d'espace (organisateur + licencié)
