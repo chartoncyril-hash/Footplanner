@@ -121,16 +121,30 @@ export function TeamView() {
       </div>
 
       {/* Liste membres */}
+      {/* Carte admin principal — toujours visible */}
+      <div style={{ ...S.card, borderColor:'rgba(163,230,53,0.25)', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:'rgba(163,230,53,0.15)', border:'1px solid rgba(163,230,53,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
+            {profile?.club_name?.[0]?.toUpperCase() || '👑'}
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+              <span style={{ fontSize:15, fontWeight:800, color:'#f1f5f9' }}>{profile?.club_name || 'Administrateur'}</span>
+              <span style={{ fontSize:11, fontWeight:700, color:'#a3e635', background:'rgba(163,230,53,0.15)', padding:'2px 8px', borderRadius:10 }}>Administrateur</span>
+              <span style={{ fontSize:11, fontWeight:700, color:'#34d399', background:'rgba(52,211,153,0.1)', padding:'2px 8px', borderRadius:10 }}>✓ Vous</span>
+            </div>
+            <div style={{ fontSize:12, color:'#64748b' }}>🔐 Accès complet à tous les modules</div>
+          </div>
+        </div>
+      </div>
       {loading ? (
         <div style={{ color:'#64748b', textAlign:'center', padding:40 }}>Chargement...</div>
       ) : members.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'60px 32px', color:'#475569' }}>
-          <Shield size={40} style={{ marginBottom:12, opacity:0.4 }} />
-          <p style={{ fontSize:15, marginBottom:4 }}>Aucun membre invité</p>
-          <p style={{ fontSize:13 }}>Invitez des assistants, secrétaires ou bénévoles</p>
+        <div style={{ textAlign:'center', padding:'20px 32px', color:'#475569' }}>
+          <p style={{ fontSize:13 }}>Aucun autre membre — invitez des assistants, secrétaires ou bénévoles</p>
         </div>
       ) : <>
-      {/* Carte admin principal */}
+      {/* Autres membres */}
       <div style={{ ...S.card, borderColor:'rgba(163,230,53,0.25)', marginBottom:10 }}>
         <div style={{ display:'flex', alignItems:'center', gap:14 }}>
           <div style={{ width:44, height:44, borderRadius:12, background:'rgba(163,230,53,0.15)', border:'1px solid rgba(163,230,53,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>
