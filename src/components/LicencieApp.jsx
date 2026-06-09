@@ -173,7 +173,7 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
         .from('event_responses')
         .select('*, club_events(title, date, time_start, location, type)')
         .eq('licencie_id', selectedLic.id)
-        .order('created_at', { ascending:false })
+        .order('responded_at', { ascending:false })
         .limit(10);
       setUpcomingEvents((evts||[]).filter(e => e.club_events && new Date(e.club_events.date) >= new Date()).slice(0,3));
 
@@ -459,7 +459,7 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
         .from('event_responses')
         .select('*, club_events(*)')
         .eq('licencie_id', selectedLic.id)
-        .order('created_at', { ascending:false });
+        .order('responded_at', { ascending:false });
       setEvents((data||[]).filter(e=>e.club_events && e.club_events.date >= ws.toISOString().slice(0,10) && e.club_events.date <= we.toISOString().slice(0,10)).sort((a,b) => new Date(a.club_events.date)-new Date(b.club_events.date)));
       setLoading(false);
     })();
@@ -708,7 +708,7 @@ function LicencieChat({ familyProfile, accent, onRefresh }) {
       .from('chat_messages')
       .select('*')
       .eq('family_profile_id', familyProfile.id)
-      .order('created_at', { ascending:true });
+      .order('responded_at', { ascending:false });
     setMessages(data || []);
     // Marquer comme lus
     await supabase.from('chat_messages')
