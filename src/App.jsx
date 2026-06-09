@@ -111,22 +111,59 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
   React.useEffect(() => {
     (async () => {
       const { supabase: supabaseClient } = await import('./lib/supabase');
-      const [{ data: profile }, { data: family }] = await Promise.all([
-        supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
-        supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).single(),
-      ]);
-      const hasOrg = !!profile;
-      const hasFamily = !!family;
-      // Lire le choix d'espace depuis localStorage
+
+      // Lire le choix AVANT tout
       const savedSpace = localStorage.getItem('fp_space_mode');
       localStorage.removeItem('fp_space_mode');
+      console.log('[AppRouter] savedSpace:', savedSpace, 'user:', user.email);
+
+      const [{ data: profile }, { data: family }, { data: licencie }] = await Promise.all([
+        supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
+        supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).single(),
+        supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email).single(),
+      ]);
+
+      console.log('[AppRouter] profile:', !!profile, 'family:', !!family, 'licencie:', !!licencie);
+
+      const hasOrg = !!profile;
+      const hasFamily = !!family;
+
+      // Cas : choix licencié + trouvé dans licencies
+      if (savedSpace === 'licencie' && licencie) {
+        let fpId = family?.id;
+        if (!fpId) {
+          const { data: newFp } = await supabaseClient
+            .from('family_profiles')
+            .insert({
+              user_id: user.id,
+              first_name: licencie.first_name || user.email.split('@')[0],
+              last_name: licencie.last_name || '',
+              club_owner_id: licencie.owner_id,
+              type: 'adult_player',
+            })
+            .select('id')
+            .single();
+          fpId = newFp?.id;
+          console.log('[AppRouter] family_profile créé:', fpId);
+        }
+        if (fpId) {
+          await supabaseClient.from('family_licencies')
+            .upsert({ family_profile_id: fpId, licencie_id: licencie.id, relation: 'self' },
+              { onConflict: 'family_profile_id,licencie_id' });
+        }
+        setProfileType('licencie');
+        setLoading(false);
+        return;
+      }
 
       if (hasOrg && hasFamily) {
-        if (savedSpace === 'licencie') setProfileType('licencie');
-        else if (savedSpace === 'club') setProfileType('organizer');
+        if (savedSpace === 'club') setProfileType('organizer');
         else setProfileType('both');
-      } else if (hasFamily) setProfileType('licencie');
-      else setProfileType('organizer');
+      } else if (hasFamily) {
+        setProfileType('licencie');
+      } else {
+        setProfileType('organizer');
+      }
       setLoading(false);
     })();
   }, [user.id]);
