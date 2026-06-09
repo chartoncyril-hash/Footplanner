@@ -120,11 +120,10 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       const savedSpace = localStorage.getItem('fp_space_mode');
       localStorage.removeItem('fp_space_mode');
 
-      const [{ data: profile }, { data: family }, { data: allLicencies }, { data: clubMember }] = await Promise.all([
+      const [{ data: profile }, { data: family }, { data: allLicencies }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
         supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).maybeSingle(),
         supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email),
-        supabaseClient.from('club_members').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
       ]);
       const licencie = allLicencies?.[0] || null;
 
@@ -165,9 +164,6 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         else setProfileType('both');
       } else if (hasFamily) {
         setProfileType('licencie');
-      } else if (clubMember && !profile) {
-        // Membre d'équipe sans profil organisateur → accès limité au club de son owner
-        setProfileType('organizer');
       } else {
         setProfileType('organizer');
       }
