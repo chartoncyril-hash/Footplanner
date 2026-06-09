@@ -32,34 +32,15 @@ export function MemberActivationPage({ token }) {
     if (form.password !== form.confirm) return setError('Les mots de passe ne correspondent pas');
     setSaving(true); setError('');
     try {
-      // 1. Créer le compte Supabase Auth
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: member.email,
-        password: form.password,
+      // Créer le compte via Edge Function (Admin API — email auto-confirmé)
+      const { data, error: fnErr } = await supabase.functions.invoke('create-member-account', {
+        body: { email: member.email, password: form.password, token }
       });
-      if (signUpErr) throw signUpErr;
-
-      // 2. Mettre à jour club_members
-      await supabase.from('club_members').update({
-        status: 'active',
-        user_id: signUpData.user?.id,
-        last_login: new Date().toISOString(),
-      }).eq('invite_token', token);
-
+      if (fnErr) throw fnErr;
+      if (data?.error) throw new Error(JSON.stringify(data.error));
       setPageState('success');
     } catch(e) {
-      // Si compte existe déjà → juste mettre à jour le mot de passe
-      if (e.message?.includes('already registered')) {
-        const { error: signInErr } = await supabase.auth.signInWithPassword({ email: member.email, password: form.password });
-        if (!signInErr) {
-          await supabase.from('club_members').update({ status:'active', last_login: new Date().toISOString() }).eq('invite_token', token);
-          setPageState('success');
-        } else {
-          setError('Ce compte existe déjà. Connectez-vous avec votre mot de passe actuel.');
-        }
-      } else {
-        setError(e.message);
-      }
+      setError(e.message || 'Erreur lors de la création du compte');
     }
     setSaving(false);
   };
