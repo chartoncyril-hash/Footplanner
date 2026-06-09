@@ -282,7 +282,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   }, [tournament?.id]);
 
   // Liste des tournois de l'organisateur connecté
-  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(null);
+  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(clubContext.clubOwnerId);
 
   // Bibliothèque persistante
   const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam, add: addToLibrary } = useTeamLibrary();
