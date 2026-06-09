@@ -183,13 +183,13 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
 
   if (profileType === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
   if (profileType === 'both') return <SpaceSelector user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
-  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={clubMember ?? null} />;
+  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
 }
 
 // Sélecteur d'espace (organisateur + licencié)
 function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   const [space, setSpace] = React.useState(null);
-  if (space === 'organizer') return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={null} />;
+  if (space === 'organizer') return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
   if (space === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
   return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
@@ -216,9 +216,8 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
 }
 
 const _BUILD = 1781006990976; // v3 - build 1781006958703
-function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember }) {
+function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
   const isDesktop = useIsDesktop();
-  const cm = clubMember || null;
   // Si cm → charger le profil du club owner, pas le sien
   const effectiveUserId = cm ? { id: cm.club_owner_id } : user;
   const { profile } = useProfile(effectiveUserId);
@@ -573,7 +572,6 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
       <HubDashboard
         profile={profile}
         myTournaments={myTournaments}
-        cm={cm}
         onEnterModule={(moduleId, tournamentId) => {
           if (moduleId === 'tournaments') {
             if (tournamentId) {
