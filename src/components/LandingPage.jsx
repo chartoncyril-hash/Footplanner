@@ -19,6 +19,7 @@ export function LandingPage({ onLogin }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeFeature, setActiveFeature] = useState(0);
   const [authMode, setAuthMode] = useState(null);
+  const [spaceMode, setSpaceMode] = useState('club'); // 'club' | 'licencie'
   const [form, setForm] = useState({ email: '', emailConfirm: '', password: '', clubName: '', tournoiCount: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,13 +35,17 @@ export function LandingPage({ onLogin }) {
     setLoading(true);
     try {
       if (authMode === 'signup') await signUp({ email: form.email.trim(), password: form.password, clubName: form.clubName.trim() });
-      else await signIn({ email: form.email.trim(), password: form.password });
+      else {
+        localStorage.setItem('fp_space_mode', spaceMode);
+        await signIn({ email: form.email.trim(), password: form.password });
+      }
     } catch(e) { setError(e.message); }
     setLoading(false);
   };
 
-  const openAuth = (mode) => {
+  const openAuth = (mode, space = 'club') => {
     setAuthMode(mode);
+    setSpaceMode(space);
     setTimeout(() => document.getElementById('auth')?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
@@ -68,9 +73,14 @@ export function LandingPage({ onLogin }) {
             <a onClick={() => scrollTo('mobile')} style={{ color: '#94a3b8', fontSize: 14, cursor: 'pointer', textDecoration: 'none' }}>Mobile</a>
           </div>
         )}
-        <button onClick={() => openAuth('signup')} style={{ padding: '9px 20px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-          Commencer gratuitement
-        </button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={() => openAuth('signin', 'licencie')} style={{ padding:'9px 16px', background:'rgba(34,211,238,0.1)', color:'#22d3ee', border:'1px solid rgba(34,211,238,0.3)', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            👤 Espace licencié
+          </button>
+          <button onClick={() => openAuth('signup', 'club')} style={{ padding:'9px 16px', background:'#a3e635', color:'#060a12', border:'none', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            🏆 Espace club
+          </button>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -472,16 +482,32 @@ export function LandingPage({ onLogin }) {
               </div>
             ))}
           </div>
-          <button onClick={() => openAuth('signup')} style={{ padding: '18px 40px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 40px rgba(163,230,53,0.2)' }}>
-            Créer mon espace club gratuitement →
-          </button>
+          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+            <button onClick={() => openAuth('signup', 'club')} style={{ padding: '16px 32px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 0 40px rgba(163,230,53,0.2)' }}>
+              🏆 Créer mon espace club →
+            </button>
+            <button onClick={() => openAuth('signin', 'licencie')} style={{ padding: '16px 32px', background: 'rgba(34,211,238,0.1)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.3)', borderRadius: 12, fontWeight: 900, fontSize: 16, cursor: 'pointer' }}>
+              👤 Espace licencié →
+            </button>
+          </div>
           <div style={{ marginTop: 16, fontSize: 13, color: '#475569' }}>Aucune carte bancaire · Accès immédiat · Support réactif</div>
 
           {authMode && (
-            <div style={{ marginTop: 40, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 32, maxWidth: 400, margin: '40px auto 0' }}>
+            <div style={{ marginTop: 40, background: 'rgba(255,255,255,0.03)', border: `1px solid ${spaceMode==='licencie'?'rgba(34,211,238,0.2)':'rgba(163,230,53,0.2)'}`, borderRadius: 16, padding: 32, maxWidth: 400, margin: '40px auto 0' }}>
+              {/* Badge espace */}
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:16 }}>
+                <span style={{ fontSize:12, fontWeight:800, padding:'4px 14px', borderRadius:20, background: spaceMode==='licencie'?'rgba(34,211,238,0.12)':'rgba(163,230,53,0.12)', color: spaceMode==='licencie'?'#22d3ee':'#a3e635', border: `1px solid ${spaceMode==='licencie'?'rgba(34,211,238,0.3)':'rgba(163,230,53,0.3)'}` }}>
+                  {spaceMode==='licencie' ? '👤 Espace Licencié' : '🏆 Espace Club'}
+                </span>
+              </div>
+              {/* Switcher espace */}
+              <div style={{ display:'flex', gap:6, marginBottom:20, padding:'4px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
+                <button onClick={() => { setSpaceMode('club'); setAuthMode('signup'); setError(''); }} style={{ flex:1, padding:'8px', borderRadius:8, border:'none', background: spaceMode==='club'?'#a3e635':'transparent', color: spaceMode==='club'?'#060a12':'#64748b', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>🏆 Club</button>
+                <button onClick={() => { setSpaceMode('licencie'); setAuthMode('signin'); setError(''); }} style={{ flex:1, padding:'8px', borderRadius:8, border:'none', background: spaceMode==='licencie'?'#22d3ee':'transparent', color: spaceMode==='licencie'?'#060a12':'#64748b', fontWeight:700, fontSize:12, cursor:'pointer', fontFamily:'inherit' }}>👤 Licencié</button>
+              </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-                {[{v:'signup',l:'Créer un compte'},{v:'signin',l:'Se connecter'}].map(m => (
-                  <button key={m.v} onClick={() => { setAuthMode(m.v); setError(''); }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: authMode === m.v ? '#a3e635' : 'rgba(255,255,255,0.06)', color: authMode === m.v ? '#060a12' : '#94a3b8', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{m.l}</button>
+                {(spaceMode==='club' ? [{v:'signup',l:'Créer un compte'},{v:'signin',l:'Se connecter'}] : [{v:'signin',l:'Se connecter'}]).map(m => (
+                  <button key={m.v} onClick={() => { setAuthMode(m.v); setError(''); }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: authMode === m.v ? (spaceMode==='licencie'?'#22d3ee':'#a3e635') : 'rgba(255,255,255,0.06)', color: authMode === m.v ? '#060a12' : '#94a3b8', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{m.l}</button>
                 ))}
               </div>
               {error && <div style={{ padding: '10px 14px', background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.2)', borderRadius: 8, fontSize: 13, color: '#fb7185', marginBottom: 16 }}>{error}</div>}
@@ -514,9 +540,14 @@ export function LandingPage({ onLogin }) {
                   </select>
                 </>
               )}
-              <button onClick={handleAuth} disabled={loading} style={{ width: '100%', padding: '14px', background: '#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
-                {loading ? 'Chargement...' : authMode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
+              <button onClick={handleAuth} disabled={loading} style={{ width: '100%', padding: '14px', background: spaceMode==='licencie'?'#22d3ee':'#a3e635', color: '#060a12', border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
+                {loading ? 'Chargement...' : authMode === 'signup' ? 'Créer mon espace club' : spaceMode==='licencie' ? 'Accéder à mon espace licencié' : 'Se connecter'}
               </button>
+              {spaceMode === 'licencie' && (
+                <p style={{ fontSize:11, color:'#475569', textAlign:'center', marginTop:10, lineHeight:1.5 }}>
+                  L'accès licencié se fait sur invitation de votre club.<br/>Utilisez l'email avec lequel vous avez été invité.
+                </p>
+              )}
             </div>
           )}
         </div>

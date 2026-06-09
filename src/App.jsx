@@ -117,8 +117,15 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       ]);
       const hasOrg = !!profile;
       const hasFamily = !!family;
-      if (hasOrg && hasFamily) setProfileType('both');
-      else if (hasFamily) setProfileType('licencie');
+      // Lire le choix d'espace depuis localStorage
+      const savedSpace = localStorage.getItem('fp_space_mode');
+      localStorage.removeItem('fp_space_mode');
+
+      if (hasOrg && hasFamily) {
+        if (savedSpace === 'licencie') setProfileType('licencie');
+        else if (savedSpace === 'club') setProfileType('organizer');
+        else setProfileType('both');
+      } else if (hasFamily) setProfileType('licencie');
       else setProfileType('organizer');
       setLoading(false);
     })();
