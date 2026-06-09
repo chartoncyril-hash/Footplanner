@@ -107,12 +107,12 @@ function generateRefereeCode() {
 // ----- Lectures -----
 
 // Liste mes tournois (organisateur connecté)
-export async function listMine() {
+export async function listMine(userId = null) {
   const user = await requireUser();
   const { data, error } = await supabase
     .from('tournaments')
     .select('*')
-    .eq('owner_id', user.id)
+    .eq('owner_id', userId || user.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data || []).map(fromDb);

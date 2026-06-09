@@ -120,10 +120,11 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       const savedSpace = localStorage.getItem('fp_space_mode');
       localStorage.removeItem('fp_space_mode');
 
-      const [{ data: profile }, { data: family }, { data: allLicencies }] = await Promise.all([
+      const [{ data: profile }, { data: family }, { data: allLicencies }, { data: clubMember }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
         supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).maybeSingle(),
         supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email),
+        supabaseClient.from('club_members').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
       ]);
       const licencie = allLicencies?.[0] || null;
 
@@ -164,6 +165,9 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         else setProfileType('both');
       } else if (hasFamily) {
         setProfileType('licencie');
+      } else if (clubMember && !profile) {
+        // Membre d'équipe sans profil organisateur → accès limité au club de son owner
+        setProfileType('organizer');
       } else {
         setProfileType('organizer');
       }
@@ -179,7 +183,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
 
   if (profileType === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
   if (profileType === 'both') return <SpaceSelector user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
-  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={clubMember} />;
 }
 
 // Sélecteur d'espace (organisateur + licencié)
@@ -211,9 +215,11 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 }
 
-function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
+function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember }) {
   const isDesktop = useIsDesktop();
-  const { profile } = useProfile(user);
+  // Si clubMember → charger le profil du club owner, pas le sien
+  const effectiveUserId = clubMember ? { id: clubMember.club_owner_id } : user;
+  const { profile } = useProfile(effectiveUserId);
   // hubMode désactivé d'emblée pour les accès QR spectateur
   const [hubMode, setHubMode] = useState(spectatorCode ? false : true);
   const [hubView, setHubView] = useState('home');
@@ -276,7 +282,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   }, [tournament?.id]);
 
   // Liste des tournois de l'organisateur connecté
-  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments();
+  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(clubMember?.club_owner_id || null);
 
   // Bibliothèque persistante
   const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam, add: addToLibrary } = useTeamLibrary();
@@ -565,6 +571,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
       <HubDashboard
         profile={profile}
         myTournaments={myTournaments}
+        clubMember={clubMember}
         onEnterModule={(moduleId, tournamentId) => {
           if (moduleId === 'tournaments') {
             if (tournamentId) {

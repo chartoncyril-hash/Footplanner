@@ -42,7 +42,7 @@ export function useTournament({ id, accessCode } = {}) {
 // ============================================================
 // useMyTournaments — liste les tournois de l'organisateur connecté
 // ============================================================
-export function useMyTournaments() {
+export function useMyTournaments(ownerId = null) {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +50,7 @@ export function useMyTournaments() {
   const reload = useCallback(async () => {
     setError(null);
     try {
-      const data = await tournamentService.listMine();
+      const data = await tournamentService.listMine(ownerId);
       setList(data);
     } catch (e) {
       setError(e);
