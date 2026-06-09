@@ -215,6 +215,7 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 }
 
+// v2 - clubMember fix
 function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember = null }) {
   const isDesktop = useIsDesktop();
   // Si clubMember → charger le profil du club owner, pas le sien
@@ -505,7 +506,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
       { id: 'compositions',  icon: 'GitBranch',       label: 'Compositions',     color: '#818cf8', perm: 'compositions' },
     ];
     const SIDEBAR_ITEMS = ALL_ITEMS.filter(item =>
-      !item.perm || !clubMember || clubMember.permissions?.[item.perm]
+      !item.perm || !(clubMember ?? null) || (clubMember ?? null).permissions?.[item.perm]
     );
     const clubColor = profile?.club_color || '#a3e635';
     const clubLogo = profile?.club_logo_url;
