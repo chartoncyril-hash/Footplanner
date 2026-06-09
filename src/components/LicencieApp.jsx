@@ -307,7 +307,7 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
       .from('event_responses')
       .select('*, club_events(*)')
       .eq('licencie_id', selectedLic.id)
-      .order('club_events.date', { ascending:false });
+      .order('responded_at', { ascending:false });
     setResponses((resp||[]).filter(r => r.club_events));
 
     // Sondages en cours
