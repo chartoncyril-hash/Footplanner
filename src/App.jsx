@@ -119,8 +119,8 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
 
       const [{ data: profile }, { data: family }, { data: licencie }] = await Promise.all([
         supabaseClient.from('profiles').select('id').eq('id', user.id).single(),
-        supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).single(),
-        supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email).single(),
+        supabaseClient.from('family_profiles').select('id').eq('user_id', user.id).maybeSingle(),
+        supabaseClient.from('licencies').select('id, owner_id, first_name, last_name').eq('email', user.email).limit(1).maybeSingle(),
       ]);
 
       console.log('[AppRouter] profile:', !!profile, 'family:', !!family, 'licencie:', !!licencie);
