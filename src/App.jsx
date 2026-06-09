@@ -189,7 +189,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
 // Sélecteur d'espace (organisateur + licencié)
 function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   const [space, setSpace] = React.useState(null);
-  if (space === 'organizer') return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  if (space === 'organizer') return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} clubMember={null} />;
   if (space === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
   return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
