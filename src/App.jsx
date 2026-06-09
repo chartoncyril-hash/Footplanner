@@ -41,6 +41,7 @@ import { PresentationView } from './components/PresentationView';
 import { AccountView } from './components/AccountView';
 import { LandingPage } from './components/LandingPage';
 import { LicencieApp } from './components/LicencieApp';
+import { MemberActivationPage } from './components/MemberActivationPage';
 import { FamilyInvitationPage } from './components/FamilyInvitationPage';
 import { RegistrationPage } from './components/RegistrationPage';
 import { PosterView } from './components/PosterView';
@@ -80,6 +81,8 @@ export default function App() {
   const stageCode = urlParams?.get('stage') || null;
   const isEventMode = urlParams?.get('event') !== null && urlParams?.get('event') !== undefined;
   const eventToken = urlParams?.get('event') || null;
+  const isMemberMode = urlParams?.get('member') !== null && urlParams?.get('member') !== undefined;
+  const memberToken = urlParams?.get('member') || null;
   const registrationCode = urlParams?.get('t') || null;
 
   // Lien QR spectateur : /?t=CODE (ni register, ni presentation)
@@ -95,6 +98,7 @@ export default function App() {
   if (isRegistrationMode && registrationCode) return <RegistrationPage accessCode={registrationCode} />;
   if (isStageMode && stageCode) return <StageRegistrationPage stageCode={stageCode} />;
   if (isEventMode && eventToken) return <EventResponsePage token={eventToken} />;
+  if (isMemberMode && memberToken) return <MemberActivationPage token={memberToken} />;
   if (isInvitationMode && invitationToken) return <FamilyInvitationPage token={invitationToken} />;
   // Spectateur via QR : bypass la landing même sans compte
   if (!user && !isPresentationMode && !spectatorCode) return <LandingPage />;
