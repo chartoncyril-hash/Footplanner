@@ -216,10 +216,11 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
 }
 
 const _BUILD = 1781006990976; // v3 - build 1781006958703
-function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember = null }) {
+function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, clubMember }) {
   const isDesktop = useIsDesktop();
-  // Si clubMember → charger le profil du club owner, pas le sien
-  const effectiveUserId = clubMember ? { id: clubMember.club_owner_id } : user;
+  const cm = clubMember || null;
+  // Si cm → charger le profil du club owner, pas le sien
+  const effectiveUserId = cm ? { id: cm.club_owner_id } : user;
   const { profile } = useProfile(effectiveUserId);
   // hubMode désactivé d'emblée pour les accès QR spectateur
   const [hubMode, setHubMode] = useState(spectatorCode ? false : true);
@@ -283,7 +284,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
   }, [tournament?.id]);
 
   // Liste des tournois de l'organisateur connecté
-  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(clubMember?.club_owner_id || null);
+  const { list: myTournaments, loading: myTLoading, create: createTournament, archive: archiveTournament, remove: removeTournament, updateInList: updateTournamentInList } = useMyTournaments(cm?.club_owner_id || null);
 
   // Bibliothèque persistante
   const { library: teamsLibrary, remove: removeFromLibrary, reload: reloadLibrary, update: updateLibraryTeam, add: addToLibrary } = useTeamLibrary();
@@ -506,7 +507,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
       { id: 'compositions',  icon: 'GitBranch',       label: 'Compositions',     color: '#818cf8', perm: 'compositions' },
     ];
     const SIDEBAR_ITEMS = ALL_ITEMS.filter(item =>
-      !item.perm || !(clubMember ?? null) || (clubMember ?? null).permissions?.[item.perm]
+      !item.perm || !(cm ?? null) || (cm ?? null).permissions?.[item.perm]
     );
     const clubColor = profile?.club_color || '#a3e635';
     const clubLogo = profile?.club_logo_url;
@@ -575,7 +576,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, cl
       <HubDashboard
         profile={profile}
         myTournaments={myTournaments}
-        clubMember={clubMember}
+        cm={cm}
         onEnterModule={(moduleId, tournamentId) => {
           if (moduleId === 'tournaments') {
             if (tournamentId) {
