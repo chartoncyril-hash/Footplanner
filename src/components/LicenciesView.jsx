@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { LicencieListItem, LicencieListHeader } from './LicencieListItem';
+import { Users, LayoutDashboard, Shield } from 'lucide-react';
 
 // ── UPLOAD BUTTON ────────────────────────────────────────────
 function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
@@ -1014,7 +1015,7 @@ export function LicenciesView() {
   const [licencies, setLicencies] = useState([]);
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState("licencies");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
@@ -1165,19 +1166,22 @@ export function LicenciesView() {
 
       <div style={S.tabs}>
         {[
-          { v: "dashboard", l: "📊 Dashboard" },
-          { v: "licencies", l: "👥 Licenciés" },
-          { v: "documents", l: "📄 Documents" },
-          { v: "equipes", l: "⚽ Équipes" },
-        ].map((t) => (
-          <button
-            key={t.v}
-            style={{ ...S.tab, ...(tab === t.v ? S.tabActive : {}) }}
-            onClick={() => setTab(t.v)}
-          >
-            {t.l}
-          </button>
-        ))}
+          { v: "licencies", l: "Licenciés", icon: Users },
+          { v: "dashboard", l: "Tableau de bord", icon: LayoutDashboard },
+          { v: "equipes", l: "Équipes", icon: Shield },
+        ].map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.v;
+          return (
+            <button
+              key={t.v}
+              style={{ ...S.tab, ...(active ? S.tabActive : {}), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              onClick={() => setTab(t.v)}
+            >
+              <Icon size={15} /> {t.l}
+            </button>
+          );
+        })}
       </div>
 
       {tab === "dashboard" && (
@@ -1324,82 +1328,6 @@ export function LicenciesView() {
               <DocumentsPanel licencie={l} onClose={() => setExpandedId(null)} />
             </LicencieListItem>
           ))}
-        </div>
-      )}
-
-      {tab === "documents" && (
-        <div>
-          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>
-            Vue globale de la conformité documentaire
-          </div>
-          {licencies
-            .filter((l) => l.status === "actif")
-            .map((l) => {
-              const licDocs = docs.filter((d) => d.licencie_id === l.id);
-              const docsConformes = TYPES_DOCS.filter((type) =>
-                licDocs.find((d) => d.type === type && d.statut === "conforme"),
-              ).length;
-              const isOk = docsConformes === TYPES_DOCS.length;
-              return (
-                <div
-                  key={l.id}
-                  style={{
-                    ...S.card,
-                    borderLeft: `3px solid ${isOk ? "#34d399" : docsConformes > 0 ? "#f59e0b" : "#fb7185"}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div>
-                      <span
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: "#f1f5f9",
-                        }}
-                      >
-                        {l.first_name} {l.last_name}
-                      </span>
-                      {l.category && (
-                        <span
-                          style={{
-                            ...S.badge,
-                            marginLeft: 8,
-                            background: "rgba(163,230,53,0.1)",
-                            color: "#a3e635",
-                            border: "1px solid rgba(163,230,53,0.2)",
-                          }}
-                        >
-                          {l.category}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {TYPES_DOCS.map((type) => {
-                        const doc = licDocs.find((d) => d.type === type);
-                        const statut = STATUTS_DOC.find(
-                          (s) => s.value === (doc?.statut || "manquant"),
-                        );
-                        return (
-                          <span
-                            key={type}
-                            title={`${type}: ${statut.label}`}
-                            style={{ fontSize: 16 }}
-                          >
-                            {statut.icon}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
         </div>
       )}
 
