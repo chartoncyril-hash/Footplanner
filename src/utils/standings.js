@@ -67,14 +67,8 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
 
   const direct = teams.find(t => t.id === ref);
   if (direct) {
-    // Enrichir name et short avec le numéro d'équipe (1, 2, 3)
-    if (direct.level) {
-      return {
-        ...direct,
-        name: direct.name + ' (' + direct.level + ')',
-        short: (direct.short || direct.name) + ' (' + direct.level + ')',
-      };
-    }
+    // Le rang d'équipe (level) est exposé tel quel ; l'affichage gère le badge.
+    // On ne colle plus "(1)/(2)" dans name/short pour éviter toute troncature.
     return direct;
   }
 

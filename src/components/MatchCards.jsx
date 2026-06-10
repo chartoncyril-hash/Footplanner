@@ -5,6 +5,28 @@ import { getDisplayTeam } from '../utils/standings';
 import { styles } from '../styles/styles';
 import { makeShortName } from '../utils/makeShortName';
 
+// Badge de rang d'équipe : affiché uniquement si level > 1 (équipe 2, 3...)
+// Utilise les chiffres entourés Unicode pour un rendu compact et lisible.
+function TeamRankBadge({ level }) {
+  if (!level || level <= 1) return null;
+  const circled = { 2: '②', 3: '③', 4: '④', 5: '⑤' };
+  return (
+    <span
+      title={'Équipe ' + level}
+      style={{
+        marginLeft: 4,
+        fontSize: 13,
+        lineHeight: 1,
+        color: '#94a3b8',
+        flexShrink: 0,
+        fontWeight: 700,
+      }}
+    >
+      {circled[level] || ('(' + level + ')')}
+    </span>
+  );
+}
+
 // ============================================================
 // Primitives UI réutilisables
 // Pas de logique métier ici, juste de l'affichage paramétré
@@ -140,6 +162,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
         <div style={styles.liveTeam}>
           <Crest team={home} size="md" />
           <span style={styles.liveTeamName}>{makeShortName(home.name)}</span>
+          <TeamRankBadge level={home.level} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {canEditDesktop && (
@@ -173,6 +196,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
         <div style={{ ...styles.liveTeam, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="md" />
           <span style={styles.liveTeamName}>{makeShortName(away.name)}</span>
+          <TeamRankBadge level={away.level} />
         </div>
       </div>
       {canEditDesktop && (
@@ -231,9 +255,11 @@ export function UpcomingMatchCard({ match, teams, matches, standings, onTap }) {
         <div style={styles.upcomingTeams}>
           <Crest team={home} size="sm" />
           <span style={styles.upcomingTeamName}>{makeShortName(home.name)}</span>
+          <TeamRankBadge level={home.level} />
           <span style={{ fontSize: 10, color: '#475569', margin: '0 4px' }}>vs</span>
           <Crest team={away} size="sm" />
           <span style={styles.upcomingTeamName}>{makeShortName(away.name)}</span>
+          <TeamRankBadge level={away.level} />
         </div>
         <div style={styles.upcomingMeta}>
           <Hash size={9} /> {match.field}
@@ -339,6 +365,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
           <span style={styles.matchListName}>{makeShortName(home.name)}</span>
+          <TeamRankBadge level={home.level} />
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -348,6 +375,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
           <span style={styles.matchListName}>{makeShortName(away.name)}</span>
+          <TeamRankBadge level={away.level} />
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -448,6 +476,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
           <span style={styles.matchListName}>{makeShortName(home.name)}</span>
+          <TeamRankBadge level={home.level} />
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -457,6 +486,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
           <span style={styles.matchListName}>{makeShortName(away.name)}</span>
+          <TeamRankBadge level={away.level} />
         </div>
       </div>
       <div style={styles.matchListRight}>
