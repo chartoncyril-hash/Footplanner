@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
+import { LicencieListItem, LicencieListHeader } from './LicencieListItem';
 
 // ── UPLOAD BUTTON ────────────────────────────────────────────
 function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
@@ -1306,151 +1307,23 @@ export function LicenciesView() {
               )}
             </div>
           )}
-          {filtered.map((l) => {
-            const licDocs = docs.filter((d) => d.licencie_id === l.id);
-            const docsConformes = TYPES_DOCS.filter((type) =>
-              licDocs.find((d) => d.type === type && d.statut === "conforme"),
-            ).length;
-            const isExpanded = expandedId === l.id;
-            return (
-              <div key={l.id} style={S.card}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  {l.photo_url ? (
-                    <img
-                      src={l.photo_url}
-                      alt=""
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: "50%",
-                        background: "rgba(163,230,53,0.15)",
-                        border: "1px solid rgba(163,230,53,0.3)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 16,
-                        fontWeight: 900,
-                        color: "#a3e635",
-                      }}
-                    >
-                      {l.first_name[0]}
-                      {l.last_name[0]}
-                    </div>
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3, flexWrap:"wrap" }}>
-                      <span
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: "#f1f5f9",
-                        }}
-                      >
-                        {l.first_name} {l.last_name}
-                      </span>
-                      {l.category && (
-                        <span
-                          style={{
-                            ...S.badge,
-                            background: "rgba(163,230,53,0.1)",
-                            color: "#a3e635",
-                            border: "1px solid rgba(163,230,53,0.2)",
-                          }}
-                        >
-                          {l.category}
-                        </span>
-                      )}
-                      {l.team && (
-                        <span
-                          style={{
-                            ...S.badge,
-                            background: "rgba(129,140,248,0.1)",
-                            color: "#818cf8",
-                            border: "1px solid rgba(129,140,248,0.2)",
-                          }}
-                        >
-                          {l.team}
-                        </span>
-                      )}
-                      {l.position && (
-                        <span
-                          style={{
-                            ...S.badge,
-                            background: "rgba(255,255,255,0.05)",
-                            color: "#64748b",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
-                          {l.position}
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "#64748b",
-                        display: "flex",
-                        gap: 12,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {l.birth_date && (
-                        <span>
-                          🎂{" "}
-                          {new Date(l.birth_date).toLocaleDateString("fr-FR")}
-                        </span>
-                      )}
-                      {l.licence_number && <span>🪪 {l.licence_number}</span>}
-                      {l.phone && <span>📞 {l.phone}</span>}
-                      <span
-                        style={{
-                          color:
-                            docsConformes === TYPES_DOCS.length
-                              ? "#34d399"
-                              : docsConformes > 0
-                                ? "#f59e0b"
-                                : "#fb7185",
-                        }}
-                      >
-                        📄 {docsConformes}/{TYPES_DOCS.length} docs
-                      </span>
-                    </div>
-                  </div>
-                  {!isMobile && (
-                    <div style={{ display:"flex", gap:6, alignItems:'center' }}>
-                      <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width:16, height:16, cursor:'pointer', accentColor:'#a3e635' }} />
-                      <button style={S.btnGhost} onClick={() => setExpandedId(isExpanded ? null : l.id)}>📄 Docs</button>
-                      <button style={S.btnGhost} onClick={() => { setEditing(l); setShowForm(true); }}>✏️</button>
-                      <button style={S.btnDanger} onClick={() => handleDelete(l.id)}>🗑️</button>
-                    </div>
-                  )}
-                </div>
-                {isMobile && (
-                    <div style={{ display:'flex', gap:8, marginTop:12, paddingTop:10, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-                      <input type="checkbox" checked={selectedLicencies.includes(l.id)} onChange={() => toggleSelect(l.id)} style={{ width:16, height:16, cursor:'pointer', accentColor:'#a3e635', marginRight:4 }} />
-                      <button style={{ ...S.btnGhost, flex:1 }} onClick={() => setExpandedId(isExpanded ? null : l.id)}>📄 Docs</button>
-                      <button style={{ ...S.btnGhost, flex:1 }} onClick={() => { setEditing(l); setShowForm(true); }}>✏️ Modifier</button>
-                      <button style={{ ...S.btnDanger }} onClick={() => handleDelete(l.id)}>🗑️</button>
-                    </div>
-                  )}
-              {isExpanded && (
-                  <DocumentsPanel
-                    licencie={l}
-                    onClose={() => setExpandedId(null)}
-                  />
-                )}
-              </div>
-            );
-          })}
+          {!isMobile && filtered.length > 0 && <LicencieListHeader />}
+          {filtered.map((l) => (
+            <LicencieListItem
+              key={l.id}
+              licencie={l}
+              docs={docs}
+              isMobile={isMobile}
+              isExpanded={expandedId === l.id}
+              isSelected={selectedLicencies.includes(l.id)}
+              onToggleSelect={() => toggleSelect(l.id)}
+              onToggleExpand={() => setExpandedId(expandedId === l.id ? null : l.id)}
+              onEdit={() => { setEditing(l); setShowForm(true); }}
+              onDelete={() => handleDelete(l.id)}
+            >
+              <DocumentsPanel licencie={l} onClose={() => setExpandedId(null)} />
+            </LicencieListItem>
+          ))}
         </div>
       )}
 
