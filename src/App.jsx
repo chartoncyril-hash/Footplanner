@@ -114,6 +114,12 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    // Accès QR spectateur : pas de détection de profil, on route direct en mode spectateur
+    if (spectatorCode) {
+      setProfileType('organizer');
+      setLoading(false);
+      return;
+    }
     (async () => {
       const { supabase: supabaseClient } = await import('./lib/supabase');
 
@@ -174,7 +180,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       }
       setLoading(false);
     })();
-  }, [user.id]);
+  }, [user.id, spectatorCode]);
 
   if (loading) return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center' }}>
