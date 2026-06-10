@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 
 // ── UPLOAD BUTTON ────────────────────────────────────────────
 function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
@@ -317,7 +318,14 @@ const S = {
 };
 function LicencieForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(
-    initial || {
+    initial ? {
+      ...initial,
+      gender: initial.gender || "",
+      strong_foot: initial.strong_foot || "",
+      preferred_number: initial.preferred_number || "",
+      emergency_contacts: initial.emergency_contacts || [],
+      legal_guardians: initial.legal_guardians || [],
+    } : {
       first_name: "",
       last_name: "",
       birth_date: "",
@@ -332,6 +340,11 @@ function LicencieForm({ initial, onSave, onCancel }) {
       contre_indications: "",
       contact_urgence_nom: "",
       contact_urgence_tel: "",
+      gender: "",
+      strong_foot: "",
+      preferred_number: "",
+      emergency_contacts: [],
+      legal_guardians: [],
       status: "actif",
       notes: "",
     },
@@ -479,6 +492,29 @@ function LicencieForm({ initial, onSave, onCancel }) {
           </select>
         </div>
       </div>
+      <div style={S.grid3}>
+        <div>
+          <label style={S.label}>Sexe</label>
+          <select style={S.input} value={form.gender || ""} onChange={(e) => u("gender", e.target.value)}>
+            <option value="" style={{ background: "#1e293b" }}>—</option>
+            <option value="M" style={{ background: "#1e293b" }}>Masculin</option>
+            <option value="F" style={{ background: "#1e293b" }}>Féminin</option>
+          </select>
+        </div>
+        <div>
+          <label style={S.label}>Pied fort</label>
+          <select style={S.input} value={form.strong_foot || ""} onChange={(e) => u("strong_foot", e.target.value)}>
+            <option value="" style={{ background: "#1e293b" }}>—</option>
+            <option value="droit" style={{ background: "#1e293b" }}>Droit</option>
+            <option value="gauche" style={{ background: "#1e293b" }}>Gauche</option>
+            <option value="ambidextre" style={{ background: "#1e293b" }}>Ambidextre</option>
+          </select>
+        </div>
+        <div>
+          <label style={S.label}>N° maillot préféré</label>
+          <input style={S.input} type="number" min="1" max="99" value={form.preferred_number || ""} onChange={(e) => u("preferred_number", e.target.value)} placeholder="Ex: 10" />
+        </div>
+      </div>
       <div style={S.grid2}>
         <div>
           <label style={S.label}>Téléphone</label>
@@ -547,39 +583,15 @@ function LicencieForm({ initial, onSave, onCancel }) {
         </div>
       </div>
 
-      <div
-        style={{
-          fontSize: 11,
-          color: "#818cf8",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: 1,
-          marginBottom: 10,
-          marginTop: 8,
-        }}
-      >
-        Contact d'urgence
-      </div>
-      <div style={S.grid2}>
-        <div>
-          <label style={S.label}>Nom</label>
-          <input
-            style={S.input}
-            value={form.contact_urgence_nom}
-            onChange={(e) => u("contact_urgence_nom", e.target.value)}
-            placeholder="Nom du contact"
-          />
-        </div>
-        <div>
-          <label style={S.label}>Téléphone</label>
-          <input
-            style={S.input}
-            value={form.contact_urgence_tel}
-            onChange={(e) => u("contact_urgence_tel", e.target.value)}
-            placeholder="06 xx xx xx xx"
-          />
-        </div>
-      </div>
+      <EmergencyContactsSection
+        contacts={form.emergency_contacts}
+        onChange={(v) => u("emergency_contacts", v)}
+      />
+
+      <LegalGuardiansSection
+        guardians={form.legal_guardians}
+        onChange={(v) => u("legal_guardians", v)}
+      />
 
       <div style={{ marginBottom: 16 }}>
         <label style={S.label}>Notes</label>
@@ -1086,6 +1098,11 @@ export function LicenciesView() {
       contre_indications: form.contre_indications || null,
       contact_urgence_nom: form.contact_urgence_nom || null,
       contact_urgence_tel: form.contact_urgence_tel || null,
+      gender: form.gender || null,
+      strong_foot: form.strong_foot || null,
+      preferred_number: form.preferred_number ? parseInt(form.preferred_number, 10) : null,
+      emergency_contacts: form.emergency_contacts || [],
+      legal_guardians: form.legal_guardians || [],
       status: form.status,
       notes: form.notes || null,
       updated_at: new Date().toISOString(),
