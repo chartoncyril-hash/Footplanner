@@ -41,16 +41,20 @@ export function useClubContext(user) {
       return;
     }
 
-    // Charger en parallèle les 3 contextes possibles
-    const [
-      { data: profile },
-      { data: member },
-      { data: family }
-    ] = await Promise.all([
-      supabase.from('profiles').select('id').eq('id', user.id).maybeSingle(),
-      supabase.from('club_members').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
-      supabase.from('family_profiles').select('*').eq('user_id', user.id).maybeSingle(),
-    ]);
+    // Charger en parallèle les 3 contextes possibles (avec garde d'erreur)
+    let profile = null, member = null, family = null;
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supabase.from('profiles').select('id').eq('id', user.id).maybeSingle(),
+        supabase.from('club_members').select('*').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+        supabase.from('family_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+      ]);
+      profile = r1.data; member = r2.data; family = r3.data;
+    } catch (e) {
+      console.warn('useClubContext load error', e);
+      setContext({ loading: false, type: 'owner', clubOwnerId: user.id, member: null, familyProfile: null, permissions: ALL_PERMISSIONS });
+      return;
+    }
 
     // Priorité : owner > member > family
     if (profile) {
