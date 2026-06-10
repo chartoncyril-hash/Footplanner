@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
@@ -114,6 +114,12 @@ const MODULES = [
 ];
 
 export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTournament, onGoToAccount, hubView, onHubViewBack, signOut }) {
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
   const clubColor = profile?.club_color || '#a3e635';
   const appColor = '#a3e635';
   const clubName = profile?.club_name || 'Mon club';
@@ -347,7 +353,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
       return (
         <div style={S.page}>
       {/* HEADER CLUB */}
-      <div style={{...S.header, background: `linear-gradient(135deg, ${clubColor}18 0%, transparent 60%)`}}>
+      <div style={{...S.header, padding: isMobile ? '20px 16px 18px' : '32px 24px 24px', background: `linear-gradient(135deg, ${clubColor}18 0%, transparent 60%)`}}>
         <div style={S.headerInner}>
           <div style={S.headerLeft}>
             {clubLogo ? (
@@ -358,23 +364,25 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
               </div>
             )}
             <div>
-              <div style={S.clubName}>{clubName}</div>
+              <div style={{...S.clubName, fontSize: isMobile ? 18 : 22}}>{clubName}</div>
               <div style={S.welcome}>
                 {firstName ? `Bonjour ${firstName} 👋` : 'Bienvenue sur FootPlanner'}
               </div>
             </div>
           </div>
-          <div style={{display:'flex', gap:10}}>
-            <button
-              onClick={onGoToAccount}
-              style={{...S.btnCreate, background:'rgba(255,255,255,0.06)', color:'#94a3b8', border:'1px solid rgba(255,255,255,0.08)'}}
-            >
-              <User size={16} />
-              Mon compte
-            </button>
+          <div style={{display:'flex', gap:10, width: isMobile ? '100%' : 'auto'}}>
+            {!isMobile && (
+              <button
+                onClick={onGoToAccount}
+                style={{...S.btnCreate, background:'rgba(255,255,255,0.06)', color:'#94a3b8', border:'1px solid rgba(255,255,255,0.08)'}}
+              >
+                <User size={16} />
+                Mon compte
+              </button>
+            )}
             <button
               onClick={onCreateTournament}
-              style={{...S.btnCreate, background: appColor, color: '#060a12'}}
+              style={{...S.btnCreate, background: appColor, color: '#060a12', flex: isMobile ? 1 : 'none', justifyContent: 'center'}}
             >
               <Plus size={16} />
               Nouveau tournoi
@@ -385,7 +393,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
 
       <div style={S.content}>
         {/* WIDGETS APERÇU — 2 colonnes */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:24 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16, marginBottom:24 }}>
           {/* Colonne 1 — Tournois en cours */}
           <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'18px 20px' }}>
             <div style={{ ...S.sectionTitle, marginBottom:12 }}>
@@ -420,12 +428,13 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
             <Trophy size={14} color={appColor} />
             Mes modules
           </div>
-          <div style={S.moduleGrid}>
+          <div style={{ ...S.moduleGrid, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
             {MODULES.map(mod => (
               <ModuleCard
                 key={mod.id}
                 mod={mod}
                 clubColor={appColor}
+                compact={isMobile}
                 onClick={() => mod.available && onEnterModule(mod.id)}
               />
             ))}
@@ -433,7 +442,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
         </div>
 
         {/* STATS RAPIDES */}
-        <div style={S.statsRow}>
+        <div style={{ ...S.statsRow, gap: isMobile ? 8 : 16 }}>
           {[
             { label: 'Tournois créés', value: (myTournaments || []).filter(t => t.status === 'live').length },
             { label: 'Archivés', value: (myTournaments || []).filter(t => t.status === 'archived').length },
@@ -450,8 +459,39 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
   );
 }
 
-function ModuleCard({ mod, clubColor, onClick }) {
+function ModuleCard({ mod, clubColor, onClick, compact }) {
   const Icon = mod.icon;
+  if (compact) {
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          background: 'rgba(15,23,42,0.6)',
+          border: `1px solid ${mod.available ? mod.color + '22' : 'rgba(255,255,255,0.04)'}`,
+          borderRadius: 14,
+          padding: '16px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          gap: 10,
+          cursor: mod.available ? 'pointer' : 'default',
+          opacity: mod.available ? 1 : 0.5,
+          minHeight: 104,
+          justifyContent: 'center',
+          position: 'relative',
+        }}
+      >
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${mod.color}15`, color: mod.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={22} />
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.25 }}>{mod.label}</div>
+        {!mod.available && (
+          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#475569', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 5 }}>Bientôt</div>
+        )}
+      </div>
+    );
+  }
   return (
     <div
       onClick={onClick}
@@ -483,14 +523,14 @@ function ModuleCard({ mod, clubColor, onClick }) {
 const S = {
   page: { minHeight: '100vh', background: '#060a12', color: '#f1f5f9' },
   header: { padding: '32px 24px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' },
-  headerInner: { maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  headerInner: { maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' },
   headerLeft: { display: 'flex', alignItems: 'center', gap: 16 },
   clubLogo: { width: 56, height: 56, borderRadius: 12, objectFit: 'cover' },
   clubLogoPlaceholder: { width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900 },
   clubName: { fontSize: 22, fontWeight: 900, letterSpacing: -0.5 },
   welcome: { fontSize: 13, color: '#64748b', marginTop: 2 },
   btnCreate: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, fontWeight: 800, fontSize: 14, border: 'none', cursor: 'pointer', fontFamily: 'inherit' },
-  content: { maxWidth: 1100, margin: '0 auto', padding: '32px 24px' },
+  content: { maxWidth: 1100, margin: '0 auto', padding: '24px 16px' },
   section: { marginBottom: 40 },
   sectionTitle: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 800, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 },
   widgetGrid: { display: 'flex', flexDirection: 'column', gap: 8 },
