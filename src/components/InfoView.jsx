@@ -1,4 +1,3 @@
-cat > (src / components / InfoView.jsx) << "INFOEOF";
 import React, { useState } from "react";
 import {
   ArrowLeft,
@@ -371,4 +370,3 @@ const S = {
     justifyContent: "center",
   },
 };
-INFOEOF;
