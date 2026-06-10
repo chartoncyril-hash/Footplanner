@@ -1,4 +1,3 @@
-cat > (src / components / TournamentFileUpload.jsx) << "TFUEOF";
 import React, { useState, useRef } from "react";
 import {
   Upload,
@@ -241,4 +240,3 @@ export function TournamentFileUpload({
     </div>
   );
 }
-TFUEOF;
