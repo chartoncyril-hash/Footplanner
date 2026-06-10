@@ -503,7 +503,7 @@ export function LandingPage() {
                   <Counter target={14966} />
                 </>
               ),
-              l: "Clubs FFF intégrés",
+              l: "Clubs français intégrés",
             },
             { v: "9", l: "Modules de gestion" },
             { v: "100%", l: "Gratuit en beta" },

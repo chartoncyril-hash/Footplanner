@@ -166,7 +166,7 @@ export function LibraryView(props) {
           <Users size={13} /> MES CLUBS ({teamsLibrary.length})
         </button>
         <button onClick={() => setTab('fff')} style={{ flex:1, padding:'10px', background: tab==='fff' ? 'rgba(163,230,53,0.15)' : 'transparent', border: tab==='fff' ? '1px solid rgba(163,230,53,0.4)' : '1px solid rgba(255,255,255,0.05)', borderRadius:8, color: tab==='fff' ? '#a3e635' : '#64748b', fontSize:12, fontWeight:800, letterSpacing:1, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, fontFamily:'inherit' }}>
-          🏆 BASE FFF
+          🏆 BASE NATIONALE
         </button>
 
       </div>
