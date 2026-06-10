@@ -660,7 +660,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
     updateTeam, removeTeam,
     importFromLibrary: (libId, pool, options) => importFromLibrary(libId, pool, { ...options, category: (options && options.category) || activeCategory }),
     // bibliothèque
-    removeFromLibrary, reloadLibrary, updateLibraryTeam,
+    removeFromLibrary, reloadLibrary, updateLibraryTeam, addToLibrary,
     // follow
     followedTeamIds, toggleFollow,
     // actions matchs
