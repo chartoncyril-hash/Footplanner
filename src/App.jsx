@@ -498,7 +498,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
   // les policies RLS de lecture (déjà 'true' dans le SQL fourni).
 
   // Spectateur sans tournoi sélectionné = onboarding code
-  if (myTLoading) return <LoadingScreen />;
+  if (myTLoading && !spectatorCode) return <LoadingScreen />;
 
   // Niveau COMPTE : Hub Dashboard
   if (hubMode && !isPresentationMode) {
