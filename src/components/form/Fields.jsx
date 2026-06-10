@@ -6,17 +6,29 @@ import { styles } from '../../styles/styles';
 // Primitives de formulaire — réutilisées par tous les éditeurs
 // ============================================================
 
-export function FieldText({ label, value, onChange, type = 'text', placeholder }) {
+export function FieldText({ label, value, onChange, type = 'text', placeholder, multiline = false, disabled = false }) {
   return (
     <label style={styles.field}>
       <span style={styles.fieldLabel}>{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        style={styles.input}
-      />
+      {multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={4}
+          style={{ ...styles.input, minHeight: 90, resize: 'vertical', fontFamily: 'inherit' }}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          style={styles.input}
+        />
+      )}
     </label>
   );
 }

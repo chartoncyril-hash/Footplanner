@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Settings, ArrowLeft, Hash, ShieldCheck, Trophy, MapPin,
   Edit3, Check, RefreshCw, LogOut, Calendar, Award, Sparkles,
-  Lock, Star, Play, Zap,
+  Lock, Star, Play, Zap, FileText, Phone, Info, Navigation,
 } from 'lucide-react';
 import { PageHeader } from './MatchCards';
 import { FieldText, FieldRow } from './form/Fields';
@@ -13,6 +13,7 @@ import {
 import { useAnnouncements, useSponsors } from '../hooks/useTournamentSecondary';
 import { tournamentService } from '../services/tournamentService';
 import { styles } from '../styles/styles';
+import { TournamentFileUpload } from './TournamentFileUpload';
 
 const ALL_CATEGORIES = ['U7', 'U9', 'U11', 'U13', 'U15', 'U17', 'Senior'];
 
@@ -157,6 +158,84 @@ export function SettingsView({
           />
         </FieldRow>
       </SettingCard>
+
+      {/* === INFORMATIONS & DOCUMENTS (vue spectateur) === */}
+      <SettingCard title="INFOS TOURNOI (VUE SPECTATEUR)" icon={Info} color="#22d3ee">
+        <div style={{ ...styles.helpBox, marginBottom: 14 }}>
+          <Info size={12} color="#22d3ee" />
+          <span>Ces informations apparaissent dans le bouton « Infos » de la vue spectateur.</span>
+        </div>
+
+        <FieldText
+          label="Règlement (texte)"
+          value={tournament.rules || ''}
+          onChange={(v) => safeUpdate({ rules: v })}
+          placeholder="Saisissez le règlement, ou ajoutez un PDF ci-dessous"
+          multiline
+        />
+        <TournamentFileUpload
+          tournamentId={tournament.id}
+          kind="pdf"
+          currentUrl={tournament.rulesPdfUrl}
+          onUploaded={(url) => safeUpdate({ rulesPdfUrl: url })}
+          label="Règlement (PDF)"
+        />
+
+        <FieldText
+          label="Informations pratiques"
+          value={tournament.practicalInfo || ''}
+          onChange={(v) => safeUpdate({ practicalInfo: v })}
+          placeholder="Parking, accès, vestiaires, accueil…"
+          multiline
+        />
+
+        <TournamentFileUpload
+          tournamentId={tournament.id}
+          kind="image"
+          currentUrl={tournament.venueMapUrl}
+          onUploaded={(url) => safeUpdate({ venueMapUrl: url })}
+          label="Plan du stade / site"
+        />
+
+        <FieldText
+          label="Restauration / buvette"
+          value={tournament.foodInfo || ''}
+          onChange={(v) => safeUpdate({ foodInfo: v })}
+          placeholder="Buvette, snacks, repas, horaires…"
+          multiline
+        />
+
+        <FieldText
+          label="Horaires clés"
+          value={tournament.scheduleInfo || ''}
+          onChange={(v) => safeUpdate({ scheduleInfo: v })}
+          placeholder="Ouverture site 8h, début 9h, remise des prix 17h…"
+          multiline
+        />
+      </SettingCard>
+
+      {/* === CONTACT & ACCÈS === */}
+      <SettingCard title="CONTACT & ACCÈS" icon={Phone} color="#f59e0b">
+        <FieldText
+          label="Téléphone de contact"
+          value={tournament.contactPhone || ''}
+          onChange={(v) => safeUpdate({ contactPhone: v })}
+          placeholder="06 12 34 56 78"
+        />
+        <FieldText
+          label="Email de contact"
+          value={tournament.contactEmail || ''}
+          onChange={(v) => safeUpdate({ contactEmail: v })}
+          placeholder="contact@club.fr"
+        />
+        <FieldText
+          label="Adresse complète (pour itinéraire GPS)"
+          value={tournament.venueAddress || ''}
+          onChange={(v) => safeUpdate({ venueAddress: v })}
+          placeholder="Stade Municipal, 12 rue du Sport, 01000 Ville"
+        />
+      </SettingCard>
+
 
       {/* === CATÉGORIES === */}
       <SettingCard title="CATÉGORIES DU TOURNOI" icon={Calendar} color="#818cf8">

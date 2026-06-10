@@ -44,6 +44,15 @@ function fromDb(row) {
     registrationFee: row.registration_fee || 0,
     registrationPaymentInfo: row.registration_payment_info || '',
     registrationConfig: row.registration_config || {},
+    rules: row.rules || '',
+    rulesPdfUrl: row.rules_pdf_url || null,
+    practicalInfo: row.practical_info || '',
+    venueMapUrl: row.venue_map_url || null,
+    contactPhone: row.contact_phone || '',
+    contactEmail: row.contact_email || '',
+    venueAddress: row.venue_address || '',
+    foodInfo: row.food_info || '',
+    scheduleInfo: row.schedule_info || '',
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -62,6 +71,15 @@ function toDb(t) {
   if (t.category !== undefined) out.category = t.category;
   if (t.date !== undefined) out.date = t.date;
   if (t.location !== undefined) out.location = t.location;
+  if (t.rules !== undefined) out.rules = t.rules;
+  if (t.rulesPdfUrl !== undefined) out.rules_pdf_url = t.rulesPdfUrl;
+  if (t.practicalInfo !== undefined) out.practical_info = t.practicalInfo;
+  if (t.venueMapUrl !== undefined) out.venue_map_url = t.venueMapUrl;
+  if (t.contactPhone !== undefined) out.contact_phone = t.contactPhone;
+  if (t.contactEmail !== undefined) out.contact_email = t.contactEmail;
+  if (t.venueAddress !== undefined) out.venue_address = t.venueAddress;
+  if (t.foodInfo !== undefined) out.food_info = t.foodInfo;
+  if (t.scheduleInfo !== undefined) out.schedule_info = t.scheduleInfo;
   if (t.startTime !== undefined) out.start_time = t.startTime;
   if (t.endTime !== undefined) out.end_time = t.endTime;
   if (t.endDate !== undefined) out.end_date = t.endDate;
