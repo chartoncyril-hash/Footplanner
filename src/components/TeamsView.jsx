@@ -4,6 +4,7 @@ import { Crest } from './Crest';
 import { PageHeader, SectionHeader } from './MatchCards';
 import { TeamEditor } from './TeamEditor';
 import { LibraryPicker } from './LibraryPicker';
+import { TeamsLibraryPicker } from './TeamsLibraryPicker';
 import { styles } from '../styles/styles';
 import { filterTeamsByCategory } from '../utils/categoryHelpers';
 import { TeamsTableDesktop } from './TeamsTableDesktop';
@@ -15,13 +16,39 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 export function TeamsView({
   tournament, teams, role, activeCategory,
   createTeam, updateTeam, removeTeam, importFromLibrary,
-  teamsLibrary, removeFromLibrary,
+  teamsLibrary, removeFromLibrary, addToLibrary,
   matches, askConfirm, closeConfirm,
 }) {
   const isDesktop = useIsDesktop();
   const [editing, setEditing] = useState(null); // null | 'new' | team object
   const [showLibrary, setShowLibrary] = useState(false);
   const [error, setError] = useState('');
+
+  // Ajoute un club national : enregistré en bibliothèque PUIS engagé dans le tournoi
+  const handleAddNationalClub = async (club) => {
+    if (!addToLibrary) throw new Error('addToLibrary indisponible');
+    // 1) Ajouter à la bibliothèque (ignore si déjà présent → renvoie null)
+    const added = await addToLibrary({
+      name: club.name,
+      short: club.short_name || (club.name || '').substring(0, 4).toUpperCase(),
+      color: '#818cf8',
+      isHost: false,
+      fff_cl_no: club.cl_no,
+      logo: club.logo_url,
+      district: club.district,
+      city: club.location,
+    });
+    // 2) Retrouver l'entrée biblio (soit nouvellement créée, soit existante)
+    let libId = added && (added.libraryId || added.id);
+    if (!libId) {
+      const existing = (teamsLibrary || []).find(t => t && (t.fffClNo === club.cl_no || t.fff_cl_no === club.cl_no || (t.name || '').toLowerCase() === (club.name || '').toLowerCase()));
+      libId = existing && (existing.libraryId || existing.id);
+    }
+    // 3) Engager dans le tournoi (catégorie active gérée par le wrapper importFromLibrary d'App.jsx)
+    if (libId && importFromLibrary) {
+      await importFromLibrary(libId, 'A', { level: 1 });
+    }
+  };
 
   // Filtrer les équipes selon la catégorie active
   const visibleTeams = filterTeamsByCategory(teams, activeCategory);
@@ -100,6 +127,7 @@ export function TeamsView({
         onUpdateTeam={updateTeam}
         onRemoveTeam={removeTeam}
         onImportFromLibrary={importFromLibrary}
+        onAddNationalClub={handleAddNationalClub}
         onOpenLibrary={teamsLibrary && teamsLibrary.length > 0 ? () => setShowLibrary(true) : null}
       />
       ) : (
@@ -172,25 +200,20 @@ export function TeamsView({
       )}
 
       {showLibrary && (
-        <LibraryPicker
-          library={teamsLibrary}
-          existingTeams={teams}
-          existingPools={existingPools}
-          onPick={async (libraryId, targetPool) => {
-            try {
-              await importFromLibrary(libraryId, targetPool);
-            } catch (e) {
-              setError(e.message);
-            }
-          }}
-          onRemove={async (libraryId) => {
-            try {
-              await removeFromLibrary(libraryId);
-            } catch (e) {
-              setError(e.message);
-            }
-          }}
+        <TeamsLibraryPicker
+          teamsLibrary={teamsLibrary}
+          teamsInCategory={teams}
+          activeCategory={activeCategory}
           onClose={() => setShowLibrary(false)}
+          onConfirm={async (imports) => {
+            try {
+              for (const imp of imports) {
+                await importFromLibrary(imp.libraryId, 'A', { level: imp.level });
+              }
+              setShowLibrary(false);
+            } catch (e) { setError(e.message); }
+          }}
+          onAddNationalClub={handleAddNationalClub}
         />
       )}
     </div>

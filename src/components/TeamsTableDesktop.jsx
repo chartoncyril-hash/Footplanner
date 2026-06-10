@@ -20,6 +20,7 @@ export function TeamsTableDesktop(props) {
   const allTeams = props.allTeams || [];
   const teamsLibrary = props.teamsLibrary || [];
   const onImportFromLibrary = props.onImportFromLibrary;
+  const onAddNationalClub = props.onAddNationalClub;
 
   const [editingCell, setEditingCell] = useState(null);
   const [draftName, setDraftName] = useState('');
@@ -470,6 +471,7 @@ export function TeamsTableDesktop(props) {
         activeCategory={activeCategory}
         onClose={() => setPickerOpen(false)}
         onConfirm={handlePickerConfirm}
+        onAddNationalClub={onAddNationalClub}
       />
     )}
     </>
