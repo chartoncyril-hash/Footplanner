@@ -7,22 +7,32 @@ import { makeShortName } from '../utils/makeShortName';
 
 // Badge de rang d'équipe : affiché uniquement si level > 1 (équipe 2, 3...)
 // Utilise les chiffres entourés Unicode pour un rendu compact et lisible.
-function TeamRankBadge({ level }) {
+function TeamRankBadge({ level, color }) {
   if (!level || level <= 1) return null;
-  const circled = { 2: '②', 3: '③', 4: '④', 5: '⑤' };
+  const c = color || '#22d3ee';
   return (
     <span
       title={'Équipe ' + level}
       style={{
-        marginLeft: 4,
-        fontSize: 13,
-        lineHeight: 1,
-        color: '#94a3b8',
+        marginLeft: 5,
         flexShrink: 0,
-        fontWeight: 700,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 16,
+        height: 16,
+        padding: '0 4px',
+        borderRadius: 5,
+        background: c + '22',
+        border: '1px solid ' + c + '66',
+        color: c,
+        fontSize: 10,
+        fontWeight: 800,
+        lineHeight: 1,
+        fontFamily: "'JetBrains Mono', monospace",
       }}
     >
-      {circled[level] || ('(' + level + ')')}
+      {level}
     </span>
   );
 }
@@ -162,7 +172,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
         <div style={styles.liveTeam}>
           <Crest team={home} size="md" />
           <span style={styles.liveTeamName}>{makeShortName(home.name)}</span>
-          <TeamRankBadge level={home.level} />
+          <TeamRankBadge level={home.level} color={home.color} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {canEditDesktop && (
@@ -196,7 +206,7 @@ export function LiveMatchCard({ match, teams, matches, standings, onTap, onUpdat
         <div style={{ ...styles.liveTeam, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="md" />
           <span style={styles.liveTeamName}>{makeShortName(away.name)}</span>
-          <TeamRankBadge level={away.level} />
+          <TeamRankBadge level={away.level} color={away.color} />
         </div>
       </div>
       {canEditDesktop && (
@@ -255,11 +265,11 @@ export function UpcomingMatchCard({ match, teams, matches, standings, onTap }) {
         <div style={styles.upcomingTeams}>
           <Crest team={home} size="sm" />
           <span style={styles.upcomingTeamName}>{makeShortName(home.name)}</span>
-          <TeamRankBadge level={home.level} />
+          <TeamRankBadge level={home.level} color={home.color} />
           <span style={{ fontSize: 10, color: '#475569', margin: '0 4px' }}>vs</span>
           <Crest team={away} size="sm" />
           <span style={styles.upcomingTeamName}>{makeShortName(away.name)}</span>
-          <TeamRankBadge level={away.level} />
+          <TeamRankBadge level={away.level} color={away.color} />
         </div>
         <div style={styles.upcomingMeta}>
           <Hash size={9} /> {match.field}
@@ -365,7 +375,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
           <span style={styles.matchListName}>{makeShortName(home.name)}</span>
-          <TeamRankBadge level={home.level} />
+          <TeamRankBadge level={home.level} color={home.color} />
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -375,7 +385,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
           <span style={styles.matchListName}>{makeShortName(away.name)}</span>
-          <TeamRankBadge level={away.level} />
+          <TeamRankBadge level={away.level} color={away.color} />
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -476,7 +486,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={styles.matchListSide}>
           <Crest team={home} size="sm" />
           <span style={styles.matchListName}>{makeShortName(home.name)}</span>
-          <TeamRankBadge level={home.level} />
+          <TeamRankBadge level={home.level} color={home.color} />
         </div>
         <div style={styles.matchListScore}>
           {(isLive || isDone)
@@ -486,7 +496,7 @@ export function MatchListCard({ match, teams, matches, standings, onTap, role, o
         <div style={{ ...styles.matchListSide, flexDirection: 'row-reverse' }}>
           <Crest team={away} size="sm" />
           <span style={styles.matchListName}>{makeShortName(away.name)}</span>
-          <TeamRankBadge level={away.level} />
+          <TeamRankBadge level={away.level} color={away.color} />
         </div>
       </div>
       <div style={styles.matchListRight}>
