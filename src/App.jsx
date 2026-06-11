@@ -587,6 +587,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         <div style={{ flex:1, minWidth:0, marginLeft: hubMobile ? 0 : 240, paddingTop: hubMobile ? 56 : 0 }}>
       <HubDashboard
         profile={profile}
+        clubContext={clubContext}
         myTournaments={myTournaments}
         onEnterModule={(moduleId, tournamentId) => {
           if (moduleId === 'tournaments') {

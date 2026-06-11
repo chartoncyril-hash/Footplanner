@@ -114,7 +114,11 @@ const MODULES = [
   },
 ];
 
-export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTournament, onGoToAccount, hubView, onHubViewBack, signOut }) {
+export function HubDashboard({ profile, clubContext, myTournaments, onEnterModule, onCreateTournament, onGoToAccount, hubView, onHubViewBack, signOut }) {
+  // Modules visibles : owner = tout, membre = selon permissions
+  const visibleModules = (clubContext && clubContext.type === 'member')
+    ? MODULES.filter(m => clubContext.permissions && clubContext.permissions[m.id])
+    : MODULES;
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 768);
@@ -430,7 +434,7 @@ export function HubDashboard({ profile, myTournaments, onEnterModule, onCreateTo
             Mes modules
           </div>
           <div style={{ ...S.moduleGrid, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
-            {MODULES.map(mod => (
+            {visibleModules.map(mod => (
               <ModuleCard
                 key={mod.id}
                 mod={mod}
