@@ -9,6 +9,9 @@ import { supabase } from './supabase';
 // ============================================================
 let _cache = null;
 
+// Vider le cache à chaque changement de session (login/logout/switch de compte)
+supabase.auth.onAuthStateChange(() => { _cache = null; });
+
 export async function getEffectiveOwnerId() {
   if (_cache) return _cache;
   const { data: { user } } = await supabase.auth.getUser();
