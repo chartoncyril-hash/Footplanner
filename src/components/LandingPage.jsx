@@ -14,23 +14,23 @@ const STADIUM =
 
 const SHOTS = {
   dashboard:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/dashboard_tournois_2.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/hub.png",
   calendrier:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/calendrier.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Dashboard_tournois.png",
   classement:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/classement.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Dashboard_tournois.png",
   licencies:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/composition_equipe.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Licencies.png",
   sponsors:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/sponsors_et_partenaire.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/hub.png",
   inscriptions:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/suivi_des_inscriptions.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/arborescence_phases_finales.png",
   regie:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/reegie_sponsor.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/saisie_score_carton.png",
   mobile:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/mobile.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/compo_equipe.png",
   tablemarque:
-    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/screenshots/table_de_marque.png",
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/saisie_score_carton.png",
 };
 
 // Hook : révèle un élément au scroll
@@ -672,14 +672,14 @@ export function LandingPage() {
             flip: false,
           },
           {
-            t: "Des inscriptions en ligne sans friction",
-            d: "Partagez un lien, les clubs s'inscrivent eux-mêmes. Vous validez, vous suivez les paiements, vous gardez le contrôle.",
+            t: "Des phases finales générées en un clic",
+            d: "Quarts, demies, finale : l'arborescence se construit automatiquement à partir de vos poules. Zéro papier, zéro erreur.",
             shot: SHOTS.inscriptions,
             flip: true,
           },
           {
-            t: "Le grand écran qui impressionne",
-            d: "Diffusez les matchs en cours, les classements et vos sponsors sur les écrans du gymnase en mode régie automatique.",
+            t: "La table de marque en temps réel",
+            d: "Scores, buteurs, cartons : saisissez tout en direct depuis le bord du terrain, les classements se mettent à jour instantanément.",
             shot: SHOTS.regie,
             flip: false,
           },
@@ -687,6 +687,27 @@ export function LandingPage() {
           <ShowcaseRow key={i} {...row} C={C} isMobile={isMobile} />
         ))}
       </Section>
+
+            {/* ════════════ SECTION VIDÉO COMPOSITIONS ════════════ */}
+      <section style={{ padding: isMobile ? '70px 20px' : '100px 20px', maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#a3e635', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>Vu en action</div>
+        <h2 style={{ fontSize: isMobile ? 30 : 44, fontWeight: 900, letterSpacing: -1.5, lineHeight: 1.1, margin: '0 0 16px' }}>
+          Composez vos équipes <span style={{ color: '#a3e635' }}>comme un pro</span>
+        </h2>
+        <p style={{ fontSize: isMobile ? 15 : 17, color: '#94a3b8', maxWidth: 560, margin: '0 auto 36px', lineHeight: 1.6 }}>
+          Glissez vos joueurs sur le terrain, choisissez la formation, partagez avec votre staff. Tout en temps réel.
+        </p>
+        <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 40px 100px rgba(0,0,0,0.55), 0 0 60px rgba(163,230,53,0.07)' }}>
+          <div style={{ height: 34, background: '#0c1322', display: 'flex', alignItems: 'center', gap: 7, padding: '0 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#ff5f57' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#febc2e' }} />
+            <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#28c840' }} />
+          </div>
+          <video autoPlay loop muted playsInline preload="metadata" style={{ width: '100%', display: 'block' }}>
+            <source src="https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/compo_equipe_video.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </section>
 
       {/* ════════════ CTA FINAL ════════════ */}
       <section
