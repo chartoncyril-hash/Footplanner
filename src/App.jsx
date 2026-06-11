@@ -55,6 +55,7 @@ import { HubDashboard } from './components/HubDashboard';
 import { useProfile } from './hooks/useProfile';
 import { useClubContext } from './hooks/useClubContext';
 import { useIsDesktop } from './hooks/useIsDesktop';
+import { ContactWidget } from './components/ContactWidget';
 
 // ============================================================
 // App.jsx — orchestration de haut niveau
@@ -647,6 +648,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
         onUpdateTournamentInList={updateTournamentInList}
         signOut={signOut}
       />
+        <ContactWidget user={user} profile={profile} />
         </div>
       </div>
     );
