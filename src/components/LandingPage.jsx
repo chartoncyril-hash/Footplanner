@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { Trophy, Users, Tent, CalendarDays, MessageSquare, Handshake, ClipboardList, BarChart2, MonitorPlay, Crown, Dribbble } from 'lucide-react';
+import { Trophy, Users, Tent, CalendarDays, MessageSquare, Handshake, ClipboardList, BarChart2, MonitorPlay, Crown, Goal } from 'lucide-react';
 
 // ============================================================
 // LandingPage v3 — "Tout votre club. Un seul terrain."
@@ -88,6 +88,15 @@ export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState("signup");
   const [scrolled, setScrolled] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
+  useEffect(() => {
+    const h = (e) => {
+      const t = e.target;
+      if (t && t.tagName === 'IMG' && t.src && t.src.includes('landingpage/')) setLightbox(t.src);
+    };
+    document.addEventListener('click', h);
+    return () => document.removeEventListener('click', h);
+  }, []);
 
   const [form, setForm] = useState({
     email: "",
@@ -168,6 +177,7 @@ export function LandingPage() {
         @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
         .reveal { opacity:0; }
         .reveal.in { animation: floatUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+        img[src*="landingpage/"] { cursor: zoom-in; }
         .lp-link:hover { color:#a3e635 !important; }
         .lp-btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(163,230,53,0.35) !important; }
         .lp-btn-primary { transition:all 0.2s ease; }
@@ -570,7 +580,7 @@ export function LandingPage() {
             },
             {
               tag: "Coachs & éducateurs",
-              icon: <Dribbble size={22} color="#f472b6" />,
+              icon: <Goal size={22} color="#f472b6" />,
               d: "Convoquez vos joueurs, suivez les présences, communiquez avec les parents et gérez les compositions.",
               shot: SHOTS.mobile,
               color: "#f472b6",
@@ -840,6 +850,13 @@ export function LandingPage() {
       </footer>
 
       {/* ════════════ MODAL AUTH ════════════ */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(2,5,12,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, cursor: 'zoom-out' }}>
+          <img src={lightbox} alt="" style={{ maxWidth: '95%', maxHeight: '92%', borderRadius: 12, objectFit: 'contain', boxShadow: '0 40px 120px rgba(0,0,0,0.8)' }} />
+          <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 18, right: 18, width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#f1f5f9', fontSize: 18, cursor: 'pointer' }}>✕</button>
+        </div>
+      )}
+
       {showAuth && (
         <AuthModal
           C={C}
