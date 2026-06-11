@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { Trophy, Users, Tent, CalendarDays, MessageSquare, Handshake, ClipboardList, BarChart2, MonitorPlay, Crown, Dribbble } from 'lucide-react';
 
 // ============================================================
 // LandingPage v3 — "Tout votre club. Un seul terrain."
@@ -555,7 +556,7 @@ export function LandingPage() {
           {[
             {
               tag: "Présidents & dirigeants",
-              icon: "👔",
+              icon: <Crown size={22} color="#a3e635" />,
               d: "Pilotez les licenciés, sponsors, finances et la communication du club depuis un tableau de bord unique.",
               shot: SHOTS.licencies,
               color: C.neon,
@@ -569,7 +570,7 @@ export function LandingPage() {
             },
             {
               tag: "Coachs & éducateurs",
-              icon: "⚽",
+              icon: <Dribbble size={22} color="#f472b6" />,
               d: "Convoquez vos joueurs, suivez les présences, communiquez avec les parents et gérez les compositions.",
               shot: SHOTS.mobile,
               color: "#f472b6",
@@ -604,49 +605,49 @@ export function LandingPage() {
               c: C.neon,
             },
             {
-              icon: "👥",
+              icon: <Users size={24} color="#fb7185" />,
               t: "Licenciés",
               d: "Photos, certificats médicaux, données RGPD sécurisées.",
               c: "#fb7185",
             },
             {
-              icon: "🏕️",
+              icon: <Tent size={24} color="#f97316" />,
               t: "Stages",
               d: "Inscriptions en ligne et relances automatiques.",
               c: "#f97316",
             },
             {
-              icon: "📅",
+              icon: <CalendarDays size={24} color="#22d3ee" />,
               t: "Planning",
               d: "Agenda club partagé, mobile et imprimable.",
               c: C.cyan,
             },
             {
-              icon: "💬",
+              icon: <MessageSquare size={24} color="#f472b6" />,
               t: "Communication",
               d: "Événements, sondages, présences, covoiturage.",
               c: "#f472b6",
             },
             {
-              icon: "🤝",
+              icon: <Handshake size={24} color="#f59e0b" />,
               t: "Sponsors",
               d: "Logos, contrats et bibliothèque documentaire.",
               c: "#f59e0b",
             },
             {
-              icon: "📋",
+              icon: <ClipboardList size={24} color="#818cf8" />,
               t: "Inscriptions",
               d: "Page publique brandée à vos couleurs.",
               c: "#818cf8",
             },
             {
-              icon: "📊",
+              icon: <BarChart2 size={24} color="#34d399" />,
               t: "Table de marque",
               d: "Scores, cartons et présences en temps réel.",
               c: "#34d399",
             },
             {
-              icon: "🖥️",
+              icon: <MonitorPlay size={24} color="#f97316" />,
               t: "Régie écran",
               d: "Diffusez matchs et classements sur vos TV.",
               c: "#f97316",
