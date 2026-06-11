@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tent, Plus, Users, CheckCircle, Clock, XCircle, CreditCard, Calendar, MapPin, ChevronRight, Edit2, Trash2, Copy, ToggleLeft, ToggleRight } from 'lucide-react';
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 // Appel Edge Function email
 async function callStageEmail(type, participant, stage, profile, extra = {}) {
@@ -153,7 +154,7 @@ export function StagesHubView() {
     const { data } = await supabase
       .from('stages')
       .select('*, stage_participants(id, status)')
-      .eq('owner_id', user.id)
+      .eq('owner_id', await getEffectiveOwnerId())
       .order('created_at', { ascending: false });
     if (data) {
       setStages(data);
@@ -404,7 +405,7 @@ function StageWizard({ stage, onClose, onSaved }) {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const payload = {
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       name: form.name.trim(),
       description: form.description.trim(),
       location: form.location.trim(),
@@ -716,7 +717,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     const { data } = await supabase
       .from('licencies')
       .select('id, first_name, last_name, email, category, team, status')
-      .eq('owner_id', user.id)
+      .eq('owner_id', await getEffectiveOwnerId())
       .order('last_name');
     console.log('licencies loaded:', data?.length, data?.[0]);
     setLicencies(data || []);
@@ -730,7 +731,7 @@ function StageDetailView({ stage, onClose, onRefresh }) {
     const { data: stagesData } = await supabase
       .from('stages')
       .select('id')
-      .eq('owner_id', user.id)
+      .eq('owner_id', await getEffectiveOwnerId())
       .neq('id', stage.id);
     const stageIds = (stagesData || []).map(s => s.id);
     if (stageIds.length === 0) { setAnciens([]); setAnciensLoading(false); return; }
@@ -1231,7 +1232,7 @@ function AddParticipantModal({ stage, onClose, onSaved }) {
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('stage_participants').insert({
       stage_id: stage.id,
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       birth_date: form.birth_date || null,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 // ============================================================
 // MatchEvents — Chrono + Cartons pour MatchDetail
@@ -88,7 +89,7 @@ export function MatchEventsPanel({ match, tournament, homeTeam, awayTeam, canEdi
       const { data } = await supabase
         .from('licencies')
         .select('id, first_name, last_name, licence_number, category')
-        .eq('owner_id', user.id)
+        .eq('owner_id', await getEffectiveOwnerId())
         .order('last_name');
       setLicencies(data || []);
     })();
@@ -226,7 +227,7 @@ function CardForm({ type, match, tournament, homeTeam, awayTeam, licencies, curr
     await supabase.from('match_events').insert({
       match_id: match.id,
       tournament_id: tournament.id,
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       type,
       team_side: teamSide,
       player_name: playerName.trim() || null,

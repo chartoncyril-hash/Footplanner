@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 // ── SPONSOR UPLOAD BUTTON ────────────────────────────────────
 function SponsorUploadButton({ value, accept, bucket, path, compress, onUploaded, onClear, label }) {
@@ -716,12 +717,12 @@ export function SponsorsHubView({ profile }) {
       supabase
         .from("sponsor_library")
         .select("*")
-        .eq("owner_id", user.id)
+        .eq("owner_id", await getEffectiveOwnerId())
         .order("name"),
       supabase
         .from("sponsor_settings")
         .select("*")
-        .eq("owner_id", user.id)
+        .eq("owner_id", await getEffectiveOwnerId())
         .single(),
     ]);
     setSponsors(sp || []);
@@ -747,7 +748,7 @@ export function SponsorsHubView({ profile }) {
       .from("sponsor_settings")
       .upsert(
         {
-          owner_id: user.id,
+          owner_id: await getEffectiveOwnerId(),
           ...newSettings,
           updated_at: new Date().toISOString(),
         },
@@ -788,7 +789,7 @@ export function SponsorsHubView({ profile }) {
     } else {
       await supabase
         .from("sponsor_library")
-        .insert({ ...payload, owner_id: user.id });
+        .insert({ ...payload, owner_id: await getEffectiveOwnerId() });
     }
     setShowForm(false);
     setEditing(null);
@@ -1250,7 +1251,7 @@ function SponsorDocumentsModal({ sponsor, onClose }) {
       const sizeKb = Math.round(file.size / 1024);
       await supabase.from('sponsor_documents').insert({
         sponsor_id: sponsor.id,
-        owner_id: user.id,
+        owner_id: await getEffectiveOwnerId(),
         name: newDocName.trim() || file.name,
         type: newDocType,
         url: urlData.publicUrl,

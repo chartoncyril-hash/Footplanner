@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, Calendar, Users, CheckSquare, BarChart2, MessageCircle, ChevronRight, X, MapPin, Clock } from 'lucide-react';
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 const EVENT_TYPES = {
   training:   { label: 'Entraînement', color: '#34d399', emoji: '⚽' },
@@ -38,7 +39,7 @@ export function CommunicationView() {
     const { data: eventsData } = await supabase
       .from('club_events')
       .select('*')
-      .eq('owner_id', user.id)
+      .eq('owner_id', await getEffectiveOwnerId())
       .order('date', { ascending: true });
     if (eventsData) {
       // Charger les réponses séparément
@@ -284,7 +285,7 @@ function EventWizard({ event, onClose, onSaved }) {
     if (step !== 2) return;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('licencies').select('id,first_name,last_name,category,team,email').eq('owner_id', user.id).order('last_name');
+      const { data } = await supabase.from('licencies').select('id,first_name,last_name,category,team,email').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
       setLicencies(data || []);
       // Pré-sélectionner selon catégories choisies étape 1
       if (form.categories.length > 0) {
@@ -316,7 +317,7 @@ function EventWizard({ event, onClose, onSaved }) {
     // 1. Créer/modifier l'événement
     let eventId = event?.id;
     const payload = {
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       title: form.title.trim(),
       type: form.type,
       date: form.date,
@@ -385,7 +386,7 @@ function EventWizard({ event, onClose, onSaved }) {
         .from('event_responses')
         .insert(selectedLics.map(licId => ({
           event_id: eventId,
-          club_owner_id: user.id,
+          club_owner_id: await getEffectiveOwnerId(),
           licencie_id: licId,
           response: 'pending',
         })))
@@ -422,7 +423,7 @@ function EventWizard({ event, onClose, onSaved }) {
     // 3. Créer le sondage si activé
     if (survey.enabled && survey.title.trim() && !isEdit) {
       await supabase.from('surveys').insert({
-        owner_id: user.id,
+        owner_id: await getEffectiveOwnerId(),
         event_id: eventId,
         title: survey.title.trim(),
         options: survey.options.filter(o=>o.trim()).map((o,i) => ({ id:i, label:o.trim() })),
@@ -718,7 +719,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     // Charger licenciés
-    const { data: lics } = await supabase.from('licencies').select('id, first_name, last_name, category, team').eq('owner_id', user.id).order('last_name');
+    const { data: lics } = await supabase.from('licencies').select('id, first_name, last_name, category, team').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
     setLicencies(lics || []);
     // Charger réponses existantes
     const { data: resp } = await supabase.from('event_responses').select('*').eq('event_id', event.id);
@@ -823,7 +824,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
     const missing = licencies.filter(l => !existingIds.includes(l.id));
     if (missing.length === 0) return;
     await supabase.from('event_responses').insert(
-      missing.map(l => ({ event_id: event.id, club_owner_id: user.id, licencie_id: l.id, response: 'pending' }))
+      missing.map(l => ({ event_id: event.id, club_owner_id: await getEffectiveOwnerId(), licencie_id: l.id, response: 'pending' }))
     );
     load();
   };
@@ -834,7 +835,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
     if (existing) {
       await supabase.from('event_responses').update({ response }).eq('id', existing.id);
     } else {
-      await supabase.from('event_responses').insert({ event_id: event.id, club_owner_id: user.id, licencie_id: licId, response });
+      await supabase.from('event_responses').insert({ event_id: event.id, club_owner_id: await getEffectiveOwnerId(), licencie_id: licId, response });
     }
     load();
   };
@@ -1008,7 +1009,7 @@ function TasksTab({ events, onRefresh }) {
     const { data } = await supabase
       .from('tasks')
       .select('*, task_assignments(*), club_events(title, date)')
-      .eq('owner_id', user.id)
+      .eq('owner_id', await getEffectiveOwnerId())
       .order('created_at', { ascending: false });
     setTasks(data || []);
     setLoading(false);
@@ -1021,7 +1022,7 @@ function TasksTab({ events, onRefresh }) {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('tasks').insert({
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       title: form.title.trim(),
       description: form.description.trim() || null,
       max_volunteers: parseInt(form.max_volunteers) || 1,
@@ -1150,7 +1151,7 @@ function EventTasksPanel({ event, licencies }) {
     if (!newTask.title.trim()) return;
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('tasks').insert({ owner_id: user.id, event_id: event.id, title: newTask.title.trim(), max_volunteers: parseInt(newTask.max_volunteers) || 1 });
+    await supabase.from('tasks').insert({ owner_id: await getEffectiveOwnerId(), event_id: event.id, title: newTask.title.trim(), max_volunteers: parseInt(newTask.max_volunteers) || 1 });
     setNewTask({ title:'', max_volunteers:1 });
     setShowForm(false);
     setSaving(false);
@@ -1227,7 +1228,7 @@ function SurveysTab({ onRefresh }) {
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    const { data } = await supabase.from('surveys').select('*, survey_responses(id, selected_options)').eq('owner_id', user.id).order('created_at', { ascending:false });
+    const { data } = await supabase.from('surveys').select('*, survey_responses(id, selected_options)').eq('owner_id', await getEffectiveOwnerId()).order('created_at', { ascending:false });
     setSurveys(data || []);
     setLoading(false);
   }, []);
@@ -1243,7 +1244,7 @@ function SurveysTab({ onRefresh }) {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('surveys').insert({
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       title: form.title.trim(),
       description: form.description.trim() || null,
       options: form.options.filter(o=>o.trim()).map((o,i) => ({ id:i, label:o.trim() })),

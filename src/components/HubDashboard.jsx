@@ -16,6 +16,7 @@ import { SettingsHubView } from './SettingsHubView';
 import { LicenciesView } from './LicenciesView';
 import { CompositionsView } from './CompositionsView';
 import { CheckInView } from './CheckInView';
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 // ============================================================
 // HubDashboard — niveau COMPTE
@@ -572,8 +573,8 @@ function TodayPlanning({ myTournaments, appColor, onNavigate }) {
       const today = new Date().toISOString().slice(0, 10);
 
       const [{ data: clubEvts }, { data: stagesData }] = await Promise.all([
-        supabase.from('club_events').select('*').eq('owner_id', user.id).eq('date', today),
-        supabase.from('stages').select('*').eq('owner_id', user.id).lte('date_start', today).gte('date_end', today),
+        supabase.from('club_events').select('*').eq('owner_id', await getEffectiveOwnerId()).eq('date', today),
+        supabase.from('stages').select('*').eq('owner_id', await getEffectiveOwnerId()).lte('date_start', today).gte('date_end', today),
       ]);
 
       const all = [];

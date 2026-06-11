@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { ChevronLeft, ChevronRight, Printer, Calendar, List, LayoutGrid } from 'lucide-react';
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 // ============================================================
 // PlanningView — Agenda club premium
@@ -58,8 +59,8 @@ export function PlanningView({ myTournaments }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const [{ data: clubEvts }, { data: stagesData }] = await Promise.all([
-      supabase.from('club_events').select('*').eq('owner_id', user.id),
-      supabase.from('stages').select('*').eq('owner_id', user.id),
+      supabase.from('club_events').select('*').eq('owner_id', await getEffectiveOwnerId()),
+      supabase.from('stages').select('*').eq('owner_id', await getEffectiveOwnerId()),
     ]);
     const all = [];
     for (const e of clubEvts || []) all.push({

@@ -649,7 +649,7 @@ function DocumentsPanel({ licencie, onClose }) {
         .from("licencies_documents")
         .insert({
           licencie_id: licencie.id,
-          owner_id: user.id,
+          owner_id: await getEffectiveOwnerId(),
           type,
           [field]: value,
         });
@@ -1045,7 +1045,7 @@ export function LicenciesView() {
       const emails = (inviteEmails[licId] || '').split(',').map(e => e.trim()).filter(Boolean);
       for (const email of emails) {
         const { data: inv, error: invError } = await supabase.from('family_invitations').insert({
-          licencie_id: licId, owner_id: user.id, email, status: 'pending'
+          licencie_id: licId, owner_id: await getEffectiveOwnerId(), email, status: 'pending'
         }).select().single();
         if (inv?.token) {
           const { data: emailData, error: emailError } = await supabase.functions.invoke('send-family-invitation', {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 const FORMATS = {
   5: {
@@ -751,12 +752,12 @@ export function CompositionsView() {
       supabase
         .from("compositions")
         .select("*")
-        .eq("owner_id", user.id)
+        .eq("owner_id", await getEffectiveOwnerId())
         .order("created_at", { ascending: false }),
       supabase
         .from("licencies")
         .select("*")
-        .eq("owner_id", user.id)
+        .eq("owner_id", await getEffectiveOwnerId())
         .order("last_name"),
     ]);
     setCompositions(comp || []);
@@ -773,7 +774,7 @@ export function CompositionsView() {
       data: { user },
     } = await supabase.auth.getUser();
     await supabase.from("compositions").insert({
-      owner_id: user.id,
+      owner_id: await getEffectiveOwnerId(),
       name: data.name,
       format: data.format,
       formation: data.formation,
