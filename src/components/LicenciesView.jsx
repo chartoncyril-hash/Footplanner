@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { getEffectiveOwnerId } from "../lib/effectiveUser";
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { LicencieListItem, LicencieListHeader } from './LicencieListItem';
 import { Users, LayoutDashboard, Shield } from 'lucide-react';
@@ -1060,17 +1061,15 @@ export function LicenciesView() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    const ownerId = await getEffectiveOwnerId();
+    if (!ownerId) return;
     const [{ data: lic }, { data: d }] = await Promise.all([
       supabase
         .from("licencies")
         .select("*")
-        .eq("owner_id", user.id)
+        .eq("owner_id", ownerId)
         .order("last_name"),
-      supabase.from("licencies_documents").select("*").eq("owner_id", user.id),
+      supabase.from("licencies_documents").select("*").eq("owner_id", ownerId),
     ]);
     setLicencies(lic || []);
     setDocs(d || []);
@@ -1112,9 +1111,10 @@ export function LicenciesView() {
     if (editing?.id) {
       await supabase.from("licencies").update(payload).eq("id", editing.id);
     } else {
+      const ownerIdSave = await getEffectiveOwnerId();
       await supabase
         .from("licencies")
-        .insert({ ...payload, owner_id: user.id });
+        .insert({ ...payload, owner_id: ownerIdSave });
     }
     setShowForm(false);
     setEditing(null);
