@@ -93,6 +93,7 @@ export function LandingPage() {
     const h = (e) => {
       let t = e.target;
       if (!t) return;
+      if (t.closest && t.closest('[data-lightbox]')) return;
       let src = null;
       // Cas 1 : clic direct sur l'image
       if (t.tagName === 'IMG' && t.src && t.src.includes('landingpage/')) src = t.src;
@@ -864,7 +865,7 @@ export function LandingPage() {
 
       {/* ════════════ MODAL AUTH ════════════ */}
       {lightbox && (
-        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(2,5,12,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, cursor: 'zoom-out' }}>
+        <div data-lightbox="1" onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(2,5,12,0.92)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, cursor: 'zoom-out' }}>
           <img src={lightbox} alt="" style={{ maxWidth: '95%', maxHeight: '92%', borderRadius: 12, objectFit: 'contain', boxShadow: '0 40px 120px rgba(0,0,0,0.8)' }} />
           <button onClick={() => setLightbox(null)} style={{ position: 'absolute', top: 18, right: 18, width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#f1f5f9', fontSize: 18, cursor: 'pointer' }}>✕</button>
         </div>
