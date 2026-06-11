@@ -382,11 +382,12 @@ function EventWizard({ event, onClose, onSaved }) {
         .single();
 
       // Insérer les réponses et récupérer les tokens
+      const _eventOwnerId = await getEffectiveOwnerId();
       const { data: insertedResp } = await supabase
         .from('event_responses')
         .insert(selectedLics.map(licId => ({
           event_id: eventId,
-          club_owner_id: await getEffectiveOwnerId(),
+          club_owner_id: _eventOwnerId,
           licencie_id: licId,
           response: 'pending',
         })))
@@ -823,8 +824,9 @@ function EventDetailModal({ event, onClose, onRefresh }) {
     const existingIds = responses.map(r => r.licencie_id);
     const missing = licencies.filter(l => !existingIds.includes(l.id));
     if (missing.length === 0) return;
+    const _initOwnerId = await getEffectiveOwnerId();
     await supabase.from('event_responses').insert(
-      missing.map(l => ({ event_id: event.id, club_owner_id: await getEffectiveOwnerId(), licencie_id: l.id, response: 'pending' }))
+      missing.map(l => ({ event_id: event.id, club_owner_id: _initOwnerId, licencie_id: l.id, response: 'pending' }))
     );
     load();
   };
