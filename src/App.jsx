@@ -170,10 +170,33 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       if (hasOrg && hasFamily) {
         if (savedSpace === 'club') setProfileType('organizer');
         else setProfileType('both');
+      } else if (clubMember && (hasFamily || licencie)) {
+        // Membre AUSSI licencié : choix entre espace club et espace licencié
+        if (!hasFamily && licencie) {
+          const { data: newFp } = await supabaseClient
+            .from('family_profiles')
+            .insert({
+              user_id: user.id,
+              first_name: licencie.first_name || user.email.split('@')[0],
+              last_name: licencie.last_name || '',
+              club_owner_id: licencie.owner_id,
+              type: 'adult_player',
+            })
+            .select('id')
+            .single();
+          if (newFp) {
+            for (const lic of (allLicencies || [])) {
+              await supabaseClient.from('family_licencies')
+                .upsert({ family_user_id: user.id, licencie_id: lic.id, relation: 'self', club_owner_id: lic.owner_id },
+                  { onConflict: 'family_user_id,licencie_id', ignoreDuplicates: true });
+            }
+          }
+        }
+        setProfileType('both');
       } else if (hasFamily) {
         setProfileType('licencie');
       } else if (clubMember) {
-        // Membre d'équipe (coach, assistant, etc.) → AuthenticatedApp avec contexte limité
+        // Membre sans profil organisateur : club avec contexte limité
         setProfileType('organizer');
       } else {
         setProfileType('organizer');
