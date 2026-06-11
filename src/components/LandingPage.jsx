@@ -91,8 +91,21 @@ export function LandingPage() {
   const [lightbox, setLightbox] = useState(null);
   useEffect(() => {
     const h = (e) => {
-      const t = e.target;
-      if (t && t.tagName === 'IMG' && t.src && t.src.includes('landingpage/')) setLightbox(t.src);
+      let t = e.target;
+      if (!t) return;
+      let src = null;
+      // Cas 1 : clic direct sur l'image
+      if (t.tagName === 'IMG' && t.src && t.src.includes('landingpage/')) src = t.src;
+      // Cas 2 : clic sur un calque au-dessus de l'image (overlay) → chercher l'image voisine
+      else {
+        let node = t;
+        for (let i = 0; i < 2 && node && !src; i++) {
+          const img = node.querySelector ? node.querySelector('img[src*="landingpage/"]') : null;
+          if (img) src = img.src;
+          node = node.parentElement;
+        }
+      }
+      if (src) setLightbox(src);
     };
     document.addEventListener('click', h);
     return () => document.removeEventListener('click', h);
