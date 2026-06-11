@@ -375,24 +375,12 @@ export function HubDashboard({ profile, clubContext, myTournaments, onEnterModul
               </div>
             </div>
           </div>
-          <div style={{display:'flex', gap:10, width: isMobile ? '100%' : 'auto'}}>
-            {!isMobile && (
-              <button
-                onClick={onGoToAccount}
-                style={{...S.btnCreate, background:'rgba(255,255,255,0.06)', color:'#94a3b8', border:'1px solid rgba(255,255,255,0.08)'}}
-              >
-                <User size={16} />
-                Mon compte
-              </button>
-            )}
-            <button
-              onClick={onCreateTournament}
-              style={{...S.btnCreate, background: appColor, color: '#060a12', flex: isMobile ? 1 : 'none', justifyContent: 'center'}}
-            >
-              <Plus size={16} />
-              Nouveau tournoi
-            </button>
-          </div>
+          <button
+            onClick={signOut}
+            style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:13, fontWeight:600, fontFamily:'inherit', padding:'8px 4px', textDecoration:'underline', textUnderlineOffset:3 }}
+          >
+            Se déconnecter
+          </button>
         </div>
       </div>
 
