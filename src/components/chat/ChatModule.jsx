@@ -915,7 +915,7 @@ function ChatWindow({
       )}
 
       {showPoll && (
-        <PollComposer
+        <PollComposer clubOwnerId={clubOwnerId} isStaff={isStaff}
           accent={accent}
           onClose={() => setShowPoll(false)}
           onSend={sendPoll}
@@ -1146,197 +1146,106 @@ function PollBubble({ msg, mine, votes, myKey, accent, onVote }) {
 // ─────────────────────────────────────────────
 // Composeur de sondage
 // ─────────────────────────────────────────────
-function PollComposer({ accent, onClose, onSend }) {
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const valid = question.trim() && options.filter((o) => o.trim()).length >= 2;
+function PollComposer({ accent, onClose, onSend, clubOwnerId, isStaff }) {
+  const [question, setQuestion] = useState('');
+  const [options, setOptions] = useState(['', '']);
+  const [existing, setExisting] = useState([]);
+  const valid = question.trim() && options.filter(o => o.trim()).length >= 2;
+
+  useEffect(() => {
+    if (!isStaff || !clubOwnerId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('surveys')
+        .select('id, title, options, closes_at')
+        .eq('owner_id', clubOwnerId)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      setExisting(data || []);
+    })();
+  }, [clubOwnerId, isStaff]);
+
+  const pickExisting = (id) => {
+    const s = existing.find(x => String(x.id) === String(id));
+    if (!s) return;
+    setQuestion(s.title || '');
+    const opts = (s.options || []).map(o => o.label || '');
+    setOptions(opts.length >= 2 ? opts : [...opts, '', ''].slice(0, Math.max(2, opts.length)));
+  };
 
   const inp = {
-    width: "100%",
-    padding: "10px 13px",
-    background: "#1e293b",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 9,
-    color: "#f1f5f9",
-    fontSize: 13.5,
-    fontFamily: "inherit",
-    boxSizing: "border-box",
-    outline: "none",
+    width: '100%', padding: '10px 13px', background: '#1e293b',
+    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9,
+    color: '#f1f5f9', fontSize: 13.5, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none',
   };
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1100,
-        background: "rgba(0,0,0,0.7)",
-        backdropFilter: "blur(5px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "min(420px, 100%)",
-          background: "#0a0e1a",
-          border: "1px solid rgba(34,211,238,0.25)",
-          borderRadius: 16,
-          padding: 20,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 14,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 800,
-              color: "#f1f5f9",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.7)',
+      backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: 'min(420px, 100%)', maxHeight: '90vh', overflowY: 'auto', background: '#0a0e1a',
+        border: '1px solid rgba(34,211,238,0.25)', borderRadius: 16, padding: 20,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
             <BarChart2 size={16} color={accent} /> Nouveau sondage
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#64748b",
-              cursor: "pointer",
-              display: "flex",
-            }}
-          >
-            <X size={18} />
-          </button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex' }}><X size={18} /></button>
         </div>
 
-        <label
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "#94a3b8",
-            display: "block",
-            marginBottom: 6,
-          }}
-        >
-          Question
-        </label>
-        <input
-          style={{ ...inp, marginBottom: 14 }}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ex : Présent à l'entraînement mercredi ?"
-          autoFocus
-        />
+        {isStaff && existing.length > 0 && (
+          <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(244,114,182,0.05)', border: '1px solid rgba(244,114,182,0.18)', borderRadius: 10 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#f472b6', display: 'block', marginBottom: 6 }}>
+              📊 Reprendre un sondage des Événements
+            </label>
+            <select defaultValue="" onChange={e => pickExisting(e.target.value)} style={{ ...inp, background: '#1e293b' }}>
+              <option value="" style={{ background: '#1e293b' }}>Choisir un sondage existant…</option>
+              {existing.map(s => (
+                <option key={s.id} value={s.id} style={{ background: '#1e293b' }}>{s.title}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        <label
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "#94a3b8",
-            display: "block",
-            marginBottom: 6,
-          }}
-        >
-          Options
-        </label>
+        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 6 }}>Question</label>
+        <input style={{ ...inp, marginBottom: 14 }} value={question} onChange={e => setQuestion(e.target.value)}
+          placeholder="Ex : Présent à l'entraînement mercredi ?" autoFocus />
+
+        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: 6 }}>Options</label>
         {options.map((o, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <input
-              style={inp}
-              value={o}
-              placeholder={"Option " + (i + 1)}
-              onChange={(e) =>
-                setOptions((prev) =>
-                  prev.map((p, j) => (j === i ? e.target.value : p)),
-                )
-              }
-            />
+          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input style={inp} value={o} placeholder={'Option ' + (i + 1)}
+              onChange={e => setOptions(prev => prev.map((p, j) => j === i ? e.target.value : p))} />
             {options.length > 2 && (
-              <button
-                onClick={() =>
-                  setOptions((prev) => prev.filter((_, j) => j !== i))
-                }
-                style={{
-                  width: 38,
-                  borderRadius: 9,
-                  background: "rgba(251,113,133,0.1)",
-                  border: "1px solid rgba(251,113,133,0.25)",
-                  color: "#fb7185",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={() => setOptions(prev => prev.filter((_, j) => j !== i))} style={{
+                width: 38, borderRadius: 9, background: 'rgba(251,113,133,0.1)',
+                border: '1px solid rgba(251,113,133,0.25)', color: '#fb7185', cursor: 'pointer',
+              }}>
                 <X size={14} />
               </button>
             )}
           </div>
         ))}
         {options.length < 8 && (
-          <button
-            onClick={() => setOptions((prev) => [...prev, ""])}
-            style={{
-              padding: "7px 13px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px dashed rgba(255,255,255,0.15)",
-              borderRadius: 9,
-              color: "#94a3b8",
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              marginBottom: 14,
-            }}
-          >
+          <button onClick={() => setOptions(prev => [...prev, ''])} style={{
+            padding: '7px 13px', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)',
+            borderRadius: 9, color: '#94a3b8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14,
+          }}>
             + Ajouter une option
           </button>
         )}
 
-        <button
-          onClick={() =>
-            valid &&
-            onSend(
-              question.trim(),
-              options.map((o) => o.trim()).filter(Boolean),
-            )
-          }
-          disabled={!valid}
-          style={{
-            width: "100%",
-            padding: 12,
-            background: valid ? accent : "rgba(163,230,53,0.25)",
-            border: "none",
-            borderRadius: 10,
-            color: "#060a12",
-            fontSize: 13.5,
-            fontWeight: 800,
-            cursor: valid ? "pointer" : "default",
-            fontFamily: "inherit",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
+        <button onClick={() => valid && onSend(question.trim(), options.map(o => o.trim()).filter(Boolean))} disabled={!valid} style={{
+          width: '100%', padding: 12, background: valid ? accent : 'rgba(163,230,53,0.25)',
+          border: 'none', borderRadius: 10, color: '#060a12', fontSize: 13.5, fontWeight: 800,
+          cursor: valid ? 'pointer' : 'default', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
           <Send size={14} /> Envoyer le sondage
         </button>
       </div>
     </div>
   );
 }
-
-// ─────────────────────────────────────────────
-// Modal nouveau groupe
-// ─────────────────────────────────────────────
