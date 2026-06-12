@@ -1303,7 +1303,7 @@ export function LicenciesView() {
                   })}
                   <div style={{ display:'flex', gap:8, marginTop:8 }}>
                     <button onClick={handleSendInvitations} disabled={inviteSending} style={{ padding:'10px 20px', background:'#a3e635', color:'#060a12', border:'none', borderRadius:8, fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
-                      {inviteSending ? 'Envoi...' : '<Send size={14} style={{ verticalAlign: "middle" }} /> Envoyer'}
+                      {inviteSending ? 'Envoi...' : <><Send size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} /> Envoyer</>}
                     </button>
                     <button onClick={() => setShowInvitePanel(false)} style={{ padding:'10px 20px', background:'rgba(255,255,255,0.05)', color:'#94a3b8', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>Annuler</button>
                   </div>
