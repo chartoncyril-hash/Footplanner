@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Calendar, Users, CheckSquare, BarChart2, MessageCircle, ChevronRight, X, MapPin, Clock } from 'lucide-react';
+import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban } from 'lucide-react';
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 const EVENT_TYPES = {
@@ -16,8 +16,8 @@ const S = {
   page: { padding: '0 0 60px' },
   title: { fontSize: 22, fontWeight: 900, color: '#f1f5f9', marginBottom: 4 },
   sub: { fontSize: 13, color: '#64748b', marginBottom: 24 },
-  tabs: { display:'flex', gap:4, marginBottom:28, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0 },
-  tab: (active) => ({ padding:'10px 18px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, color: active ? '#f472b6' : '#64748b', borderBottom: active ? '2px solid #f472b6' : '2px solid transparent', marginBottom:-1, transition:'all 0.15s' }),
+  tabs: { display:'flex', gap:4, marginBottom:28, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0, overflowX:'auto' },
+  tab: (active) => ({ display:'inline-flex', alignItems:'center', gap:6, whiteSpace:'nowrap', padding:'10px 18px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, color: active ? '#f472b6' : '#64748b', borderBottom: active ? '2px solid #f472b6' : '2px solid transparent', marginBottom:-1, transition:'all 0.15s' }),
   btn: { display:'inline-flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:10, border:'none', background:'#f472b6', color:'#fff', cursor:'pointer', fontSize:14, fontWeight:700, fontFamily:'inherit' },
   btnGhost: { display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontSize:13, fontWeight:600, fontFamily:'inherit' },
   card: { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'18px 20px', marginBottom:10 },
@@ -72,10 +72,9 @@ export function CommunicationView() {
   };
 
   const tabs = [
-    { key:'events', label:'📅 Événements' },
-    { key:'tasks', label:'✅ Tâches' },
-    { key:'surveys', label:'📊 Sondages' },
-    { key:'chat', label:'💬 Tchat' },
+    { key:'events', label:'Événements', Icon: Calendar },
+    { key:'tasks', label:'Tâches', Icon: CheckSquare },
+    { key:'surveys', label:'Sondages', Icon: BarChart2 },
   ];
 
   return (
@@ -83,8 +82,8 @@ export function CommunicationView() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:28 }}>
         <div>
-          <h2 style={S.title}>💬 Communication</h2>
-          <p style={S.sub}>Événements, tâches, sondages et messagerie du club</p>
+          <h2 style={S.title}>Communication</h2>
+          <p style={S.sub}>Événements, tâches et sondages du club</p>
         </div>
         {activeTab === 'events' && (
           <button style={S.btn} onClick={() => { setWizardOpen(true); }}>
@@ -94,7 +93,7 @@ export function CommunicationView() {
       </div>
 
       {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:28 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(110px, 1fr))', gap:12, marginBottom:28 }}>
         {[
           { val:stats.total, lbl:'Événements', color:'#f472b6' },
           { val:stats.upcoming, lbl:'À venir', color:'#34d399' },
@@ -110,7 +109,7 @@ export function CommunicationView() {
       {/* Onglets */}
       <div style={S.tabs}>
         {tabs.map(t => (
-          <button key={t.key} style={S.tab(activeTab === t.key)} onClick={() => setActiveTab(t.key)}>{t.label}</button>
+          <button key={t.key} style={S.tab(activeTab === t.key)} onClick={() => setActiveTab(t.key)}><t.Icon size={14} /> {t.label}</button>
         ))}
       </div>
 
@@ -164,10 +163,10 @@ export function CommunicationView() {
                     {/* Présences */}
                     {responses.length > 0 && (
                       <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                        <span style={{ fontSize:12, color:'#34d399', fontWeight:700 }}>✅ {yes} présents</span>
-                        <span style={{ fontSize:12, color:'#fb7185', fontWeight:700 }}>❌ {no} absents</span>
-                        <span style={{ fontSize:12, color:'#f59e0b', fontWeight:700 }}>❓ {maybe} peut-être</span>
-                        {pending > 0 && <span style={{ fontSize:12, color:'#64748b' }}>⏳ {pending} en attente</span>}
+                        <span style={{ fontSize:12, color:'#34d399', fontWeight:700 }}>{yes} présents</span>
+                        <span style={{ fontSize:12, color:'#fb7185', fontWeight:700 }}>{no} absents</span>
+                        <span style={{ fontSize:12, color:'#f59e0b', fontWeight:700 }}>{maybe} peut-être</span>
+                        {pending > 0 && <span style={{ fontSize:12, color:'#64748b' }}>{pending} en attente</span>}
                       </div>
                     )}
                   </div>
@@ -192,15 +191,6 @@ export function CommunicationView() {
 
       {/* ── SONDAGES ── */}
       {activeTab === 'surveys' && <SurveysTab onRefresh={load} />}
-
-      {/* ── TCHAT ── */}
-      {activeTab === 'chat' && (
-        <div style={{ textAlign:'center', padding:'60px 32px', color:'#475569' }}>
-          <MessageCircle size={40} style={{ marginBottom:12, opacity:0.4 }} />
-          <p style={{ fontSize:15, marginBottom:4 }}>Tchat — Bientôt disponible</p>
-          <p style={{ fontSize:13 }}>La messagerie en temps réel arrive prochainement</p>
-        </div>
-      )}
 
       {/* Modals */}
       {wizardOpen && <EventWizard onClose={() => setWizardOpen(false)} onSaved={() => { setWizardOpen(false); load(); }} />}
@@ -870,19 +860,19 @@ function EventDetailModal({ event, onClose, onRefresh }) {
             <div style={{ display:'flex', gap:14, flexWrap:'wrap' }}>
               <span style={{ fontSize:13, color:'#94a3b8' }}>📅 {new Date(event.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })}</span>
               {event.time_start && <span style={{ fontSize:13, color:'#94a3b8' }}>🕐 {event.time_start.slice(0,5)}{event.time_end ? ` → ${event.time_end.slice(0,5)}` : ''}</span>}
-              {event.location && <span style={{ fontSize:13, color:'#94a3b8' }}>📍 {event.location}</span>}
+              {event.location && <span style={{ fontSize:13, color:'#94a3b8' }}><MapPin size={12} /> {event.location}</span>}
             </div>
           </div>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             <button onClick={handleRelance} disabled={relancing} style={{ ...S.btnGhost, color:'#f472b6', fontSize:12, opacity: relancing ? 0.5 : 1 }}>
-              {relancing ? '⏳' : '📣'} Relancer ({responses.filter(r=>r.response==='pending').length})
+              {relancing ? '…' : <Megaphone size={13} />} Relancer ({responses.filter(r=>r.response==='pending').length})
             </button>
             {event.status !== 'cancelled' && (
               <button onClick={() => setCancelOpen(true)} style={{ ...S.btnGhost, color:'#fb7185', fontSize:12 }}>
-                ❌ Annuler
+                <Ban size={13} /> Annuler
               </button>
             )}
-            <button onClick={() => setEditOpen(true)} style={S.btnGhost}>✏️ Modifier</button>
+            <button onClick={() => setEditOpen(true)} style={S.btnGhost}><Pencil size={13} /> Modifier</button>
             <button onClick={onClose} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20 }}>✕</button>
           </div>
           {relanceToast && (
@@ -906,13 +896,13 @@ function EventDetailModal({ event, onClose, onRefresh }) {
             </div>
           ))}
           <button onClick={initResponses} style={{ ...S.btnGhost, fontSize:12, alignSelf:'center' }}>
-            ⚡ Initialiser toutes les présences
+            <Zap size={13} /> Initialiser toutes les présences
           </button>
         </div>
 
         {/* Onglets */}
         <div style={{ display:'flex', gap:4, marginBottom:20, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-          {[{ key:'presences', label:'👥 Présences' }, { key:'tasks', label:'✅ Tâches' }].map(t => (
+          {[{ key:'presences', label:'Présences' }, { key:'tasks', label:'Tâches' }].map(t => (
             <button key={t.key} onClick={() => setActiveTab(t.key)} style={S.tab(activeTab === t.key)}>{t.label}</button>
           ))}
         </div>
