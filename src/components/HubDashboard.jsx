@@ -435,18 +435,7 @@ export function HubDashboard({ profile, clubContext, myTournaments, onEnterModul
         </div>
 
         {/* STATS RAPIDES */}
-        <div style={{ ...S.statsRow, gap: isMobile ? 8 : 16 }}>
-          {[
-            { label: 'Tournois créés', value: (myTournaments || []).filter(t => t.status === 'live').length },
-            { label: 'Archivés', value: (myTournaments || []).filter(t => t.status === 'archived').length },
-            { label: 'Total', value: (myTournaments || []).length },
-          ].map(s => (
-            <div key={s.label} style={S.statCard}>
-              <div style={{...S.statValue, color: appColor}}>{s.value}</div>
-              <div style={S.statLabel}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+        
       </div>
     </div>
   );
