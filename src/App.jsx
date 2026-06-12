@@ -196,6 +196,27 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
         setProfileType('both');
       } else if (hasFamily) {
         setProfileType('licencie');
+      } else if (licencie && !profile) {
+        // Licencié/parent invité sans profil organisateur → espace licencié
+        const { data: newFp2 } = await supabaseClient
+          .from('family_profiles')
+          .insert({
+            user_id: user.id,
+            first_name: licencie.first_name || user.email.split('@')[0],
+            last_name: licencie.last_name || '',
+            club_owner_id: licencie.owner_id,
+            type: 'adult_player',
+          })
+          .select('id')
+          .single();
+        if (newFp2) {
+          for (const lic of (allLicencies || [])) {
+            await supabaseClient.from('family_licencies')
+              .upsert({ family_user_id: user.id, licencie_id: lic.id, relation: 'self', club_owner_id: lic.owner_id },
+                { onConflict: 'family_user_id,licencie_id', ignoreDuplicates: true });
+          }
+        }
+        setProfileType('licencie');
       } else if (clubMember) {
         // Membre sans profil organisateur : club avec contexte limité
         setProfileType('organizer');
