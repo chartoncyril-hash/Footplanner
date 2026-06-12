@@ -204,7 +204,7 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
       }
       setLoading(false);
     })();
-  }, [user.id, spectatorCode]);
+  }, [user?.id, spectatorCode]);
 
   if (loading) return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center' }}>
