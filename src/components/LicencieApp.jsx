@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Calendar, Bell, User, MessageCircle, Home } from 'lucide-react';
+import { ChatModule } from './chat/ChatModule';
 
 // ============================================================
 // LicencieApp — Espace licencié / parent
@@ -131,7 +132,7 @@ export function LicencieApp({ user, signOut }) {
         {activeTab === 'events'  && <LicencieEvents familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} onRefresh={load} />}
         {activeTab === 'planning'&& <LicienciePlanning familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} />}
         {activeTab === 'profile' && <LicencieProfil familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} setSelectedLicId={setSelectedLicId} accent={accent} onRefresh={load} />}
-        {activeTab === 'chat'    && <LicencieChat familyProfile={familyProfile} accent={accent} onRefresh={load} />}
+        {activeTab === 'chat'    && <ChatModule user={user} clubOwnerId={familyProfile.club_owner_id} isStaff={false} senderName={(familyProfile.first_name || '') + ' ' + (familyProfile.last_name || '')} familyProfile={familyProfile} accent={accent} />}
       </div>
 
       {/* Bottom nav */}

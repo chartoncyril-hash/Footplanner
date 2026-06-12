@@ -9,7 +9,7 @@ import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
 import { SponsorsHubView } from './SponsorsHubView';
 import { StagesHubView } from './StagesHubView';
-import { CommunicationView } from './CommunicationView';
+import { CommunicationHub } from './CommunicationHub';
 import { PlanningView } from './PlanningView';
 import { TeamView } from './TeamView';
 import { SettingsHubView } from './SettingsHubView';
@@ -247,7 +247,7 @@ export function HubDashboard({ profile, clubContext, myTournaments, onEnterModul
             <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:8}}>
               ← Retour au dashboard
             </button>
-            <CommunicationView />
+            <CommunicationHub />
           </div>
         );
       }
