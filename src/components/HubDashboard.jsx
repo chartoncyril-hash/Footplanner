@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
-  CircleUser, Dribbble, Handshake,
+  CircleUser, Shirt, Handshake,
   Tent, MessageSquare, CalendarDays, Users2, Image, ArrowRight, Clock, Plus, User
 } from 'lucide-react';
 import { AccountView } from './AccountView';
@@ -59,7 +59,7 @@ const MODULES = [
   {
     id: 'compositions',
     label: 'Compositions & Tactique',
-    icon: Dribbble,
+    icon: Shirt,
     color: '#818cf8',
     desc: "Créez vos compositions d'équipe et plans tactiques.",
     available: true,
