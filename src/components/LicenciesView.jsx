@@ -1275,7 +1275,7 @@ export function LicenciesView() {
                   setInviteEmails(prefilled);
                   setShowInvitePanel(true);
                 }} style={{ padding:'8px 16px', background:'rgba(129,140,248,0.1)', border:'1px solid rgba(129,140,248,0.2)', borderRadius:8, color:'#818cf8', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-                  ✉️ Inviter les parents ({selectedLicencies.length})
+                  ✉️ Envoyer invitation ({selectedLicencies.length})
                 </button>
               )}
             </div>
@@ -1283,7 +1283,7 @@ export function LicenciesView() {
           {showInvitePanel && (
             <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(129,140,248,0.3)', borderRadius:16, padding:24, marginBottom:16 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-                <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>✉️ Inviter les parents</div>
+                <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>✉️ Envoyer invitation</div>
                 <button onClick={() => setShowInvitePanel(false)} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:18 }}>×</button>
               </div>
               {inviteSuccess ? (
