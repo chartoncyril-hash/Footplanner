@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { LicencieListItem, LicencieListHeader } from './LicencieListItem';
-import { Users, LayoutDashboard, Shield } from 'lucide-react';
+import { Users, LayoutDashboard, Shield, Send } from 'lucide-react';
 
 // ── UPLOAD BUTTON ────────────────────────────────────────────
 function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
