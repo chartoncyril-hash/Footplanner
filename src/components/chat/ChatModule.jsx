@@ -31,8 +31,7 @@ import { NewGroupModal } from './NewGroupModal';
 //   accent        : couleur d'accent (défaut #a3e635)
 // ============================================================
 
-const BG_PATTERN =
-  "radial-gradient(rgba(255,255,255,0.018) 1px, transparent 1.2px)";
+const BG_PATTERN = 'linear-gradient(rgba(8,12,21,0.92), rgba(8,12,21,0.92)), url("https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/tchat/ChatGPT%20Image%2012%20juin%202026,%2020_44_47.png")';
 
 export function ChatModule({
   user,
@@ -776,7 +775,7 @@ function ChatWindow({
           overflowY: "auto",
           padding: "16px 14px",
           backgroundImage: BG_PATTERN,
-          backgroundSize: "22px 22px",
+          backgroundSize: 'auto, 380px', backgroundRepeat: 'repeat',
         }}
       >
         {days.map((day, di) => (
