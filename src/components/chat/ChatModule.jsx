@@ -799,7 +799,7 @@ function ChatWindow({
                 (isStaff && m.sender_user_id === user?.id) ||
                 (familyProfile && m.sender_family_id === familyProfile.id);
               return m.kind === "poll" ? (
-                <PollBubble
+                <PollBubble isStaff={isStaff}
                   key={m.id}
                   msg={m}
                   mine={mine}
@@ -1007,135 +1007,66 @@ function Bubble({ msg, mine, accent }) {
 // ─────────────────────────────────────────────
 // Bulle sondage
 // ─────────────────────────────────────────────
-function PollBubble({ msg, mine, votes, myKey, accent, onVote }) {
-  const time = new Date(msg.created_at).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function PollBubble({ msg, mine, votes, myKey, accent, onVote, isStaff }) {
+  const time = new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const options = msg.poll?.options || [];
-  const total = votes.length;
+  const totalVoix = votes.length;
+  const totalVotants = new Set(votes.map(v => v.voter_key)).size;
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: mine ? "flex-end" : "flex-start",
-        marginBottom: 6,
-      }}
-    >
-      <div
-        style={{
-          width: "min(330px, 85%)",
-          padding: "10px 12px 8px",
-          background: mine ? "rgba(163,230,53,0.13)" : "rgba(255,255,255,0.06)",
-          border:
-            "1px solid " +
-            (mine ? "rgba(163,230,53,0.3)" : "rgba(255,255,255,0.09)"),
-          borderRadius: mine ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-        }}
-      >
+    <div style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 6 }}>
+      <div style={{
+        width: 'min(330px, 85%)', padding: '10px 12px 8px',
+        background: mine ? 'rgba(163,230,53,0.13)' : 'rgba(255,255,255,0.06)',
+        border: '1px solid ' + (mine ? 'rgba(163,230,53,0.3)' : 'rgba(255,255,255,0.09)'),
+        borderRadius: mine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+      }}>
         {!mine && (
-          <div
-            style={{
-              fontSize: 11.5,
-              fontWeight: 800,
-              color: senderColor(msg.sender_name),
-              marginBottom: 2,
-            }}
-          >
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: senderColor(msg.sender_name), marginBottom: 2 }}>
             {msg.sender_name}
           </div>
         )}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            marginBottom: 8,
-          }}
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
           <BarChart2 size={13} color={accent} />
-          <span style={{ fontSize: 13.5, fontWeight: 800, color: "#f1f5f9" }}>
-            {msg.poll?.question}
-          </span>
+          <span style={{ fontSize: 13.5, fontWeight: 800, color: '#f1f5f9' }}>{msg.poll?.question}</span>
         </div>
-        {options.map((opt) => {
-          const optVotes = votes.filter((v) => v.option_id === opt.id);
-          const iVoted = optVotes.some((v) => v.voter_key === myKey);
-          const pct = total ? Math.round((optVotes.length / total) * 100) : 0;
+        {options.map(opt => {
+          const optVotes = votes.filter(v => v.option_id === opt.id);
+          const iVoted = optVotes.some(v => v.voter_key === myKey);
+          const pct = totalVoix ? Math.round((optVotes.length / totalVoix) * 100) : 0;
           return (
-            <div
-              key={opt.id}
-              onClick={() => onVote(opt.id)}
-              style={{
-                position: "relative",
-                marginBottom: 6,
-                padding: "8px 10px",
-                borderRadius: 9,
-                background: "rgba(255,255,255,0.04)",
-                cursor: "pointer",
-                overflow: "hidden",
-                border:
-                  "1px solid " +
-                  (iVoted ? accent + "66" : "rgba(255,255,255,0.07)"),
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: pct + "%",
-                  background: accent + "14",
-                  transition: "width 0.3s",
-                }}
-              />
-              <div
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    flexShrink: 0,
-                    border: "2px solid " + (iVoted ? accent : "#475569"),
-                    background: iVoted ? accent : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {iVoted && (
-                    <Check size={10} color="#060a12" strokeWidth={3.5} />
-                  )}
+            <div key={opt.id} style={{ marginBottom: 6 }}>
+              <div onClick={() => onVote(opt.id)} style={{
+                position: 'relative', padding: '8px 10px', borderRadius: 9,
+                background: 'rgba(255,255,255,0.04)', cursor: 'pointer', overflow: 'hidden',
+                border: '1px solid ' + (iVoted ? accent + '66' : 'rgba(255,255,255,0.07)'),
+              }}>
+                <div style={{ position: 'absolute', inset: 0, width: pct + '%', background: accent + '14', transition: 'width 0.3s' }} />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                    border: '2px solid ' + (iVoted ? accent : '#475569'),
+                    background: iVoted ? accent : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {iVoted && <Check size={10} color="#060a12" strokeWidth={3.5} />}
+                  </div>
+                  <span style={{ flex: 1, fontSize: 13, color: '#f1f5f9' }}>{opt.label}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, color: '#94a3b8' }}>{optVotes.length}</span>
                 </div>
-                <span style={{ flex: 1, fontSize: 13, color: "#f1f5f9" }}>
-                  {opt.label}
-                </span>
-                <span
-                  style={{ fontSize: 11.5, fontWeight: 800, color: "#94a3b8" }}
-                >
-                  {optVotes.length}
-                </span>
               </div>
+              {isStaff && optVotes.length > 0 && (
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 3, marginLeft: 10, lineHeight: 1.5 }}>
+                  {optVotes.map(v => v.voter_name || 'Anonyme').join(' · ')}
+                </div>
+              )}
             </div>
           );
         })}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 4,
-          }}
-        >
-          <span style={{ fontSize: 10, color: "#64748b" }}>
-            {total} vote{total > 1 ? "s" : ""}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          <span style={{ fontSize: 10, color: '#64748b' }}>
+            {totalVotants} votant{totalVotants > 1 ? 's' : ''}{totalVoix !== totalVotants ? ' · ' + totalVoix + ' voix' : ''}
           </span>
-          <span style={{ fontSize: 9.5, color: "#64748b" }}>{time}</span>
+          <span style={{ fontSize: 9.5, color: '#64748b' }}>{time}</span>
         </div>
       </div>
     </div>
