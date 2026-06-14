@@ -39,6 +39,7 @@ export function ChatModule({
   isStaff,
   senderName,
   familyProfile,
+  voterLicencie,
   accent = "#a3e635",
 }) {
   const [isMobile, setIsMobile] = useState(
@@ -193,6 +194,7 @@ export function ChatModule({
             isStaff={isStaff}
             senderName={senderName}
             familyProfile={familyProfile}
+            voterLicencie={voterLicencie}
             isMobile={isMobile}
             accent={accent}
             onBack={() => setActiveConv(null)}
@@ -456,6 +458,7 @@ function ChatWindow({
   isStaff,
   senderName,
   familyProfile,
+  voterLicencie,
   isMobile,
   accent,
   onBack,
@@ -468,7 +471,9 @@ function ChatWindow({
   const [showSettings, setShowSettings] = useState(false);
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
-  const myKey = familyProfile
+  const myKey = voterLicencie
+    ? "lic_" + voterLicencie.id
+    : familyProfile
     ? "fam_" + familyProfile.id
     : "usr_" + (user?.id || "");
 
@@ -592,7 +597,9 @@ function ChatWindow({
       await supabase.from("poll_votes").insert({
         message_id: msg.id,
         voter_key: myKey,
-        voter_name: senderName || "",
+        voter_name: voterLicencie
+          ? voterLicencie.first_name + " " + voterLicencie.last_name
+          : senderName || "",
         option_id: optionId,
       });
     }

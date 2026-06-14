@@ -132,7 +132,7 @@ export function LicencieApp({ user, signOut }) {
         {activeTab === 'events'  && <LicencieEvents familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} onRefresh={load} />}
         {activeTab === 'planning'&& <LicienciePlanning familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} accent={accent} />}
         {activeTab === 'profile' && <LicencieProfil familyProfile={familyProfile} licencies={licencies} selectedLic={selectedLic} setSelectedLicId={setSelectedLicId} accent={accent} onRefresh={load} />}
-        {activeTab === 'chat'    && <ChatModule user={user} clubOwnerId={familyProfile.club_owner_id} isStaff={false} senderName={(familyProfile.first_name || '') + ' ' + (familyProfile.last_name || '')} familyProfile={familyProfile} accent={accent} />}
+        {activeTab === 'chat'    && <ChatModule user={user} clubOwnerId={familyProfile.club_owner_id} isStaff={false} senderName={selectedLic ? (selectedLic.first_name + ' ' + selectedLic.last_name) : ((familyProfile.first_name || '') + ' ' + (familyProfile.last_name || ''))} familyProfile={familyProfile} voterLicencie={selectedLic} accent={accent} />}
       </div>
 
       {/* Bottom nav */}
