@@ -32,6 +32,10 @@ const SHOTS = {
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/compo_equipe.png",
   spectateur:
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Capture%20decran%20mobile%20spectateur.png",
+  spectateurClassement:
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Capture%20ecran%20mobile%20classement.png",
+  spectateurInfo:
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Capture%20ecran%20info.png",
   tablemarque:
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/saisie_score_carton.png",
 };
@@ -710,15 +714,10 @@ export function LandingPage() {
             shot: SHOTS.regie,
             flip: false,
           },
-          {
-            t: "Le tournoi dans la poche des spectateurs",
-            d: "Un simple QR code et chaque parent suit les scores en direct, les classements et le programme depuis son téléphone. Aucune inscription, aucune appli à installer.",
-            shot: SHOTS.spectateur,
-            flip: true,
-          },
         ].map((row, i) => (
           <ShowcaseRow key={i} {...row} C={C} isMobile={isMobile} />
         ))}
+        <MobileTrio C={C} isMobile={isMobile} />
       </Section>
 
             {/* ════════════ SECTION VIDÉO COMPOSITIONS ════════════ */}
@@ -1070,6 +1069,60 @@ function ModuleCard({ icon, t, d, c, C, delay }) {
 }
 
 // ── Ligne showcase alternée ──
+function MobileTrio({ C, isMobile }) {
+  const [ref, shown] = useReveal();
+  const phone = (src, rotate, z, ty, scale, ml, mr) => (
+    React.createElement('div', {
+      style: {
+        position: 'relative', width: isMobile ? 116 : 190, flexShrink: 0,
+        transform: 'rotate(' + rotate + 'deg) translateY(' + ty + 'px) scale(' + scale + ')',
+        zIndex: z, marginLeft: ml, marginRight: mr,
+      },
+    },
+      React.createElement('div', {
+        style: {
+          borderRadius: 30, padding: 7,
+          background: 'linear-gradient(145deg,#1c2233,#0a0e18)',
+          boxShadow: '0 30px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)',
+        },
+      },
+        React.createElement('div', {
+          style: { borderRadius: 24, overflow: 'hidden', background: '#0c1322', position: 'relative' },
+        },
+          React.createElement('div', {
+            style: {
+              position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)',
+              width: 54, height: 5, background: '#000', borderRadius: 3, zIndex: 2,
+            },
+          }),
+          React.createElement('img', { src, alt: '', style: { width: '100%', display: 'block' } })
+        )
+      )
+    )
+  );
+  const mlmr = isMobile ? -24 : -38;
+  return React.createElement('div', {
+    ref, className: 'reveal' + (shown ? ' in' : ''),
+    style: { marginTop: 64 },
+  },
+    React.createElement('div', { style: { textAlign: 'center', maxWidth: 640, margin: '0 auto 36px' } },
+      React.createElement('h3', {
+        style: { fontSize: isMobile ? 24 : 30, fontWeight: 800, letterSpacing: -0.8, lineHeight: 1.2, marginBottom: 14 },
+      }, 'Le tournoi dans la poche des spectateurs'),
+      React.createElement('p', {
+        style: { fontSize: 16, color: C.sub, lineHeight: 1.7 },
+      }, 'Un simple QR code et chaque parent suit les scores en direct, le classement de sa poule et toutes les infos pratiques — lieu, contact, accès Google Maps — depuis son téléphone. Aucune inscription, aucune appli à installer.')
+    ),
+    React.createElement('div', {
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    },
+      phone(SHOTS.spectateurClassement, -9, 1, 28, 0.85, 0, mlmr),
+      phone(SHOTS.spectateur, 0, 3, 0, 1, 0, 0),
+      phone(SHOTS.spectateurInfo, 9, 1, 28, 0.85, mlmr, 0)
+    )
+  );
+}
+
 function ShowcaseRow({ t, d, shot, flip, C, isMobile }) {
   const [ref, shown] = useReveal();
   return (
