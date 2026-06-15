@@ -67,8 +67,21 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
 
   const direct = teams.find(t => t.id === ref);
   if (direct) {
-    // Le rang d'équipe (level) est exposé tel quel ; l'affichage gère le badge.
-    // On ne colle plus "(1)/(2)" dans name/short pour éviter toute troncature.
+    // Suffixe d'équipe : ajouté uniquement si plusieurs équipes partagent le même nom
+    // (ex : "CS CHEVROUX" 1 et 2). Sinon nom brut, pas de "(1)" inutile.
+    const sameName = teams.filter(t => t.name === direct.name);
+    if (sameName.length > 1) {
+      let num = direct.level && direct.level > 0 ? direct.level : null;
+      if (num === null) {
+        const ordered = [...sameName].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+        num = ordered.findIndex(t => t.id === direct.id) + 1;
+      }
+      return {
+        ...direct,
+        name: direct.name + ' ' + num,
+        short: (direct.short || direct.name) + num,
+      };
+    }
     return direct;
   }
 
