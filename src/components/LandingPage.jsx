@@ -30,6 +30,8 @@ const SHOTS = {
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/saisie_score_carton.png",
   mobile:
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/compo_equipe.png",
+  spectateur:
+    "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/Capture%20decran%20mobile%20spectateur.png",
   tablemarque:
     "https://cmldxjlbxtcfmhzfvnyd.supabase.co/storage/v1/object/public/landingpage/saisie_score_carton.png",
 };
@@ -707,6 +709,12 @@ export function LandingPage() {
             d: "Scores, buteurs, cartons : saisissez tout en direct depuis le bord du terrain, les classements se mettent à jour instantanément.",
             shot: SHOTS.regie,
             flip: false,
+          },
+          {
+            t: "Le tournoi dans la poche des spectateurs",
+            d: "Un simple QR code et chaque parent suit les scores en direct, les classements et le programme depuis son téléphone. Aucune inscription, aucune appli à installer.",
+            shot: SHOTS.spectateur,
+            flip: true,
           },
         ].map((row, i) => (
           <ShowcaseRow key={i} {...row} C={C} isMobile={isMobile} />
