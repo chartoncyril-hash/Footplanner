@@ -21,7 +21,7 @@ export function SponsorTicker({ tournamentId }) {
           {items.map((s, i) => (
             <div key={i} style={styles.sponsorItem}>
               {s.logo
-                ? <img src={s.logo} alt={s.name} style={{ height: 40, maxWidth: 120, objectFit: 'contain', filter: 'brightness(1.2)' }} />
+                ? <img src={s.logo} alt={s.name} style={{ height: 80, maxWidth: 240, objectFit: 'contain', filter: 'brightness(1.2)' }} />
                 : <span style={styles.sponsorName}>{s.name}</span>}
               <span style={styles.sponsorSep}>•</span>
             </div>

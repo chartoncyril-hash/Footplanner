@@ -1342,7 +1342,7 @@ export const styles = {
   sponsorBar: {
     position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
     width: '100%', maxWidth: 480,
-    height: 28,
+    height: 64,
     display: 'flex', alignItems: 'center', gap: 8,
     background: 'rgba(5,8,16,0.92)',
     backdropFilter: 'blur(12px)',
