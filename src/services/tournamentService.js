@@ -33,6 +33,7 @@ function fromDb(row) {
     hasThirdPlace: row.has_third_place !== false,
     knockoutFields: Array.isArray(row.knockout_fields) ? row.knockout_fields : null,
     knockoutFormat: row.knockout_format || 'standard',
+    finalsEngine: row.finals_engine || 'legacy',
     hasConsolation: row.has_consolation === true,
     categoryDurations: row.category_durations || {},
     rankingByCategory: row.ranking_by_category || {},
@@ -92,6 +93,7 @@ function toDb(t) {
   if (t.hasThirdPlace !== undefined) out.has_third_place = t.hasThirdPlace;
   if (t.knockoutFields !== undefined) out.knockout_fields = t.knockoutFields;
   if (t.knockoutFormat !== undefined) out.knockout_format = t.knockoutFormat;
+  if (t.finalsEngine !== undefined) out.finals_engine = t.finalsEngine;
   if (t.hasConsolation !== undefined) out.has_consolation = t.hasConsolation;
   if (t.categoryDurations !== undefined) out.category_durations = t.categoryDurations;
   if (t.rankingByCategory !== undefined) out.ranking_by_category = t.rankingByCategory;
@@ -194,6 +196,7 @@ const payload = {
     has_third_place: input.hasThirdPlace ?? true,
     knockout_fields: Array.isArray(input.knockoutFields) ? input.knockoutFields : null,
     knockout_format: input.knockoutFormat || 'standard',
+    finals_engine: input.finalsEngine || 'legacy',
     has_consolation: input.hasConsolation === true,
     category_durations: input.categoryDurations || {
       U7: 8, U9: 10, U11: 12, U13: 15, U15: 20, U17: 25, Senior: 30,

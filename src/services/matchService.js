@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { circleMethodRoundRobin, pickBracketSize, makeKnockoutPairs } from '../utils/scheduling';
+import { buildFinals, topoWaves } from '../utils/finalsEngine';
 
 // ============================================================
 // matchService
@@ -250,7 +251,97 @@ export async function generateSchedule(tournament, teams, category) {
                   });
                   });
                   }
-                  // ----- Phase finale -----
+                  // ----- Phase finale (moteur v2 si activé) -----
+  if (tournament.finalsEngine === 'v2' && tournament.hasKnockout && pools.length > 0) {
+    fields = knockoutFieldsList;
+    if (fieldIdx >= fields.length) fieldIdx = 0;
+
+    // Configuration par défaut (sera pilotée par le wizard plus tard)
+    const cfg = {
+      qualifiersPerPool: tournament.knockoutFromTopN || 2,
+      championsRanks: tournament.championsRanks || [1],
+      europaRanks: tournament.europaRanks || [2],
+      format: tournament.finalsFormat || 'auto',
+      groupSize: tournament.finalsGroupSize || 4,
+    };
+
+    const poolNames = pools.map((p) => p.name || p);
+    const finals = buildFinals(poolNames, cfg);
+
+    // Concatène champions + europa, ordonne par round puis par cup pour placement horaire
+    const allMatches = [
+      ...finals.champions.matches.map((m) => ({ ...m, cupOrder: 0 })),
+      ...finals.europa.matches.map((m) => ({ ...m, cupOrder: 1 })),
+    ].sort((a, b) => a.round - b.round || a.cupOrder - b.cupOrder);
+
+    const topo = topoWaves(allMatches);
+    if (topo.error) {
+      console.error('[finalsEngine v2] cycle de dépendances', topo);
+      throw new Error('Impossible de planifier la phase finale (cycle détecté)');
+    }
+
+    // Saut logistique avant phase finale (cohérent avec legacy)
+    if (fieldIdx > 0) { timeMinutes += slotDur; fieldIdx = 0; }
+    timeMinutes += slotDur;
+
+    // Insertion par vagues : on insère une vague, on récupère les UUID, on remappe les refs winner/loser des vagues suivantes
+    const keyToUuid = {};
+    const remap = (ref) => {
+      if (typeof ref !== 'string') return ref;
+      const m = ref.match(/^(winner|loser):(.+)$/);
+      if (!m) return ref;
+      const uuid = keyToUuid[m[2]];
+      return uuid ? `${m[1]}:${uuid}` : ref;
+    };
+
+    let currentRound = null;
+    for (const wave of topo.waves) {
+      // Aligner sur un nouveau créneau si on change de round
+      const wRound = wave[0].round;
+      if (currentRound !== null && wRound !== currentRound && fieldIdx > 0) {
+        timeMinutes += slotDur; fieldIdx = 0;
+      }
+      currentRound = wRound;
+
+      const rows = wave.map((m) => {
+        const hh = Math.floor(timeMinutes / 60);
+        const mm = timeMinutes % 60;
+        const field = fields[fieldIdx];
+        const row = {
+          tournament_id: tournament.id,
+          category: category || null,
+          phase: m.phaseKind || 'knockout',
+          cup: m.cup || null,
+          knockout_round: m.roundLabel,
+          knockout_index: 0,
+          round: m.round,
+          home_team_id: null,
+          away_team_id: null,
+          home_slot: remap(m.home),
+          away_slot: remap(m.away),
+          home_label: m.homeLabel,
+          away_label: m.awayLabel,
+          field,
+          match_time: `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:00`,
+          status: 'scheduled',
+        };
+        advance();
+        return row;
+      });
+
+      // Insert + récupération des UUID pour remapper la vague suivante
+      const { data: inserted, error } = await supabase
+        .from('matches')
+        .insert(rows)
+        .select('id');
+      if (error) throw error;
+      inserted.forEach((r, idx) => { keyToUuid[wave[idx].key] = r.id; });
+    }
+
+    return; // Court-circuite le legacy : tout est inséré.
+  }
+
+  // ----- Phase finale (legacy, inchangé) -----
   if (tournament.hasKnockout && pools.length > 0) {
     // Basculer sur les terrains dédiés à la phase finale
     fields = knockoutFieldsList;
