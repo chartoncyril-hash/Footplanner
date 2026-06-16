@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { Crest } from './Crest';
 import { getDisplayTeam } from '../utils/standings';
-import { knockoutRoundLabel } from '../utils/scheduling';
+import { knockoutRoundLabel, isKnockoutPhase } from '../utils/scheduling';
 import { styles } from '../styles/styles';
 import { supabase } from '../lib/supabase';
 import { ChronoBar, MatchEventsPanel } from './MatchEvents';
@@ -138,7 +138,7 @@ export function MatchDetail({
 
       <div style={styles.matchDetailHero}>
         <div style={styles.matchMetaRow}>
-          {m.phase === 'knockout' ? (
+          {isKnockoutPhase(m) ? (
             <span style={{ ...styles.matchMeta, color: '#f59e0b' }}>
               {knockoutRoundLabel(m.knockoutRound, m.cup)}
             </span>

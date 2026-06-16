@@ -5,6 +5,7 @@ import { PageHeader } from './MatchCards';
 import { BracketView } from './BracketView';
 import { isRankingEnabled } from '../utils/tournament';
 import { styles } from '../styles/styles';
+import { isKnockoutPhase } from '../utils/scheduling';
 
 // ============================================================
 // Standings — classement par poule + accès bracket
@@ -17,7 +18,7 @@ export function Standings({
   const [activePool, setActivePool] = useState(pools[0]);
   const [mode, setMode] = useState('pools'); // 'pools' | 'bracket'
 
-  const knockoutMatches = matches.filter(m => m.phase === 'knockout');
+  const knockoutMatches = matches.filter(isKnockoutPhase);
   const rankingOn = isRankingEnabled(tournament);
   const hasKnockout = rankingOn && tournament.hasKnockout && knockoutMatches.length > 0;
 

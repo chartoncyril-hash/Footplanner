@@ -8,7 +8,7 @@ import { Crest } from './Crest';
 import { PageHeader } from './MatchCards';
 import { MatchEditor } from './MatchEditor';
 import { getDisplayTeam } from '../utils/standings';
-import { knockoutRoundLabel, knockoutRoundLabelLines } from '../utils/scheduling';
+import { knockoutRoundLabel, knockoutRoundLabelLines, isKnockoutPhase } from '../utils/scheduling';
 import { pdfService } from '../services/pdfService';
 import { styles } from '../styles/styles';
 
@@ -146,8 +146,8 @@ import { styles } from '../styles/styles';
     let filtered = filterPool === 'all'
       ? matchesInCategory
       : filterPool === 'knockout'
-        ? matchesInCategory.filter(m => m.phase === 'knockout')
-        : matchesInCategory.filter(m => m.pool === filterPool && m.phase !== 'knockout');
+        ? matchesInCategory.filter(isKnockoutPhase)
+        : matchesInCategory.filter(m => m.pool === filterPool && !isKnockoutPhase(m));
 
   filtered = [...filtered].sort((a, b) => {
     const ta = (a.time || '99:99').slice(0, 5);
@@ -344,7 +344,7 @@ import { styles } from '../styles/styles';
             Poule {p}
           </button>
         ))}
-        {matches.some(m => m.phase === 'knockout') && (
+        {matches.some(isKnockoutPhase) && (
           <button
             onClick={() => setFilterPool('knockout')}
             style={{ ...styles.filterChip, ...(filterPool === 'knockout' ? styles.filterChipActive : {}) }}
@@ -473,7 +473,7 @@ import { styles } from '../styles/styles';
         <PdfExportMenu
           tournament={tournament}
           pools={pools}
-          hasKnockout={matches.some(m => m.phase === 'knockout')}
+          hasKnockout={matches.some(isKnockoutPhase)}
           exporting={exporting}
           onExport={exportPdf}
           onClose={() => setPdfMenuOpen(false)}
@@ -606,7 +606,7 @@ function PdfChoice({ icon: Icon, color, title, desc, onClick, disabled, small })
 function ScheduleMatchRow({ match, teams, matches, standings, onEdit, onTap, selectionMode, isSelected, onToggleSelect }) {
   const home = getDisplayTeam('home', match, teams, matches, standings);
   const away = getDisplayTeam('away', match, teams, matches, standings);
-  const isKnockout = match.phase === 'knockout';
+  const isKnockout = isKnockoutPhase(match);
   const isProtected = match.status === 'validated' || (match.status === 'live' && (match.scoreHome > 0 || match.scoreAway > 0));
 
   return (

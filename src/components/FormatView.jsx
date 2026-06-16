@@ -3,6 +3,7 @@ import { Crest } from './Crest';
 import { GitBranch, Layers, Trophy } from 'lucide-react';
 import { filterTeamsByCategory } from '../utils/categoryHelpers';
 import { BracketView } from './BracketView';
+import { isKnockoutPhase } from '../utils/scheduling';
 
 export function FormatView(props) {
   const tournament = props.tournament;
@@ -16,7 +17,7 @@ export function FormatView(props) {
   const matches = activeCategory 
     ? allMatches.filter(m => !m.category || m.category === activeCategory) 
     : allMatches;
-  const knockoutMatches = matches.filter(m => m.phase === 'knockout');
+  const knockoutMatches = matches.filter(isKnockoutPhase);
 
   // State pour le drag-and-drop
   const [draggedTeam, setDraggedTeam] = React.useState(null);

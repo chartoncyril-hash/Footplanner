@@ -177,3 +177,8 @@ export function knockoutRoundLabelLines(round, cup) {
   if (cup === 'europa') return { line1: '🥈 Europa', line2: shortRound };
   return { line1: base, line2: null };
 }
+
+// Vrai pour tout match de phase finale (legacy 'knockout' + v2 'ranking'/'final'/'3rd')
+export function isKnockoutPhase(m) {
+  return m && (m.phase === 'knockout' || m.phase === 'ranking' || m.phase === 'final' || m.phase === '3rd');
+}

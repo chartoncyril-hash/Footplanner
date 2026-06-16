@@ -8,7 +8,7 @@
 // puis instantané ensuite (cache navigateur).
 // ============================================================
 
-import { knockoutRoundLabel } from '../utils/scheduling';
+import { knockoutRoundLabel, isKnockoutPhase } from '../utils/scheduling';
 import { getDisplayTeam, computeStandings } from '../utils/standings';
 
 // Charge les libs PDF à la demande (cache après 1er appel)
@@ -234,7 +234,7 @@ export async function generateSchedulePdf(tournament, teams, matches) {
 
   // Phase finale
   const knockoutMatches = matches
-    .filter(m => m.phase === 'knockout')
+    .filter(isKnockoutPhase)
     .sort((a, b) => {
       const order = ['r16', 'qf', 'sf', 'final', '3rd'];
       const oa = order.indexOf(a.knockoutRound);
@@ -343,7 +343,7 @@ export async function generateSummaryPdf(tournament, teams, matches) {
     const away = resolveTeamName('away', m, teams, matches, standings);
     let phaseLabel = '—';
     if (m.phase === 'pool') phaseLabel = `P.${m.pool} J${m.round}`;
-    else if (m.phase === 'knockout') phaseLabel = knockoutRoundLabel(m.knockoutRound);
+    else if (isKnockoutPhase(m)) phaseLabel = knockoutRoundLabel(m.knockoutRound);
     return [
       formatTime(m.time),
       m.field || '—',
