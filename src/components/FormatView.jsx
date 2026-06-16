@@ -3,6 +3,7 @@ import { Crest } from './Crest';
 import { GitBranch, Layers, Trophy } from 'lucide-react';
 import { filterTeamsByCategory } from '../utils/categoryHelpers';
 import { BracketView } from './BracketView';
+import { FinalsViewV2 } from './FinalsViewV2';
 import { isKnockoutPhase } from '../utils/scheduling';
 
 export function FormatView(props) {
@@ -394,6 +395,13 @@ export function FormatView(props) {
                 Genere le planning depuis l'onglet Calendrier pour voir apparaitre la phase finale ici.
               </div>
             </div>
+          ) : tournament?.finalsEngine === 'v2' ? (
+            <FinalsViewV2
+              knockoutMatches={knockoutMatches}
+              teams={teams}
+              matches={matches}
+              standings={standings}
+            />
           ) : (
             <BracketView
               knockoutMatches={knockoutMatches}
