@@ -280,6 +280,15 @@ export async function generateSchedule(tournament, teams, category) {
       throw new Error('Impossible de planifier la phase finale (cycle détecté)');
     }
 
+    // INSERT préalable : matchs de poules accumulés dans `generated` (le legacy le fait
+    // dans son propre flux, v2 doit le faire ici sinon les poules sont perdues)
+    if (generated.length > 0) {
+      const cleaned = generated.map(({ _tempId, _roundLevel, ...rest }) => rest);
+      const { error: errPools } = await supabase.from('matches').insert(cleaned);
+      if (errPools) throw errPools;
+      generated.length = 0; // vider pour éviter double insertion par le code aval
+    }
+
     // Saut logistique avant phase finale (cohérent avec legacy)
     if (fieldIdx > 0) { timeMinutes += slotDur; fieldIdx = 0; }
     timeMinutes += slotDur;
