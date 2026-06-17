@@ -142,6 +142,8 @@ export function TournamentWizard(props) {
         knockoutFields: data.hasKnockout ? data.knockoutFields : null,
         knockoutFormat: data.hasKnockout ? data.knockoutFormat : 'standard',
         knockoutFromTopN: data.hasKnockout ? data.qualifiedPerPool : 0,
+        // Active automatiquement le moteur v2 quand l'organisateur choisit Champions/Europa (multi-cup).
+        finalsEngine: data.hasKnockout && data.knockoutFormat === 'multicup' ? 'v2' : 'legacy',
         categories: data.categories,
         endDate: data.endDate || null,
         startTime: data.startTime || '09:00',
@@ -485,7 +487,7 @@ export function TournamentWizard(props) {
                     {[
                       { v: 'standard', l: 'Standard', d: '1er A vs 2e B / 1er B vs 2e A (croisement classique)' },
                       { v: 'crossed', l: 'Croisé', d: '1er A vs 2e A / 1er B vs 2e B (chaque poule garde ses équipes)' },
-                      { v: 'multicup', l: 'Multi-cup (Coupe Or / Argent)', d: 'Coupes séparées : 1ers entre eux, 2es entre eux. Recommandé pour 16+ équipes.' },
+                      { v: 'multicup', l: 'Champions / Europa League', d: 'Deux coupes parallèles avec finales distinctes. Gère automatiquement tous les nombres d\'équipes.' },
                     ].map(opt => {
                       const isActive = data.knockoutFormat === opt.v;
                       // Multi-cup désactivé si moins de 16 équipes au total (on l'estime à partir du nombre de poules visées)

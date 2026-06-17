@@ -53,7 +53,7 @@ export function FormatView(props) {
     if (toAssign.length === 0) return;
     setSnaking(true);
     try {
-      const poolLetters = ['A','B','C','D','E','F'].slice(0, nbPools);
+      const poolLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'].slice(0, nbPools);
       // Serpentin : aller A→B→C→D puis retour D→C→B→A
       const assignments = [];
       let direction = 1;
@@ -323,7 +323,7 @@ export function FormatView(props) {
             </div>
           )}
           {/* Bouton + Nouvelle poule (visible si moins de 6 poules ET au moins 1 équipe) */}
-          {visiblePools.length < 6 && pools.length > 0 && updateTeam && (
+          {visiblePools.length < 16 && pools.length > 0 && updateTeam && (
             <button
               onClick={handleAddPool}
               style={{
