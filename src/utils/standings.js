@@ -98,6 +98,50 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
     return makePlaceholder(fallbackLabel || `${rank + 1}${rank === 0 ? 'er' : 'e'} P.${poolName}`);
   }
 
+  if (typeof ref === 'string' && ref.startsWith('rank:')) {
+    // Placeholder v2 : "rank:<groupKey>#<position>" → l'équipe classée <position>
+    // dans la poule de classement <groupKey> (ex: rank:IG1#1 = 1er de IG1).
+    // Résolu uniquement si tous les matchs de la poule de classement sont validés.
+    const [groupKey, posStr] = ref.replace('rank:', '').split('#');
+    const position = parseInt(posStr);
+    const groupMatches = matches.filter(m =>
+      m.phase === 'ranking' && (m.group === groupKey || m.knockoutRound === groupKey || m.knockout_round === groupKey)
+    );
+    // Si on a 0 match pour ce groupKey, fallback label sans casser le rendu
+    if (groupMatches.length === 0) {
+      return makePlaceholder(fallbackLabel || `Position ${position}`);
+    }
+    const allDone = groupMatches.every(m => m.status === 'validated');
+    if (allDone) {
+      // Mini-classement aux points (3/1/0) limité aux équipes de ce groupe
+      const pts = {}, gf = {}, ga = {};
+      const teamIds = new Set();
+      groupMatches.forEach(m => {
+        const h = m.homeTeamId || m.home_team_id;
+        const a = m.awayTeamId || m.away_team_id;
+        if (!h || !a) return;
+        teamIds.add(h); teamIds.add(a);
+        pts[h] = pts[h] || 0; pts[a] = pts[a] || 0;
+        gf[h] = (gf[h] || 0) + (m.scoreHome || 0);
+        gf[a] = (gf[a] || 0) + (m.scoreAway || 0);
+        ga[h] = (ga[h] || 0) + (m.scoreAway || 0);
+        ga[a] = (ga[a] || 0) + (m.scoreHome || 0);
+        if (m.scoreHome > m.scoreAway) pts[h] += 3;
+        else if (m.scoreHome < m.scoreAway) pts[a] += 3;
+        else { pts[h] += 1; pts[a] += 1; }
+      });
+      const ranked = [...teamIds].sort((a, b) => {
+        if ((pts[b] || 0) !== (pts[a] || 0)) return (pts[b] || 0) - (pts[a] || 0);
+        return ((gf[b] || 0) - (ga[b] || 0)) - ((gf[a] || 0) - (ga[a] || 0));
+      });
+      const winnerId = ranked[position - 1];
+      if (winnerId) {
+        const team = teams.find(t => t.id === winnerId);
+        if (team) return team;
+      }
+    }
+    return makePlaceholder(fallbackLabel || `Position ${position} (${groupKey})`);
+  }
   if (typeof ref === 'string' && (ref.startsWith('winner:') || ref.startsWith('loser:'))) {
     const isWinner = ref.startsWith('winner:');
     const matchId = ref.split(':')[1];
