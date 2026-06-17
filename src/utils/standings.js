@@ -110,12 +110,6 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
     if (typeof window !== 'undefined' && !window.__rankDebug) {
       window.__rankDebug = true;
       const allRanking = matches.filter(m => m.phase === 'ranking');
-      console.log('[RANK DEBUG] groupKey cherché:', groupKey);
-      console.log('[RANK DEBUG] matchs ranking trouvés total:', allRanking.length);
-      console.log('[RANK DEBUG] 1er match ranking:', allRanking[0]);
-      console.log('[RANK DEBUG] groupMatches matchés:', groupMatches.length);
-      console.log('[RANK DEBUG] statuts:', groupMatches.map(m => m.status));
-      console.log('[RANK DEBUG] 1er groupMatch détaillé:', JSON.stringify(groupMatches[0], null, 2));
     }
     // Si on a 0 match pour ce groupKey, fallback label sans casser le rendu
     if (groupMatches.length === 0) {
@@ -123,14 +117,16 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
     }
     const allDone = groupMatches.every(m => m.status === 'validated');
     if (allDone) {
-      // Mini-classement aux points (3/1/0) limité aux équipes de ce groupe
+      // Mini-classement aux points (3/1/0). Les équipes sont référencées par
+      // placeholder (slot:A#1...) donc on les résout via getDisplayTeam.
       const pts = {}, gf = {}, ga = {};
-      const teamIds = new Set();
+      const teamMap = {}; // id résolu -> team complète
       groupMatches.forEach(m => {
-        const h = m.homeTeamId || m.home_team_id;
-        const a = m.awayTeamId || m.away_team_id;
-        if (!h || !a) return;
-        teamIds.add(h); teamIds.add(a);
+        const homeTeam = getDisplayTeam('home', m, teams, matches, standings);
+        const awayTeam = getDisplayTeam('away', m, teams, matches, standings);
+        if (!homeTeam || homeTeam.isPlaceholder || !awayTeam || awayTeam.isPlaceholder) return;
+        const h = homeTeam.id, a = awayTeam.id;
+        teamMap[h] = homeTeam; teamMap[a] = awayTeam;
         pts[h] = pts[h] || 0; pts[a] = pts[a] || 0;
         gf[h] = (gf[h] || 0) + (m.scoreHome || 0);
         gf[a] = (gf[a] || 0) + (m.scoreAway || 0);
@@ -140,15 +136,12 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
         else if (m.scoreHome < m.scoreAway) pts[a] += 3;
         else { pts[h] += 1; pts[a] += 1; }
       });
-      const ranked = [...teamIds].sort((a, b) => {
+      const ranked = Object.keys(teamMap).sort((a, b) => {
         if ((pts[b] || 0) !== (pts[a] || 0)) return (pts[b] || 0) - (pts[a] || 0);
         return ((gf[b] || 0) - (ga[b] || 0)) - ((gf[a] || 0) - (ga[a] || 0));
       });
       const winnerId = ranked[position - 1];
-      if (winnerId) {
-        const team = teams.find(t => t.id === winnerId);
-        if (team) return team;
-      }
+      if (winnerId && teamMap[winnerId]) return teamMap[winnerId];
     }
     return makePlaceholder(fallbackLabel || `Position ${position} (${groupKey})`);
   }
