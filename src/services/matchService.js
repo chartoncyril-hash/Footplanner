@@ -321,7 +321,10 @@ export async function generateSchedule(tournament, teams, category) {
           category: category || null,
           phase: m.phaseKind || 'knockout',
           cup: m.cup || null,
-          knockout_round: m.roundLabel,
+          // Pour les matchs ranking : on stocke la clé technique du groupe (IG1, IG2...)
+          // pour que le placeholder 'rank:IG1#1' puisse retrouver ses matchs.
+          // Pour les autres phases : on garde le libellé classique.
+          knockout_round: m.phaseKind === 'ranking' ? m.group : m.roundLabel,
           knockout_index: 0,
           round: m.round,
           home_team_id: null,

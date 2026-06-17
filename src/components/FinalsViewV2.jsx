@@ -30,6 +30,11 @@ function LeagueSection({ title, icon, accent, matches, teams, allMatches, standi
     if (!groups[key]) groups[key] = [];
     groups[key].push(m);
   });
+  // Traduit une clé technique "IG1"/"IG2" en libellé lisible
+  const groupLabel = (key) => {
+    const match = key.match(/^[IJ]G(\d+)$/);
+    return match ? `Poule de classement ${match[1]}` : key;
+  };
   return (
     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid ' + accent + '33', borderRadius: 12, padding: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -37,7 +42,7 @@ function LeagueSection({ title, icon, accent, matches, teams, allMatches, standi
         <span style={{ fontSize: 13, fontWeight: 800, color: accent, letterSpacing: 0.4 }}>{title}</span>
       </div>
       {Object.keys(groups).sort().map(key => (
-        <GroupCard key={key} title={key} matches={groups[key]} teams={teams} allMatches={allMatches} standings={standings} accent={accent} />
+        <GroupCard key={key} title={groupLabel(key)} matches={groups[key]} teams={teams} allMatches={allMatches} standings={standings} accent={accent} />
       ))}
       {final.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent={accent} isFinal />)}
       {thirdPlace.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent="#64748b" />)}
