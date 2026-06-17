@@ -114,6 +114,8 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
       console.log('[RANK DEBUG] matchs ranking trouvés total:', allRanking.length);
       console.log('[RANK DEBUG] 1er match ranking:', allRanking[0]);
       console.log('[RANK DEBUG] groupMatches matchés:', groupMatches.length);
+      console.log('[RANK DEBUG] statuts:', groupMatches.map(m => m.status));
+      console.log('[RANK DEBUG] 1er groupMatch détaillé:', JSON.stringify(groupMatches[0], null, 2));
     }
     // Si on a 0 match pour ce groupKey, fallback label sans casser le rendu
     if (groupMatches.length === 0) {
