@@ -107,6 +107,14 @@ export function getDisplayTeam(side, match, teams, matches, standings) {
     const groupMatches = matches.filter(m =>
       m.phase === 'ranking' && (m.group === groupKey || m.knockoutRound === groupKey || m.knockout_round === groupKey)
     );
+    if (typeof window !== 'undefined' && !window.__rankDebug) {
+      window.__rankDebug = true;
+      const allRanking = matches.filter(m => m.phase === 'ranking');
+      console.log('[RANK DEBUG] groupKey cherché:', groupKey);
+      console.log('[RANK DEBUG] matchs ranking trouvés total:', allRanking.length);
+      console.log('[RANK DEBUG] 1er match ranking:', allRanking[0]);
+      console.log('[RANK DEBUG] groupMatches matchés:', groupMatches.length);
+    }
     // Si on a 0 match pour ce groupKey, fallback label sans casser le rendu
     if (groupMatches.length === 0) {
       return makePlaceholder(fallbackLabel || `Position ${position}`);
