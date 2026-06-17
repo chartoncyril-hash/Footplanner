@@ -44,8 +44,22 @@ function LeagueSection({ title, icon, accent, matches, teams, allMatches, standi
       {Object.keys(groups).sort().map(key => (
         <GroupCard key={key} title={groupLabel(key)} matches={groups[key]} teams={teams} allMatches={allMatches} standings={standings} accent={accent} />
       ))}
-      {final.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent={accent} isFinal />)}
-      {thirdPlace.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent="#64748b" />)}
+      {final.length > 0 && (
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: accent, marginBottom: 6, opacity: 0.85 }}>
+            Finale {title}
+          </div>
+          {final.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent={accent} isFinal />)}
+        </div>
+      )}
+      {thirdPlace.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 6, opacity: 0.85 }}>
+            Match pour la 3e place
+          </div>
+          {thirdPlace.map(m => <MatchRow key={m.id} match={m} teams={teams} allMatches={allMatches} standings={standings} accent="#64748b" />)}
+        </div>
+      )}
     </div>
   );
 }

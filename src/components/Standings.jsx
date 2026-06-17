@@ -3,6 +3,7 @@ import { Trophy, Users, Sparkles, Hash } from 'lucide-react';
 import { Crest } from './Crest';
 import { PageHeader } from './MatchCards';
 import { BracketView } from './BracketView';
+import { FinalsViewV2 } from './FinalsViewV2';
 import { isRankingEnabled } from '../utils/tournament';
 import { styles } from '../styles/styles';
 import { isKnockoutPhase } from '../utils/scheduling';
@@ -76,13 +77,22 @@ export function Standings({
       )}
 
       {mode === 'bracket' ? (
-        <BracketView
-          knockoutMatches={knockoutMatches}
-          teams={teams}
-          matches={matches}
-          standings={standings}
-          onMatchTap={(m) => { setSelectedMatch(m); setView('match'); }}
-        />
+        tournament?.finalsEngine === 'v2' ? (
+          <FinalsViewV2
+            knockoutMatches={knockoutMatches}
+            teams={teams}
+            matches={matches}
+            standings={standings}
+          />
+        ) : (
+          <BracketView
+            knockoutMatches={knockoutMatches}
+            teams={teams}
+            matches={matches}
+            standings={standings}
+            onMatchTap={(m) => { setSelectedMatch(m); setView('match'); }}
+          />
+        )
       ) : (
         <PoolsStandings
           pools={pools}
