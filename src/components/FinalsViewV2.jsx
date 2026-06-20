@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 import { getDisplayTeam } from '../utils/standings';
 
 export function FinalsViewV2({ knockoutMatches, teams, matches, standings }) {
@@ -12,10 +12,12 @@ export function FinalsViewV2({ knockoutMatches, teams, matches, standings }) {
   }
   const champions = knockoutMatches.filter(m => m.cup === 'champions');
   const europa = knockoutMatches.filter(m => m.cup === 'europa');
+  const consolante = knockoutMatches.filter(m => m.cup === 'consolante');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {champions.length > 0 && <LeagueSection title="Champions League" icon={<Trophy size={16} color="#facc15" />} accent="#facc15" matches={champions} teams={teams} allMatches={matches} standings={standings} />}
       {europa.length > 0 && <LeagueSection title="Europa League" icon={<Medal size={16} color="#94a3b8" />} accent="#94a3b8" matches={europa} teams={teams} allMatches={matches} standings={standings} />}
+      {consolante.length > 0 && <LeagueSection title="Consolante" icon={<Award size={16} color="#b45309" />} accent="#b45309" matches={consolante} teams={teams} allMatches={matches} standings={standings} />}
     </div>
   );
 }

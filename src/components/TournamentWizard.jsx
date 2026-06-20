@@ -36,6 +36,7 @@ export function TournamentWizard(props) {
         knockoutFields: Array.isArray(t.knockoutFields) ? t.knockoutFields : null,
         knockoutFormat: t.knockoutFormat || 'standard',
         qualifiedPerPool: t.knockoutFromTopN || 2,
+        finalsMode: t.finalsMode || 'champions_europa',
         categories: Array.isArray(t.categories) ? t.categories : [],
         customCategory: '',
         endDate: t.endDate || '',
@@ -59,6 +60,7 @@ export function TournamentWizard(props) {
       knockoutFields: null,
       knockoutFormat: 'standard',
       qualifiedPerPool: 2,
+      finalsMode: 'champions_europa',
       categories: [],
       customCategory: '',
       endDate: '',
@@ -141,6 +143,7 @@ export function TournamentWizard(props) {
         hasConsolation: data.hasKnockout && data.knockoutFormat !== 'multicup' && data.hasConsolation,
         knockoutFields: data.hasKnockout ? data.knockoutFields : null,
         knockoutFormat: data.hasKnockout ? data.knockoutFormat : 'standard',
+        finalsMode: data.hasKnockout ? data.finalsMode : 'champions_europa',
         knockoutFromTopN: data.hasKnockout ? data.qualifiedPerPool : 0,
         // Active automatiquement le moteur v2 quand l'organisateur choisit Champions/Europa (multi-cup).
         finalsEngine: data.hasKnockout && data.knockoutFormat === 'multicup' ? 'v2' : 'legacy',
@@ -518,7 +521,42 @@ export function TournamentWizard(props) {
                   </div>
                 </Field>
               )}
-              {data.hasKnockout && (
+              {data.hasKnockout && data.knockoutFormat === 'multicup' && (
+                <Field label="Mode Champions / Europa">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      { v: 'single', l: 'Une seule coupe', d: 'Les qualifiés jouent une phase finale unique.' },
+                      { v: 'champions_europa', l: 'Champions & Europa', d: 'Deux coupes par niveau : moitié haute en Champions, moitié basse en Europa.' },
+                      { v: 'everyone', l: 'Tout le monde joue', d: 'Trois coupes (Champions / Europa / Consolante). Aucune équipe éliminée.' },
+                    ].map(opt => {
+                      const isActive = (data.finalsMode || 'champions_europa') === opt.v;
+                      return (
+                        <button
+                          key={opt.v}
+                          onClick={() => update({ finalsMode: opt.v })}
+                          style={{
+                            padding: '10px 12px',
+                            background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
+                            border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: 7,
+                            color: isActive ? '#a3e635' : '#94a3b8',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <div style={{ marginBottom: 2 }}>{opt.l}</div>
+                          <div style={{ fontSize: 10, fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>
+                            {opt.d}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+              )}
+              {data.hasKnockout && data.finalsMode !== 'everyone' && (
                 <Field label="Qualifies par poule">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {[

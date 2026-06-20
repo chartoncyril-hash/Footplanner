@@ -258,20 +258,25 @@ export async function generateSchedule(tournament, teams, category) {
 
     // Configuration par défaut (sera pilotée par le wizard plus tard)
     const cfg = {
+      finalsMode: tournament.finalsMode || 'champions_europa',
       qualifiersPerPool: tournament.knockoutFromTopN || 2,
-      championsRanks: tournament.championsRanks || [1],
-      europaRanks: tournament.europaRanks || [2],
       format: tournament.finalsFormat || 'auto',
       groupSize: tournament.finalsGroupSize || 4,
     };
 
     const poolNames = pools.map((p) => p.name || p);
-    const finals = buildFinals(poolNames, cfg);
+    // Tailles réelles des poules (pour répartition "tout le monde joue" + éviter rangs fantômes)
+    const poolSizes = {};
+    poolNames.forEach((pn) => {
+      poolSizes[pn] = teams.filter((t) => t.pool === pn).length;
+    });
+    const finals = buildFinals(poolNames, cfg, poolSizes);
 
     // Concatène champions + europa, ordonne par round puis par cup pour placement horaire
     const allMatches = [
       ...finals.champions.matches.map((m) => ({ ...m, cupOrder: 0 })),
       ...finals.europa.matches.map((m) => ({ ...m, cupOrder: 1 })),
+      ...finals.consolante.matches.map((m) => ({ ...m, cupOrder: 2 })),
     ].sort((a, b) => a.round - b.round || a.cupOrder - b.cupOrder);
 
     const topo = topoWaves(allMatches);
