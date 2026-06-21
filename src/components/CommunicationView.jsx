@@ -227,6 +227,7 @@ function EventWizard({ event, onClose, onSaved }) {
     reminder_hours: event?.reminder_hours || [48, 2],
     recurrence: event?.recurrence || 'none',
     recurrence_end: event?.recurrence_end || '',
+    recurrence_days: event?.recurrence_days || [],
   });
   const [survey, setSurvey] = React.useState({
     enabled: false,
@@ -324,6 +325,7 @@ function EventWizard({ event, onClose, onSaved }) {
       reminder_hours: form.reminder_hours,
       recurrence: form.recurrence,
       recurrence_end: form.recurrence_end || null,
+      recurrence_days: form.recurrence_days,
     };
 
     if (isEdit) {
@@ -332,29 +334,22 @@ function EventWizard({ event, onClose, onSaved }) {
       const { data: newEvt } = await supabase.from('club_events').insert(payload).select('id').single();
       eventId = newEvt.id;
 
-      // Générer les occurrences récurrentes
-      if (form.recurrence !== 'none' && form.recurrence_end && form.date) {
+      // Générer les occurrences récurrentes (jours de semaine coches)
+      if (form.recurrence === 'weekly' && form.recurrence_days.length > 0 && form.recurrence_end && form.date) {
         const occurrences = [];
-        let current = new Date(form.date);
-        const endDate = new Date(form.recurrence_end);
-        const deltaMap = { weekly: 7, biweekly: 14, monthly: 30 };
-        const delta = deltaMap[form.recurrence] || 7;
-
-        while (true) {
-          // Avancer à la prochaine occurrence
-          if (form.recurrence === 'monthly') {
-            current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate());
-          } else {
-            current = new Date(current.getTime() + delta * 24 * 60 * 60 * 1000);
+        let current = new Date(form.date + 'T12:00:00');
+        const endDate = new Date(form.recurrence_end + 'T12:00:00');
+        current.setDate(current.getDate() + 1);
+        while (current <= endDate) {
+          if (form.recurrence_days.includes(current.getDay())) {
+            occurrences.push({
+              ...payload,
+              date: current.toISOString().slice(0, 10),
+              recurrence_parent_id: eventId,
+            });
           }
-          if (current > endDate) break;
-          occurrences.push({
-            ...payload,
-            date: current.toISOString().slice(0, 10),
-            recurrence_parent_id: eventId,
-          });
+          current.setDate(current.getDate() + 1);
         }
-
         if (occurrences.length > 0) {
           await supabase.from('club_events').insert(occurrences);
         }
@@ -535,25 +530,36 @@ function EventWizard({ event, onClose, onSaved }) {
             {/* Récurrence */}
             <div>
               <label style={S.lbl}>Récurrence</label>
-              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom: form.recurrence !== 'none' ? 10 : 0 }}>
-                {[
-                  { val:'none',      label:'Aucune' },
-                  { val:'weekly',    label:'Chaque semaine' },
-                  { val:'biweekly',  label:'Toutes les 2 semaines' },
-                  { val:'monthly',   label:'Chaque mois' },
-                ].map(r => (
+              <div style={{ display:'flex', gap:6, marginBottom: form.recurrence !== 'none' ? 12 : 0 }}>
+                {[{ val:'none', label:'Ponctuel' }, { val:'weekly', label:'Répété' }].map(r => (
                   <button key={r.val} onClick={() => set('recurrence', r.val)} style={{
-                    padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
+                    flex:1, padding:'8px 0', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700,
                     borderColor: form.recurrence === r.val ? '#f472b6' : 'rgba(255,255,255,0.1)',
                     background: form.recurrence === r.val ? 'rgba(244,114,182,0.15)' : 'transparent',
                     color: form.recurrence === r.val ? '#f472b6' : '#64748b',
                   }}>{r.label}</button>
                 ))}
               </div>
-              {form.recurrence !== 'none' && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:8, padding:'10px 14px', borderRadius:8, background:'rgba(244,114,182,0.06)', border:'1px solid rgba(244,114,182,0.15)' }}>
-                  <span style={{ fontSize:12, color:'#94a3b8', fontWeight:600 }}>Répéter jusqu'au</span>
-                  <input type="date" style={{ ...S.inp, width:'auto', flex:1 }} value={form.recurrence_end} onChange={e => set('recurrence_end', e.target.value)} min={form.date} />
+              {form.recurrence === 'weekly' && (
+                <div>
+                  <label style={{ ...S.lbl, marginTop:4 }}>Se répète chaque</label>
+                  <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+                    {[{d:1,l:'Lu'},{d:2,l:'Ma'},{d:3,l:'Me'},{d:4,l:'Je'},{d:5,l:'Ve'},{d:6,l:'Sa'},{d:0,l:'Di'}].map(({d,l}) => {
+                      const on = form.recurrence_days.includes(d);
+                      return (
+                      <button key={d} onClick={() => set('recurrence_days', on ? form.recurrence_days.filter(x=>x!==d) : [...form.recurrence_days, d])} style={{
+                        flex:1, aspectRatio:'1', borderRadius:'50%', border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
+                        borderColor: on ? '#f472b6' : 'rgba(255,255,255,0.1)',
+                        background: on ? 'rgba(244,114,182,0.15)' : 'transparent',
+                        color: on ? '#f472b6' : '#64748b',
+                      }}>{l}</button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:8, background:'rgba(244,114,182,0.06)', border:'1px solid rgba(244,114,182,0.15)' }}>
+                    <span style={{ fontSize:12, color:'#94a3b8', fontWeight:600, whiteSpace:'nowrap' }}>Jusqu'au</span>
+                    <input type="date" style={{ ...S.inp, width:'auto', flex:1 }} value={form.recurrence_end} onChange={e => set('recurrence_end', e.target.value)} min={form.date} />
+                  </div>
                 </div>
               )}
             </div>
