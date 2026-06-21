@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban } from 'lucide-react';
+import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban, Dumbbell, Trophy, Medal, Tent, ClipboardList, Pin } from 'lucide-react';
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 const EVENT_TYPES = {
-  training:   { label: 'Entraînement', color: '#34d399', emoji: '⚽' },
-  match:      { label: 'Match',        color: '#f59e0b', emoji: '🏆' },
-  tournament: { label: 'Tournoi',      color: '#f97316', emoji: '🥇' },
-  stage:      { label: 'Stage',        color: '#818cf8', emoji: '🏕️' },
-  meeting:    { label: 'Réunion',      color: '#22d3ee', emoji: '📋' },
-  other:      { label: 'Autre',        color: '#94a3b8', emoji: '📌' },
+  training:   { label: 'Entraînement', color: '#34d399', icon: Dumbbell, emoji: '⚽' },
+  match:      { label: 'Match',        color: '#f59e0b', icon: Trophy, emoji: '🏆' },
+  tournament: { label: 'Tournoi',      color: '#f97316', icon: Medal, emoji: '🥇' },
+  stage:      { label: 'Stage',        color: '#818cf8', icon: Tent, emoji: '🏕️' },
+  meeting:    { label: 'Réunion',      color: '#22d3ee', icon: ClipboardList, emoji: '📋' },
+  other:      { label: 'Autre',        color: '#94a3b8', icon: Pin, emoji: '📌' },
 };
 
 const S = {
@@ -460,14 +460,14 @@ function EventWizard({ event, onClose, onSaved }) {
             <div>
               <label style={S.lbl}>Type d'événement</label>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                {Object.entries(EVENT_TYPES).map(([key, val]) => (
+                {Object.entries(EVENT_TYPES).map(([key, val]) => { const Icon = val.icon; return (
                   <button key={key} onClick={() => set('type', key)} style={{
                     padding:'6px 12px', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700,
                     borderColor: form.type === key ? val.color : 'rgba(255,255,255,0.1)',
                     background: form.type === key ? val.color+'20' : 'transparent',
                     color: form.type === key ? val.color : '#64748b',
-                  }}>{val.emoji} {val.label}</button>
-                ))}
+                  }}><Icon size={14} style={{ verticalAlign:'text-bottom', marginRight:4 }} />{val.label}</button>
+                ); })}
               </div>
             </div>
             <div>
