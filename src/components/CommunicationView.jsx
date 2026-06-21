@@ -489,8 +489,11 @@ function EventWizard({ event, onClose, onSaved }) {
                 </div>
               )}
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
-              <div><label style={S.lbl}>Date *</label><input type="date" style={S.inp} value={form.date} onChange={e => set('date', e.target.value)} /></div>
+            <div>
+              <label style={S.lbl}>Date *</label>
+              <input type="date" style={S.inp} value={form.date} onChange={e => set('date', e.target.value)} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               <div><label style={S.lbl}>Début</label><input type="time" style={S.inp} value={form.time_start} onChange={e => set('time_start', e.target.value)} /></div>
               <div><label style={S.lbl}>Fin</label><input type="time" style={S.inp} value={form.time_end} onChange={e => set('time_end', e.target.value)} /></div>
             </div>
