@@ -479,12 +479,13 @@ function EventWizard({ event, onClose, onSaved }) {
               </div>
               <input style={S.inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Entraînement U12 — Jeudi soir" />
               {defaults.titles.length > 0 && (
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
+                <div style={{ display:'flex', alignItems:'center', flexWrap:'wrap', gap:6, marginTop:8 }}>
+                  <span style={{ fontSize:11, color:'#64748b' }}>Récents</span>
                   {defaults.titles.map(t => (
-                    <div key={t} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:16, overflow:'hidden', border:'1px solid rgba(244,114,182,0.25)' }}>
-                      <button onClick={() => set('title', t)} style={{ padding:'3px 10px', background:'rgba(244,114,182,0.1)', color:'#f472b6', border:'none', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}>{t}</button>
-                      <button onClick={() => removeDefault('title', t)} style={{ padding:'3px 6px', background:'rgba(244,114,182,0.08)', color:'#fb7185', border:'none', cursor:'pointer', fontSize:11, borderLeft:'1px solid rgba(244,114,182,0.15)' }}>✕</button>
-                    </div>
+                    <span key={t} style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.04)' }}>
+                      <button onClick={() => set('title', t)} style={{ background:'none', border:'none', color:'#cbd5e1', cursor:'pointer', fontSize:12, fontFamily:'inherit', padding:0 }}>{t}</button>
+                      <button onClick={() => removeDefault('title', t)} style={{ display:'inline-flex', alignItems:'center', background:'none', border:'none', color:'#64748b', cursor:'pointer', padding:0 }} aria-label="Retirer"><X size={12} /></button>
+                    </span>
                   ))}
                 </div>
               )}
@@ -506,12 +507,13 @@ function EventWizard({ event, onClose, onSaved }) {
               </div>
               <input style={S.inp} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Terrain municipal..." />
               {defaults.locations.length > 0 && (
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:6 }}>
+                <div style={{ display:'flex', alignItems:'center', flexWrap:'wrap', gap:6, marginTop:8 }}>
+                  <span style={{ fontSize:11, color:'#64748b' }}>Récents</span>
                   {defaults.locations.map(l => (
-                    <div key={l} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:16, overflow:'hidden', border:'1px solid rgba(244,114,182,0.25)' }}>
-                      <button onClick={() => set('location', l)} style={{ padding:'3px 10px', background:'rgba(244,114,182,0.1)', color:'#f472b6', border:'none', cursor:'pointer', fontSize:11, fontWeight:600, fontFamily:'inherit' }}>{l}</button>
-                      <button onClick={() => removeDefault('location', l)} style={{ padding:'3px 6px', background:'rgba(244,114,182,0.08)', color:'#fb7185', border:'none', cursor:'pointer', fontSize:11, borderLeft:'1px solid rgba(244,114,182,0.15)' }}>✕</button>
-                    </div>
+                    <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.04)' }}>
+                      <button onClick={() => set('location', l)} style={{ background:'none', border:'none', color:'#cbd5e1', cursor:'pointer', fontSize:12, fontFamily:'inherit', padding:0 }}>{l}</button>
+                      <button onClick={() => removeDefault('location', l)} style={{ display:'inline-flex', alignItems:'center', background:'none', border:'none', color:'#64748b', cursor:'pointer', padding:0 }} aria-label="Retirer"><X size={12} /></button>
+                    </span>
                   ))}
                 </div>
               )}
