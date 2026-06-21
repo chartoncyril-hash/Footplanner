@@ -213,6 +213,7 @@ function EventWizard({ event, onClose, onSaved }) {
   const [selectedLics, setSelectedLics] = React.useState([]);
   const [filterCat, setFilterCat] = React.useState('');
   const [filterTeam, setFilterTeam] = React.useState('');
+  const [clubTeams, setClubTeams] = React.useState([]);
   const [form, setForm] = React.useState({
     title: event?.title || '',
     type: event?.type || 'training',
@@ -222,6 +223,7 @@ function EventWizard({ event, onClose, onSaved }) {
     location: event?.location || '',
     description: event?.description || '',
     categories: event?.categories || [],
+    club_team_id: event?.club_team_id || '',
     reminder_hours: event?.reminder_hours || [48, 2],
     recurrence: event?.recurrence || 'none',
     recurrence_end: event?.recurrence_end || '',
@@ -275,8 +277,10 @@ function EventWizard({ event, onClose, onSaved }) {
     if (step !== 2) return;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase.from('licencies').select('id,first_name,last_name,category,team,email').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
+      const { data } = await supabase.from('licencies').select('id,first_name,last_name,category,team,club_team_id,email').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
       setLicencies(data || []);
+      const { data: ct } = await supabase.from('club_teams').select('id,category,name,number').eq('owner_id', await getEffectiveOwnerId()).order('category').order('name');
+      setClubTeams(ct || []);
       // Pré-sélectionner selon catégories choisies étape 1
       if (form.categories.length > 0) {
         const preselected = (data || []).filter(l => form.categories.includes(l.category) && l.email).map(l => l.id);
@@ -289,7 +293,7 @@ function EventWizard({ event, onClose, onSaved }) {
 
   const filteredLics = licencies.filter(l => {
     const matchCat = !filterCat || l.category === filterCat;
-    const matchTeam = !filterTeam || l.team === filterTeam;
+    const matchTeam = !filterTeam || l.club_team_id === filterTeam;
     return matchCat && matchTeam;
   });
 
@@ -316,6 +320,7 @@ function EventWizard({ event, onClose, onSaved }) {
       location: form.location.trim() || null,
       description: form.description.trim() || null,
       categories: form.categories,
+      club_team_id: form.club_team_id || null,
       reminder_hours: form.reminder_hours,
       recurrence: form.recurrence,
       recurrence_end: form.recurrence_end || null,
@@ -574,9 +579,9 @@ function EventWizard({ event, onClose, onSaved }) {
                 <option value="">Toutes catégories</option>
                 {cats.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ padding:'7px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}>
+              <select value={filterTeam} onChange={e => { const tid = e.target.value; setFilterTeam(tid); set('club_team_id', tid || ''); if (tid) setSelectedLics(licencies.filter(l => l.club_team_id === tid && l.email).map(l => l.id)); }} style={{ padding:'7px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'#1e293b', color:'#f1f5f9', fontSize:12, fontFamily:'inherit' }}>
                 <option value="">Toutes équipes</option>
-                {teams.map(t => <option key={t} value={t}>{t}</option>)}
+                {clubTeams.map(t => <option key={t.id} value={t.id}>{t.category} · {t.name}</option>)}
               </select>
               <button onClick={selectAll} style={{ ...S.btnGhost, fontSize:11 }}>Tout sélectionner</button>
               <button onClick={deselectAll} style={{ ...S.btnGhost, fontSize:11 }}>Tout désélectionner</button>
@@ -710,7 +715,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     // Charger licenciés
-    const { data: lics } = await supabase.from('licencies').select('id, first_name, last_name, category, team').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
+    const { data: lics } = await supabase.from('licencies').select('id, first_name, last_name, category, team, club_team_id').eq('owner_id', await getEffectiveOwnerId()).order('last_name');
     setLicencies(lics || []);
     // Charger réponses existantes
     const { data: resp } = await supabase.from('event_responses').select('*').eq('event_id', event.id);
@@ -812,7 +817,8 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const initResponses = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const existingIds = responses.map(r => r.licencie_id);
-    const missing = licencies.filter(l => !existingIds.includes(l.id));
+    const targetLics = event.club_team_id ? licencies.filter(l => l.club_team_id === event.club_team_id) : licencies;
+    const missing = targetLics.filter(l => !existingIds.includes(l.id));
     if (missing.length === 0) return;
     const _initOwnerId = await getEffectiveOwnerId();
     await supabase.from('event_responses').insert(
