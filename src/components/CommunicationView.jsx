@@ -54,6 +54,12 @@ export function CommunicationView() {
         ...e,
         event_responses: (respData || []).filter(r => r.event_id === e.id),
       }));
+      const todayStr = new Date().toISOString().slice(0,10);
+      events.sort((a, b) => {
+        const aFut = a.date >= todayStr, bFut = b.date >= todayStr;
+        if (aFut !== bFut) return aFut ? -1 : 1;
+        return aFut ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+      });
       setEvents(events);
       const now = new Date();
       setStats({
