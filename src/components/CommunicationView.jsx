@@ -861,14 +861,33 @@ function EventDetailModal({ event, onClose, onRefresh }) {
 
   const getResponse = (licId) => responses.find(r => r.licencie_id === licId)?.response || 'pending';
 
+  const updateDayOf = async (licId, status) => {
+    const existing = responses.find(r => r.licencie_id === licId);
+    const newVal = existing?.day_of_status === status ? null : status;
+    if (existing) {
+      await supabase.from('event_responses').update({ day_of_status: newVal }).eq('id', existing.id);
+    } else {
+      await supabase.from('event_responses').insert({ event_id: event.id, club_owner_id: await getEffectiveOwnerId(), licencie_id: licId, response: 'pending', day_of_status: newVal });
+    }
+    load();
+  };
+  const getDayOf = (licId) => responses.find(r => r.licencie_id === licId)?.day_of_status || null;
+
   const RESP_BTNS = [
     { val:'yes',   label:'✅', color:'#34d399' },
     { val:'no',    label:'❌', color:'#fb7185' },
     { val:'maybe', label:'❓', color:'#f59e0b' },
   ];
 
+  const DAYOF_BTNS = [
+    { val:'checked_in', label:'Arrivé', icon:CheckSquare, color:'#34d399' },
+    { val:'late',       label:'Retard', icon:Clock,       color:'#f59e0b' },
+    { val:'excused',    label:'Excusé', icon:Ban,         color:'#94a3b8' },
+  ];
+
   const cats = [...new Set(licencies.map(l => l.category).filter(Boolean))].sort();
   const [filterCat, setFilterCat] = useState('');
+  const [pointMode, setPointMode] = useState('convocation');
   const filteredLics = filterCat ? licencies.filter(l => l.category === filterCat) : licencies;
 
   const countByResp = (r) => responses.filter(x => x.response === r).length;
@@ -937,6 +956,19 @@ function EventDetailModal({ event, onClose, onRefresh }) {
         {/* ── PRÉSENCES ── */}
         {activeTab === 'presences' && (
           <div>
+            {/* Bascule Convocation / Jour J */}
+            <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+              {[{ k:'convocation', l:'Convocation' }, { k:'jourj', l:'Jour J' }].map(m => (
+                <button key={m.k} type="button" onClick={() => setPointMode(m.k)} style={{ flex:1, padding:'7px 0', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, borderColor: pointMode === m.k ? '#f472b6' : 'rgba(255,255,255,0.1)', background: pointMode === m.k ? 'rgba(244,114,182,0.15)' : 'transparent', color: pointMode === m.k ? '#f472b6' : '#64748b' }}>{m.l}</button>
+              ))}
+            </div>
+            {pointMode === 'jourj' && (
+              <div style={{ display:'flex', gap:12, marginBottom:14, fontSize:12, fontWeight:700 }}>
+                <span style={{ color:'#34d399' }}>{responses.filter(r=>r.day_of_status==='checked_in').length} arrivés</span>
+                <span style={{ color:'#f59e0b' }}>{responses.filter(r=>r.day_of_status==='late').length} en retard</span>
+                <span style={{ color:'#94a3b8' }}>{responses.filter(r=>r.day_of_status==='excused').length} excusés</span>
+              </div>
+            )}
             {/* Filtre catégorie */}
             <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
               <button onClick={() => setFilterCat('')} style={{ padding:'4px 10px', borderRadius:16, border:'1px solid', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'inherit', borderColor: !filterCat ? '#f472b6' : 'rgba(255,255,255,0.1)', background: !filterCat ? 'rgba(244,114,182,0.15)' : 'transparent', color: !filterCat ? '#f472b6' : '#64748b' }}>Tous</button>
@@ -959,6 +991,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
                         {lic.category && <span style={{ fontSize:11, color:'#818cf8', marginLeft:8 }}>{lic.category}</span>}
                         {lic.team && <span style={{ fontSize:11, color:'#64748b', marginLeft:6 }}>{lic.team}</span>}
                       </div>
+                      {pointMode === 'convocation' ? (
                       <div style={{ display:'flex', gap:4 }}>
                         {RESP_BTNS.map(btn => (
                           <button key={btn.val} onClick={() => updateResponse(lic.id, btn.val)} style={{
@@ -968,6 +1001,19 @@ function EventDetailModal({ event, onClose, onRefresh }) {
                           }}>{btn.label}</button>
                         ))}
                       </div>
+                      ) : (
+                      <div style={{ display:'flex', gap:4, flexWrap:'wrap', justifyContent:'flex-end' }}>
+                        {DAYOF_BTNS.map(btn => {
+                          const Icon = btn.icon;
+                          const on = getDayOf(lic.id) === btn.val;
+                          return (
+                            <button key={btn.val} type="button" onClick={() => updateDayOf(lic.id, btn.val)} style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:32, padding:'0 10px', gap:5, borderRadius:8, border:'2px solid', cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:'inherit', borderColor: on ? btn.color : 'rgba(255,255,255,0.08)', background: on ? btn.color+'20' : 'transparent', color: on ? btn.color : '#64748b' }}>
+                              <Icon size={14} /> {btn.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      )}
                     </div>
                   );
                 })}
