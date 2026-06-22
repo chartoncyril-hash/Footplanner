@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban, Dumbbell, Trophy, Medal, Tent, ClipboardList, Pin, Mail, Repeat } from 'lucide-react';
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
+import { useIsDesktop } from '../hooks/useIsDesktop';
 
 const EVENT_TYPES = {
   training:   { label: 'Entraînement', color: '#34d399', icon: Dumbbell, emoji: '⚽' },
@@ -27,6 +28,7 @@ const S = {
 
 export function CommunicationView() {
   const [activeTab, setActiveTab] = useState('events');
+  const isDesktop = useIsDesktop();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -134,7 +136,8 @@ export function CommunicationView() {
             const isPast = new Date(evt.date) < new Date();
             return (
               <div key={evt.id} style={{ ...S.card, borderColor: isPast ? 'rgba(255,255,255,0.05)' : `${type.color}33`, opacity: isPast ? 0.7 : 1 }}>
-                <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
+                <div style={{ display:'flex', flexDirection: isDesktop ? 'row' : 'column', alignItems:'flex-start', gap:14 }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:14, flex:1, minWidth:0, width:'100%' }}>
                   {/* Emoji type */}
                   <div style={{ flexShrink:0, marginTop:2 }}>{React.createElement(type.icon, { size:22, color:type.color })}</div>
                   {/* Infos */}
@@ -170,9 +173,10 @@ export function CommunicationView() {
                       </div>
                     )}
                   </div>
+                  </div>
                   {/* Actions */}
-                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                    <button onClick={() => setSelectedEvent(evt)} style={{ ...S.btn, padding:'6px 12px', fontSize:12, background:'#f472b6' }}>
+                  <div style={{ display:'flex', gap:6, flexShrink:0, width: isDesktop ? 'auto' : '100%' }}>
+                    <button onClick={() => setSelectedEvent(evt)} style={{ ...S.btn, padding:'6px 12px', fontSize:12, background:'#f472b6', flex: isDesktop ? undefined : 1, justifyContent:'center' }}>
                       Gérer <ChevronRight size={12} />
                     </button>
                     <button onClick={() => deleteEvent(evt.id)} style={{ ...S.btnGhost, color:'#fb7185' }}>
