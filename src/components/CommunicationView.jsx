@@ -136,21 +136,21 @@ export function CommunicationView() {
               <div key={evt.id} style={{ ...S.card, borderColor: isPast ? 'rgba(255,255,255,0.05)' : `${type.color}33`, opacity: isPast ? 0.7 : 1 }}>
                 <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
                   {/* Emoji type */}
-                  <div style={{ fontSize:24, flexShrink:0, marginTop:2 }}>{type.emoji}</div>
+                  <div style={{ flexShrink:0, marginTop:2 }}>{React.createElement(type.icon, { size:22, color:type.color })}</div>
                   {/* Infos */}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                       <span style={{ fontSize:15, fontWeight:800, color:'#f1f5f9' }}>{evt.title}</span>
                       <span style={{ fontSize:11, fontWeight:700, color:type.color, background:`${type.color}15`, padding:'2px 8px', borderRadius:10 }}>{type.label}</span>
-              {event.status === 'cancelled' && <span style={{ fontSize:11, fontWeight:700, color:'#fb7185', background:'rgba(251,113,133,0.15)', padding:'2px 8px', borderRadius:10 }}>❌ ANNULÉ</span>}
+              {evt.status === 'cancelled' && <span style={{ fontSize:11, fontWeight:700, color:'#fb7185', background:'rgba(251,113,133,0.15)', padding:'2px 8px', borderRadius:10, display:'inline-flex', alignItems:'center', gap:4 }}><Ban size={11} /> ANNULÉ</span>}
                       {isPast && <span style={{ fontSize:10, color:'#475569', fontWeight:600 }}>PASSÉ</span>}
                       {evt.recurrence && evt.recurrence !== 'none' && !evt.recurrence_parent_id && (
-                        <span style={{ fontSize:10, color:'#818cf8', fontWeight:700, background:'rgba(129,140,248,0.1)', padding:'2px 8px', borderRadius:10 }}>
-                          🔄 {evt.recurrence === 'weekly' ? 'Hebdo' : evt.recurrence === 'biweekly' ? '/2 sem' : 'Mensuel'}
+                        <span style={{ fontSize:10, color:'#818cf8', fontWeight:700, background:'rgba(129,140,248,0.1)', padding:'2px 8px', borderRadius:10, display:'inline-flex', alignItems:'center', gap:4 }}>
+                          <Repeat size={10} /> {evt.recurrence === 'weekly' ? 'Hebdo' : evt.recurrence === 'biweekly' ? '/2 sem' : 'Mensuel'}
                         </span>
                       )}
                       {evt.recurrence_parent_id && (
-                        <span style={{ fontSize:10, color:'#475569', fontWeight:600, background:'rgba(100,116,139,0.1)', padding:'2px 8px', borderRadius:10 }}>🔄 Récurrent</span>
+                        <span style={{ fontSize:10, color:'#475569', fontWeight:600, background:'rgba(100,116,139,0.1)', padding:'2px 8px', borderRadius:10, display:'inline-flex', alignItems:'center', gap:4 }}><Repeat size={10} /> Récurrent</span>
                       )}
                     </div>
                     <div style={{ display:'flex', gap:14, flexWrap:'wrap', marginBottom:8 }}>
