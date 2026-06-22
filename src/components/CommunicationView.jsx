@@ -891,6 +891,7 @@ function EventDetailModal({ event, onClose, onRefresh }) {
   const filteredLics = filterCat ? licencies.filter(l => l.category === filterCat) : licencies;
 
   const countByResp = (r) => responses.filter(x => x.response === r).length;
+  const countByDayOf = (v) => responses.filter(x => x.day_of_status === v).length;
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:1000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:24, overflowY:'auto' }}>
@@ -930,12 +931,17 @@ function EventDetailModal({ event, onClose, onRefresh }) {
 
         {/* Stats présences */}
         <div style={{ display:'flex', gap:10, marginBottom:20, flexWrap:'wrap' }}>
-          {[
+          {(pointMode === 'jourj' ? [
+            { val:countByDayOf('checked_in'), label:'Arrivés',    color:'#34d399' },
+            { val:countByDayOf('late'),       label:'En retard',  color:'#f59e0b' },
+            { val:countByDayOf('excused'),    label:'Excusés',    color:'#94a3b8' },
+            { val:responses.filter(r=>!r.day_of_status).length, label:'Non pointés', color:'#64748b' },
+          ] : [
             { val:countByResp('yes'),   label:'Présents',   color:'#34d399' },
             { val:countByResp('no'),    label:'Absents',    color:'#fb7185' },
             { val:countByResp('maybe'), label:'Peut-être',  color:'#f59e0b' },
             { val:countByResp('pending'), label:'En attente', color:'#64748b' },
-          ].map(s => (
+          ]).map(s => (
             <div key={s.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'10px 16px', textAlign:'center', minWidth:80 }}>
               <div style={{ fontSize:20, fontWeight:900, color:s.color }}>{s.val}</div>
               <div style={{ fontSize:11, color:'#64748b', fontWeight:600 }}>{s.label}</div>
@@ -962,13 +968,6 @@ function EventDetailModal({ event, onClose, onRefresh }) {
                 <button key={m.k} type="button" onClick={() => setPointMode(m.k)} style={{ flex:1, padding:'7px 0', borderRadius:8, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, borderColor: pointMode === m.k ? '#f472b6' : 'rgba(255,255,255,0.1)', background: pointMode === m.k ? 'rgba(244,114,182,0.15)' : 'transparent', color: pointMode === m.k ? '#f472b6' : '#64748b' }}>{m.l}</button>
               ))}
             </div>
-            {pointMode === 'jourj' && (
-              <div style={{ display:'flex', gap:12, marginBottom:14, fontSize:12, fontWeight:700 }}>
-                <span style={{ color:'#34d399' }}>{responses.filter(r=>r.day_of_status==='checked_in').length} arrivés</span>
-                <span style={{ color:'#f59e0b' }}>{responses.filter(r=>r.day_of_status==='late').length} en retard</span>
-                <span style={{ color:'#94a3b8' }}>{responses.filter(r=>r.day_of_status==='excused').length} excusés</span>
-              </div>
-            )}
             {/* Filtre catégorie */}
             <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
               <button onClick={() => setFilterCat('')} style={{ padding:'4px 10px', borderRadius:16, border:'1px solid', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'inherit', borderColor: !filterCat ? '#f472b6' : 'rgba(255,255,255,0.1)', background: !filterCat ? 'rgba(244,114,182,0.15)' : 'transparent', color: !filterCat ? '#f472b6' : '#64748b' }}>Tous</button>
