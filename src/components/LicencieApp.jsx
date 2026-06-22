@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { supabase } from '../lib/supabase';
 import { Calendar, Bell, User, MessageCircle, Home } from 'lucide-react';
 import { ChatModule } from './chat/ChatModule';
@@ -539,42 +540,76 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
 // LICENCIE PROFIL — Fiche modifiable + RGPD
 // ============================================================
 function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicId, accent, onRefresh }) {
-  const [form, setForm] = useState({
-    first_name: selectedLic?.first_name || '',
-    last_name: selectedLic?.last_name || '',
-    allergies: selectedLic?.allergies || '',
-    medical_notes: selectedLic?.medical_notes || '',
-    medical_consent: selectedLic?.medical_consent || false,
+  const blank = (lic) => ({
+    first_name: lic?.first_name || '',
+    last_name: lic?.last_name || '',
+    birth_date: lic?.birth_date || '',
+    gender: lic?.gender || '',
+    strong_foot: lic?.strong_foot || '',
+    preferred_number: (lic?.preferred_number ?? '') === null ? '' : (lic?.preferred_number ?? ''),
+    allergies: lic?.allergies || '',
+    contre_indications: lic?.medical_notes || '',
+    medical_consent: lic?.medical_consent || false,
+    emergency_contacts: Array.isArray(lic?.emergency_contacts) ? lic.emergency_contacts : [],
+    legal_guardians: Array.isArray(lic?.legal_guardians) ? lic.legal_guardians : [],
   });
+  const [form, setForm] = useState(blank(selectedLic));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileRef = React.useRef();
 
-  useEffect(() => {
-    if (selectedLic) setForm({
-      first_name: selectedLic.first_name || '',
-      last_name: selectedLic.last_name || '',
-      allergies: selectedLic.allergies || '',
-      medical_notes: selectedLic.medical_notes || '',
-      medical_consent: selectedLic.medical_consent || false,
-    });
-  }, [selectedLic?.id]);
+  useEffect(() => { if (selectedLic) setForm(blank(selectedLic)); }, [selectedLic?.id]);
 
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
 
+  const isLocked = (key) => {
+    const v = selectedLic?.[key];
+    if (key === 'preferred_number') return v !== null && v !== undefined && v !== '';
+    return v !== null && v !== undefined && String(v).trim() !== '';
+  };
+
+  const FIELD_DEFS = [
+    { key:'first_name', label:'Prénom', type:'text', required:true },
+    { key:'last_name', label:'Nom', type:'text', required:true },
+    { key:'birth_date', label:'Date de naissance', type:'date', required:true },
+    { key:'gender', label:'Sexe', type:'select', required:true, options:[['M','Masculin'],['F','Féminin']] },
+    { key:'strong_foot', label:'Pied fort', type:'select', required:false, options:[['droit','Droit'],['gauche','Gauche']] },
+    { key:'preferred_number', label:'Numéro de maillot préféré', type:'number', required:false, placeholder:'Ex: 10' },
+  ];
+  const fmtVal = (def, v) => {
+    if (v === null || v === undefined || v === '') return '—';
+    if (def.type === 'date') return new Date(v).toLocaleDateString('fr-FR');
+    if (def.options) { const o = def.options.find(([val]) => String(val) === String(v)); return o ? o[1] : v; }
+    return v;
+  };
+
   const save = async () => {
     if (!selectedLic) return;
+    setError('');
+    const missing = FIELD_DEFS.filter(d => d.required && !isLocked(d.key) && !String(form[d.key] || '').trim()).map(d => d.label);
+    if (missing.length) { setError('Champs obligatoires a completer : ' + missing.join(', ')); return; }
     setSaving(true);
     const payload = {
       allergies: form.allergies.trim() || null,
-      medical_notes: form.medical_notes.trim() || null,
+      contre_indications: form.contre_indications.trim() || null,
       medical_consent: form.medical_consent,
       medical_consent_at: form.medical_consent ? new Date().toISOString() : null,
+      emergency_contacts: form.emergency_contacts,
+      legal_guardians: form.legal_guardians,
       last_active_at: new Date().toISOString(),
     };
-    await supabase.from('licencies').update(payload).eq('id', selectedLic.id);
+    if (!isLocked('first_name')) payload.first_name = form.first_name.trim();
+    if (!isLocked('last_name')) payload.last_name = form.last_name.trim();
+    if (!isLocked('birth_date')) payload.birth_date = form.birth_date || null;
+    if (!isLocked('gender')) payload.gender = form.gender || null;
+    if (!isLocked('strong_foot')) payload.strong_foot = form.strong_foot || null;
+    if (!isLocked('preferred_number')) payload.preferred_number = form.preferred_number ? parseInt(form.preferred_number, 10) : null;
+
+    const { error: err } = await supabase.from('licencies').update(payload).eq('id', selectedLic.id);
     setSaving(false);
+    if (err) { setError("Erreur d enregistrement : " + err.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
     onRefresh();
@@ -585,8 +620,8 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
     setUploadingPhoto(true);
     const ext = file.name.split('.').pop();
     const path = `photos/${selectedLic.id}_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('licencies-docs').upload(path, file, { upsert:true, contentType:file.type });
-    if (!error) {
+    const { error: upErr } = await supabase.storage.from('licencies-docs').upload(path, file, { upsert:true, contentType:file.type });
+    if (!upErr) {
       const { data } = supabase.storage.from('licencies-docs').getPublicUrl(path);
       await supabase.from('licencies').update({ photo_url: data.publicUrl }).eq('id', selectedLic.id);
       onRefresh();
@@ -596,12 +631,12 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
 
   const inp = { width:'100%', padding:'11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' };
   const lbl = { fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:0.8, marginBottom:6, display:'block' };
+  const anyEditable = FIELD_DEFS.some(d => !isLocked(d.key));
 
   return (
     <div>
-      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>👤 Mon profil</h3>
+      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>Mon profil</h3>
 
-      {/* Sélecteur enfant */}
       {licencies.length > 1 && (
         <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
           {licencies.map(l => (
@@ -614,7 +649,6 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
 
       {selectedLic && (
         <>
-          {/* Photo */}
           <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:24 }}>
             <div style={{ position:'relative', cursor:'pointer' }} onClick={() => fileRef.current?.click()}>
               {selectedLic.photo_url
@@ -630,36 +664,56 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
                 {selectedLic.category && <span style={{ fontSize:11, color:accent, fontWeight:700 }}>{selectedLic.category}</span>}
                 {selectedLic.team && <span style={{ fontSize:11, color:'#64748b' }}>{selectedLic.team}</span>}
               </div>
-              {uploadingPhoto && <div style={{ fontSize:11, color:'#64748b', marginTop:4 }}>⏳ Upload...</div>}
+              {uploadingPhoto && <div style={{ fontSize:11, color:'#64748b', marginTop:4 }}>Upload...</div>}
             </div>
           </div>
 
-          {/* Infos lecture seule */}
-          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'14px 16px', marginBottom:20 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Informations administratives</div>
-            {[
-              { label:'Date de naissance', val:selectedLic.birth_date ? new Date(selectedLic.birth_date).toLocaleDateString('fr-FR') : '—' },
-              { label:'Numéro de licence', val:selectedLic.licence_number || '—' },
-            ].map(row => (
-              <div key={row.label} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontSize:13, color:'#64748b' }}>{row.label}</span>
-                <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{row.val}</span>
+          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'16px', marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Identité</div>
+            {anyEditable
+              ? <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Complétez les informations manquantes. Les champs déjà renseignés par le club (🔒) sont verrouillés.</div>
+              : <div style={{ height:10 }} />}
+
+            {FIELD_DEFS.map(def => isLocked(def.key) ? (
+              <div key={def.key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontSize:13, color:'#64748b' }}>🔒 {def.label}</span>
+                <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{fmtVal(def, selectedLic[def.key])}</span>
+              </div>
+            ) : (
+              <div key={def.key} style={{ marginBottom:12 }}>
+                <label style={lbl}>{def.label}{def.required && <span style={{ color:accent }}> *</span>}</label>
+                {def.type === 'select'
+                  ? <select style={inp} value={form[def.key]} onChange={e=>set(def.key, e.target.value)}>
+                      <option value="" style={{ background:'#1e293b' }}>—</option>
+                      {def.options.map(([v,l]) => <option key={v} value={v} style={{ background:'#1e293b' }}>{l}</option>)}
+                    </select>
+                  : <input style={inp} type={def.type} value={form[def.key]} onChange={e=>set(def.key, e.target.value)} placeholder={def.placeholder || ''} {...(def.type==='number' ? { min:1, max:99 } : {})} />}
               </div>
             ))}
-            <div style={{ fontSize:11, color:'#334155', marginTop:8 }}>🔒 Ces informations sont gérées par le club</div>
+
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0' }}>
+              <span style={{ fontSize:13, color:'#64748b' }}>🔒 Numéro de licence</span>
+              <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{selectedLic.licence_number || '—'}</span>
+            </div>
           </div>
 
-          {/* Données médicales — RGPD */}
+          <div style={{ marginBottom:20 }}>
+            <LegalGuardiansSection guardians={form.legal_guardians} onChange={v=>set('legal_guardians', v)} />
+          </div>
+
+          <div style={{ marginBottom:20 }}>
+            <EmergencyContactsSection contacts={form.emergency_contacts} onChange={v=>set('emergency_contacts', v)} />
+          </div>
+
           <div style={{ background:'rgba(251,113,133,0.04)', border:'1px solid rgba(251,113,133,0.15)', borderRadius:12, padding:'16px', marginBottom:20 }}>
             <div style={{ fontSize:13, fontWeight:800, color:'#fb7185', marginBottom:12 }}>🏥 Données médicales</div>
 
-            {/* Consentement RGPD */}
             <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 14px', borderRadius:8, border:'1px solid rgba(251,113,133,0.2)', background:'rgba(251,113,133,0.06)', cursor:'pointer', marginBottom:14 }}>
               <input type="checkbox" checked={form.medical_consent} onChange={e => set('medical_consent', e.target.checked)} style={{ accentColor:'#fb7185', width:16, height:16, marginTop:1, flexShrink:0 }} />
               <div>
                 <div style={{ fontSize:12, fontWeight:700, color:'#f1f5f9', marginBottom:2 }}>Consentement RGPD</div>
                 <div style={{ fontSize:11, color:'#94a3b8', lineHeight:1.5 }}>
-                  J'accepte que les données médicales de mon enfant soient conservées pour assurer sa sécurité lors des activités sportives. Je peux les supprimer à tout moment.
+                  J accepte que les données médicales de mon enfant soient conservées pour assurer sa sécurité lors des activités sportives. Je peux les supprimer à tout moment.
                 </div>
                 {selectedLic.medical_consent_at && <div style={{ fontSize:10, color:'#64748b', marginTop:4 }}>Consenti le {new Date(selectedLic.medical_consent_at).toLocaleDateString('fr-FR')}</div>}
               </div>
@@ -673,7 +727,7 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
                 </div>
                 <div>
                   <label style={lbl}>Contre-indications médicales</label>
-                  <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={form.medical_notes} onChange={e=>set('medical_notes',e.target.value)} placeholder="Aucune ou préciser..." />
+                  <textarea style={{ ...inp, minHeight:70, resize:'vertical' }} value={form.contre_indications} onChange={e=>set('contre_indications',e.target.value)} placeholder="Aucune ou préciser..." />
                 </div>
               </>
             ) : (
@@ -683,7 +737,8 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
             )}
           </div>
 
-          {/* Bouton sauvegarder */}
+          {error && <div style={{ background:'rgba(251,113,133,0.1)', border:'1px solid rgba(251,113,133,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:'#fb7185' }}>{error}</div>}
+
           <button onClick={save} disabled={saving} style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:accent, color:'#0a0e1a', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit', opacity:saving?0.6:1 }}>
             {saving ? 'Enregistrement...' : saved ? '✓ Sauvegardé !' : 'Sauvegarder'}
           </button>
