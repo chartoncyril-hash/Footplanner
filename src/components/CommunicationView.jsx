@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban, Dumbbell, Trophy, Medal, Tent, ClipboardList, Pin } from 'lucide-react';
+import { Plus, Calendar, Users, CheckSquare, BarChart2, ChevronRight, X, MapPin, Clock, Megaphone, Pencil, Zap, Ban, Dumbbell, Trophy, Medal, Tent, ClipboardList, Pin, Mail, Repeat } from 'lucide-react';
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
 const EVENT_TYPES = {
@@ -620,7 +620,7 @@ function EventWizard({ event, onClose, onSaved }) {
               })}
             </div>
             <div style={{ padding:'10px 14px', borderRadius:8, background:'rgba(244,114,182,0.06)', border:'1px solid rgba(244,114,182,0.15)', fontSize:12, color:'#94a3b8' }}>
-              📧 {selectedLics.filter(id => licencies.find(l=>l.id===id)?.email).length} email(s) seront envoyés à la création
+              <Mail size={13} style={{ verticalAlign:'text-bottom', marginRight:4 }} />{selectedLics.filter(id => licencies.find(l=>l.id===id)?.email).length} email(s) seront envoyés à la création
             </div>
           </div>
         )}
@@ -634,7 +634,7 @@ function EventWizard({ event, onClose, onSaved }) {
             }}>
               <input type="checkbox" checked={survey.enabled} onChange={e => setSurveyField('enabled', e.target.checked)} style={{ accentColor:'#f472b6', width:18, height:18 }} />
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9' }}>📊 Attacher un sondage à cet événement</div>
+                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9', display:'flex', alignItems:'center', gap:6 }}><BarChart2 size={16} /> Attacher un sondage à cet événement</div>
                 <div style={{ fontSize:12, color:'#64748b' }}>Les licenciés pourront répondre depuis leur lien personnel</div>
               </div>
             </label>
@@ -672,16 +672,16 @@ function EventWizard({ event, onClose, onSaved }) {
 
             {/* Récap avant envoi */}
             <div style={{ padding:'16px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
-              <p style={{ color:'#94a3b8', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>📋 Récapitulatif</p>
+              <p style={{ color:'#94a3b8', fontSize:13, fontWeight:700, margin:'0 0 8px', display:'flex', alignItems:'center', gap:6 }}><ClipboardList size={15} /> Récapitulatif</p>
               <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                <span style={{ fontSize:13, color:'#f1f5f9' }}>{EVENT_TYPES[form.type]?.emoji} {form.title}</span>
-                <span style={{ fontSize:12, color:'#64748b' }}>📅 {form.date && new Date(form.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' })}{form.time_start ? ` à ${form.time_start}` : ''}</span>
-                {form.location && <span style={{ fontSize:12, color:'#64748b' }}>📍 {form.location}</span>}
-                <span style={{ fontSize:12, color:'#f472b6', fontWeight:700 }}>📧 {selectedLics.length} destinataire(s)</span>
-                {survey.enabled && survey.title && <span style={{ fontSize:12, color:'#818cf8' }}>📊 Sondage : {survey.title}</span>}
+                <span style={{ fontSize:13, color:'#f1f5f9' }}>{React.createElement(EVENT_TYPES[form.type]?.icon || Pin, { size:13, style:{ verticalAlign:'text-bottom', marginRight:4 } })}{form.title}</span>
+                <span style={{ fontSize:12, color:'#64748b' }}><Calendar size={12} style={{ verticalAlign:'text-bottom', marginRight:4 }} />{form.date && new Date(form.date).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' })}{form.time_start ? ` à ${form.time_start}` : ''}</span>
+                {form.location && <span style={{ fontSize:12, color:'#64748b' }}><MapPin size={12} style={{ verticalAlign:'text-bottom', marginRight:4 }} />{form.location}</span>}
+                <span style={{ fontSize:12, color:'#f472b6', fontWeight:700 }}><Users size={12} style={{ verticalAlign:'text-bottom', marginRight:4 }} />{selectedLics.length} destinataire(s)</span>
+                {survey.enabled && survey.title && <span style={{ fontSize:12, color:'#818cf8' }}><BarChart2 size={12} style={{ verticalAlign:'text-bottom', marginRight:4 }} />Sondage : {survey.title}</span>}
                 {form.recurrence !== 'none' && form.recurrence_end && (
                   <span style={{ fontSize:12, color:'#818cf8', fontWeight:700 }}>
-                    🔄 {form.recurrence === 'weekly' ? 'Chaque semaine' : form.recurrence === 'biweekly' ? 'Toutes les 2 semaines' : 'Chaque mois'} jusqu'au {new Date(form.recurrence_end).toLocaleDateString('fr-FR')}
+                    <Repeat size={12} style={{ verticalAlign:'text-bottom', marginRight:4 }} />Répété : {[...form.recurrence_days].sort((a,b)=>a-b).map(d => ({0:'Dim',1:'Lun',2:'Mar',3:'Mer',4:'Jeu',5:'Ven',6:'Sam'})[d]).join(', ')} jusqu'au {new Date(form.recurrence_end).toLocaleDateString('fr-FR')}
                   </span>
                 )}
               </div>
