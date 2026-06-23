@@ -443,6 +443,7 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const getWeekStart = (offset=0) => {
     const d = new Date();
@@ -455,6 +456,7 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
   useEffect(() => {
     if (!selectedLic) return;
     (async () => {
+      setLoading(true);
       const ws = getWeekStart(weekOffset);
       const we = new Date(ws); we.setDate(we.getDate()+6);
       const { data } = await supabase
@@ -462,72 +464,112 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
         .select('*, club_events(*)')
         .eq('licencie_id', selectedLic.id)
         .order('responded_at', { ascending:false });
-      setEvents((data||[]).filter(e=>e.club_events && e.club_events.date >= ws.toISOString().slice(0,10) && e.club_events.date <= we.toISOString().slice(0,10)).sort((a,b) => new Date(a.club_events.date)-new Date(b.club_events.date)));
+      setEvents((data||[]).filter(e=>e.club_events && e.club_events.date >= ws.toISOString().slice(0,10) && e.club_events.date <= we.toISOString().slice(0,10)).sort((a,b)=>{
+        const d=new Date(a.club_events.date)-new Date(b.club_events.date);
+        if(d!==0) return d;
+        return (a.club_events.time_start||'').localeCompare(b.club_events.time_start||'');
+      }));
       setLoading(false);
     })();
   }, [selectedLic, weekOffset]);
 
   const ws = getWeekStart(weekOffset);
   const we = new Date(ws); we.setDate(we.getDate()+6);
+  const wsStr = ws.toISOString().slice(0,10);
+  const weStr = we.toISOString().slice(0,10);
   const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
   const EVENT_COLORS = { training:'#34d399', match:'#f59e0b', tournament:'#f97316', stage:'#a78bfa', meeting:'#22d3ee', other:'#94a3b8' };
-  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
+  const TYPE_LABELS = { training:'Entrainement', match:'Match', tournament:'Tournoi', stage:'Stage', meeting:'Reunion', other:'Evenement' };
+  const weekDays = Array.from({length:7}, (_,i)=>{ const d=new Date(ws); d.setDate(d.getDate()+i); return d; });
 
-  const weekDays = Array.from({length:7}, (_,i) => { const d=new Date(ws); d.setDate(d.getDate()+i); return d; });
+  const inWeek = todayStr >= wsStr && todayStr <= weStr;
+  const effectiveDay = (selectedDay && selectedDay >= wsStr && selectedDay <= weStr) ? selectedDay : (inWeek ? todayStr : wsStr);
+  const dayEvents = events.filter(e => e.club_events?.date === effectiveDay);
+  const effDateObj = new Date(effectiveDay + 'T00:00:00');
+  const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+
+  const navBtn = { width:34, height:34, borderRadius:10, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' };
+  const Chevron = ({dir}) => (<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">{dir==='l'?<path d="M15 18l-6-6 6-6"/>:<path d="M9 18l6-6-6-6"/>}</svg>);
+
+  const RESP = {
+    yes:    { bg:'rgba(52,211,153,0.15)',  c:'#34d399' },
+    no:     { bg:'rgba(251,113,133,0.15)', c:'#fb7185' },
+    maybe:  { bg:'rgba(245,158,11,0.15)',  c:'#f59e0b' },
+    pending:{ bg:'rgba(148,163,184,0.12)', c:'#94a3b8' },
+  };
+  const RespIcon = ({r}) => {
+    const st = { width:19, height:19 };
+    if(r==='yes') return <svg viewBox="0 0 24 24" style={st} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+    if(r==='no') return <svg viewBox="0 0 24 24" style={st} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>;
+    if(r==='maybe') return <svg viewBox="0 0 24 24" style={st} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.6-2.5 2-2.5 3.5"/><circle cx="12" cy="17" r="0.7" fill="currentColor"/></svg>;
+    return <svg viewBox="0 0 24 24" style={st} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
+  };
 
   return (
     <div>
-      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-        <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', margin:0, flex:1 }}>📅 Planning</h3>
-        <button onClick={()=>setWeekOffset(w=>w-1)} style={{ width:32, height:32, borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-        <button onClick={()=>setWeekOffset(0)} style={{ padding:'4px 12px', borderRadius:8, border:`1px solid ${accent}44`, background:`${accent}15`, color:accent, cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:700 }}>Auj.</button>
-        <button onClick={()=>setWeekOffset(w=>w+1)} style={{ width:32, height:32, borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+        <h3 style={{ fontSize:22, fontWeight:900, color:'#f1f5f9', margin:0, flex:1, letterSpacing:'-0.5px' }}>Planning</h3>
+        <button onClick={()=>{setWeekOffset(w=>w-1); setSelectedDay(null);}} style={navBtn}><Chevron dir="l"/></button>
+        <button onClick={()=>{setWeekOffset(0); setSelectedDay(null);}} style={{ padding:'0 14px', height:34, borderRadius:10, border:`1px solid ${accent}55`, background:`${accent}15`, color:accent, cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700 }}>Auj.</button>
+        <button onClick={()=>{setWeekOffset(w=>w+1); setSelectedDay(null);}} style={navBtn}><Chevron dir="r"/></button>
       </div>
-      <div style={{ fontSize:12, color:'#475569', marginBottom:16, textAlign:'center' }}>
+      <div style={{ fontSize:13, color:'#64748b', fontWeight:600, marginBottom:14 }}>
         {ws.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} — {we.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}
       </div>
-      {/* Grille semaine */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4, marginBottom:16 }}>
-        {weekDays.map((day,i) => {
-          const isToday = day.getTime()===today.getTime();
-          const dayEvts = events.filter(e => e.club_events?.date === day.toISOString().slice(0,10));
+
+      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:22 }}>
+        {weekDays.map((day,i)=>{
+          const dStr = day.toISOString().slice(0,10);
+          const isActive = dStr===effectiveDay;
+          const dayEvts = events.filter(e=>e.club_events?.date===dStr);
           return (
-            <div key={i} style={{ textAlign:'center' }}>
-              <div style={{ fontSize:9, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1 }}>{DAYS[i]}</div>
-              <div style={{ width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'4px auto', background:isToday?accent:'transparent', border:isToday?'none':'1px solid rgba(255,255,255,0.08)', fontSize:12, fontWeight:isToday?900:500, color:isToday?'#0a0e1a':'#94a3b8' }}>{day.getDate()}</div>
-              {dayEvts.map(er => {
-                const c = EVENT_COLORS[er.club_events.type]||'#94a3b8';
-                return <div key={er.id} style={{ width:6, height:6, borderRadius:'50%', background:c, margin:'2px auto' }} />;
-              })}
+            <div key={i} onClick={()=>setSelectedDay(dStr)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, flex:1, cursor:'pointer' }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.5px', color:'#475569', textTransform:'uppercase' }}>{DAYS[i]}</div>
+              <div style={{ width:34, height:34, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:14, color:isActive?'#0a0e1a':'#94a3b8', background:isActive?accent:'transparent', border:isActive?'none':'1px solid rgba(255,255,255,0.08)', boxShadow:isActive?`0 6px 14px -5px ${accent}`:'none', transition:'.15s' }}>{day.getDate()}</div>
+              <div style={{ display:'flex', gap:3, height:6 }}>
+                {dayEvts.slice(0,3).map(er=>(<i key={er.id} style={{ width:5, height:5, borderRadius:'50%', background:EVENT_COLORS[er.club_events?.type]||'#94a3b8', display:'block' }} />))}
+              </div>
             </div>
           );
         })}
       </div>
-      {/* Liste événements de la semaine */}
-      {loading ? <div style={{color:'#64748b',textAlign:'center',padding:20}}>Chargement...</div>
-      : events.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'30px 0', color:'#334155' }}>
-          <div style={{ fontSize:32, marginBottom:8 }}>📭</div>
-          <p style={{ fontSize:14 }}>Aucun événement cette semaine</p>
+
+      <div style={{ display:'flex', alignItems:'center', gap:8, margin:'4px 2px 13px', fontSize:14, fontWeight:800, color:'#94a3b8' }}>
+        {cap(effDateObj.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}))}
+        <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.07)' }} />
+      </div>
+
+      {loading ? (
+        <div style={{ color:'#64748b', textAlign:'center', padding:24 }}>Chargement...</div>
+      ) : dayEvents.length===0 ? (
+        <div style={{ textAlign:'center', padding:'34px 20px' }}>
+          <div style={{ width:56, height:56, borderRadius:16, background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#475569" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+          </div>
+          <p style={{ fontSize:14, fontWeight:600, color:'#64748b', margin:0 }}>Aucune activite ce jour</p>
         </div>
-      ) : events.map(er => {
+      ) : dayEvents.map(er=>{
         const evt = er.club_events;
         const color = EVENT_COLORS[evt.type]||'#94a3b8';
-        const emoji = EVENT_EMOJIS[evt.type]||'📌';
-        const respColor = er.response==='yes'?'#34d399':er.response==='no'?'#fb7185':er.response==='maybe'?'#f59e0b':'#64748b';
+        const rs = RESP[er.response] || RESP.pending;
         return (
-          <div key={er.id} style={{ display:'flex', alignItems:'stretch', gap:0, borderRadius:10, overflow:'hidden', border:`1px solid ${color}22`, marginBottom:8 }}>
-            <div style={{ width:4, background:color, flexShrink:0 }} />
-            <div style={{ flex:1, padding:'10px 14px' }}>
-              <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9' }}>{emoji} {evt.title}</div>
-              <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>
-                {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'})}
-                {evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}{evt.location?` · ${evt.location}`:''}
+          <div key={er.id} style={{ display:'flex', alignItems:'center', gap:13, borderRadius:15, padding:'13px 14px', marginBottom:11, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderLeft:`3px solid ${color}` }}>
+            <div style={{ width:48, textAlign:'center', flexShrink:0 }}>
+              <div style={{ fontWeight:800, fontSize:15, color:'#f1f5f9' }}>{evt.time_start?evt.time_start.slice(0,5):'--'}</div>
+            </div>
+            <div style={{ width:1, alignSelf:'stretch', background:'rgba(255,255,255,0.07)' }} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontWeight:700, fontSize:15, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
+              <div style={{ fontSize:12, color:'#94a3b8', marginTop:3, display:'flex', alignItems:'center', gap:5 }}>
+                {evt.location ? (
+                  <><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#64748b" strokeWidth="2"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>{evt.location}</>
+                ) : (TYPE_LABELS[evt.type]||'Evenement')}
               </div>
             </div>
-            <div style={{ display:'flex', alignItems:'center', padding:'0 12px', flexShrink:0 }}>
-              <span style={{ fontSize:16, color:respColor }}>{er.response==='yes'?'✅':er.response==='no'?'❌':er.response==='maybe'?'❓':'⏳'}</span>
+            <div style={{ width:34, height:34, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, background:rs.bg, color:rs.c }}>
+              <RespIcon r={er.response||'pending'} />
             </div>
           </div>
         );
