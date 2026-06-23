@@ -110,7 +110,7 @@ export function LicencieApp({ user, signOut }) {
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:14, fontWeight:800, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{clubProfile?.club_name || 'Mon club'}</div>
           <div style={{ fontSize:11, color:'#64748b' }}>
-            Bonjour {familyProfile.first_name} 👋
+            Bonjour {((Array.isArray(selectedLic?.legal_guardians) && selectedLic.legal_guardians[0]?.first_name?.trim()) || selectedLic?.first_name || familyProfile.first_name)} 👋
           </div>
         </div>
         {/* Sélecteur enfant si plusieurs */}
