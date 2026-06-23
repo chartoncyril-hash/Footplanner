@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { LicencieListItem, LicencieListHeader } from './LicencieListItem';
-import { Users, LayoutDashboard, Shield, Send } from 'lucide-react';
+import { Users, LayoutDashboard, Shield, Send, FileText, Trash2 } from 'lucide-react';
 
 // ── UPLOAD BUTTON ────────────────────────────────────────────
 function UploadButton({ value, accept, bucket, path, compress, onUploaded, onClear }) {
@@ -1011,6 +1011,95 @@ function DashboardTab({ licencies, docs }) {
     </div>
   );
 }
+function DocumentSettingsPanel() {
+  const [types, setTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newName, setNewName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const ownerId = await getEffectiveOwnerId();
+    const { data } = await supabase.from('document_types_config').select('*').eq('owner_id', ownerId).order('sort_order');
+    setTypes(data || []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const toggle = async (id, field, value) => {
+    setTypes(ts => ts.map(t => t.id === id ? { ...t, [field]: value } : t));
+    await supabase.from('document_types_config').update({ [field]: value }).eq('id', id);
+  };
+
+  const addType = async () => {
+    const name = newName.trim();
+    if (!name) return;
+    setSaving(true);
+    const ownerId = await getEffectiveOwnerId();
+    const maxOrder = types.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
+    const { error } = await supabase.from('document_types_config').insert({
+      owner_id: ownerId, name, required: false, has_expiry: false, licencie_readonly: false, sort_order: maxOrder + 1, active: true,
+    });
+    setSaving(false);
+    if (error) { alert(error.message.includes('duplicate') ? 'Ce type existe déjà.' : 'Erreur'); return; }
+    setNewName('');
+    load();
+  };
+
+  const removeType = async (id, name) => {
+    if (!confirm(`Supprimer le type "${name}" ? Les documents déjà déposés ne sont pas effacés.`)) return;
+    await supabase.from('document_types_config').delete().eq('id', id);
+    load();
+  };
+
+  const Switch = ({ on, onClick }) => (
+    <button onClick={onClick} style={{ width:42, height:24, borderRadius:12, border:'none', cursor:'pointer', background: on ? '#34d399' : 'rgba(255,255,255,0.12)', position:'relative', transition:'all 0.15s', flexShrink:0 }}>
+      <span style={{ position:'absolute', top:2, left: on ? 20 : 2, width:20, height:20, borderRadius:'50%', background:'#fff', transition:'all 0.15s' }} />
+    </button>
+  );
+
+  return (
+    <div>
+      <div style={{ ...S.card, marginBottom:16 }}>
+        <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9', marginBottom:6 }}>Documents attendus</div>
+        <div style={{ fontSize:12, color:'#94a3b8', marginBottom:0, lineHeight:1.5 }}>
+          Configurez les documents que vos licenciés doivent fournir. <strong>Obligatoire</strong> : requis pour la conformité. <strong>Date de péremption</strong> : le licencié saisit une date de validité. <strong>Lecture seule</strong> : seul le club peut déposer ce document (le licencié le consulte uniquement).
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ color:'#64748b', fontSize:13, padding:20 }}>Chargement...</div>
+      ) : (
+        <>
+          {types.map(t => (
+            <div key={t.id} style={{ ...S.card, marginBottom:10 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, marginBottom:14 }}>
+                <div style={{ fontSize:15, fontWeight:700, color:'#f1f5f9' }}>{t.name}</div>
+                <button onClick={() => removeType(t.id, t.name)} title="Supprimer" style={{ background:'rgba(251,113,133,0.08)', border:'1px solid rgba(251,113,133,0.2)', borderRadius:8, color:'#fb7185', cursor:'pointer', padding:'5px 9px', display:'flex', alignItems:'center' }}><Trash2 size={14} /></button>
+              </div>
+              {[
+                { field:'required',          label:'Obligatoire' },
+                { field:'has_expiry',        label:'Date de péremption à saisir' },
+                { field:'licencie_readonly', label:'Lecture seule (déposé par le club)' },
+              ].map(row => (
+                <div key={row.field} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+                  <span style={{ fontSize:13, color:'#94a3b8' }}>{row.label}</span>
+                  <Switch on={!!t[row.field]} onClick={() => toggle(t.id, row.field, !t[row.field])} />
+                </div>
+              ))}
+            </div>
+          ))}
+
+          <div style={{ ...S.card, display:'flex', gap:8, alignItems:'center' }}>
+            <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key==='Enter' && addType()} placeholder="Ajouter un type de document..." style={{ ...S.input, flex:1, marginBottom:0 }} />
+            <button onClick={addType} disabled={saving || !newName.trim()} style={{ ...S.btnPrimary, opacity: (saving||!newName.trim())?0.5:1, whiteSpace:'nowrap' }}>+ Ajouter</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function LicenciesView() {
   const isMobile = window.innerWidth < 768;
   const [licencies, setLicencies] = useState([]);
@@ -1169,6 +1258,7 @@ export function LicenciesView() {
           { v: "licencies", l: "Licenciés", icon: Users },
           { v: "dashboard", l: "Tableau de bord", icon: LayoutDashboard },
           { v: "equipes", l: "Équipes", icon: Shield },
+          { v: "documents", l: "Documents", icon: FileText },
         ].map((t) => {
           const Icon = t.icon;
           const active = tab === t.v;
@@ -1374,6 +1464,8 @@ export function LicenciesView() {
           })}
         </div>
       )}
+
+      {tab === "documents" && <DocumentSettingsPanel />}
     </div>
   );
 }
