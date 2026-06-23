@@ -633,7 +633,6 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
 // ============================================================
 // LICENCIE PROFIL — Fiche modifiable + RGPD
 // ============================================================
-const TYPES_DOCS_LIC = ["Licence", "Certificat médical", "Assurance", "Pièce d'identité", "Autorisation parentale"];
 const DOC_STATUTS = {
   conforme:       { label:'Conforme',      color:'#34d399' },
   expire_bientot: { label:'Expire bientôt', color:'#f59e0b' },
@@ -648,15 +647,30 @@ function DocStatusDot({ statut }) {
 
 function LicencieDocuments({ selectedLic, accent, onRefresh }) {
   const [docs, setDocs] = useState([]);
+  const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyType, setBusyType] = useState(null);
+  const [expiryInputs, setExpiryInputs] = useState({});
   const fileRefs = React.useRef({});
+
+  const computeStatut = (expDate) => {
+    if (!expDate) return 'conforme';
+    const exp = new Date(expDate);
+    const now = new Date();
+    if (exp < now) return 'expire';
+    if (exp < new Date(Date.now() + 30*24*60*60*1000)) return 'expire_bientot';
+    return 'conforme';
+  };
 
   const load = async () => {
     if (!selectedLic) return;
     setLoading(true);
-    const { data } = await supabase.from('licencies_documents').select('*').eq('licencie_id', selectedLic.id);
-    setDocs(data || []);
+    const [{ data: d }, { data: cfg }] = await Promise.all([
+      supabase.from('licencies_documents').select('*').eq('licencie_id', selectedLic.id),
+      supabase.from('document_types_config').select('*').eq('owner_id', selectedLic.owner_id).eq('active', true).order('sort_order'),
+    ]);
+    setDocs(d || []);
+    setTypes(cfg || []);
     setLoading(false);
   };
   useEffect(() => { load(); }, [selectedLic?.id]);
@@ -678,8 +692,13 @@ function LicencieDocuments({ selectedLic, accent, onRefresh }) {
     img.src = url;
   });
 
-  const upload = async (type, file) => {
+  const upload = async (typeCfg, file) => {
+    const type = typeCfg.name;
     if (!file || !selectedLic) return;
+    if (typeCfg.has_expiry && !expiryInputs[type]) {
+      alert("Merci d'indiquer la date de validité du document avant de le déposer.");
+      return;
+    }
     setBusyType(type);
     try {
       const compressed = await compressImage(file);
@@ -690,11 +709,13 @@ function LicencieDocuments({ selectedLic, accent, onRefresh }) {
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('licencies-docs').getPublicUrl(finalPath);
 
+      const expDate = typeCfg.has_expiry ? (expiryInputs[type] || null) : null;
+      const statut = computeStatut(expDate);
       const existing = docs.find(d => d.type === type);
       if (existing) {
-        await supabase.from('licencies_documents').update({ url: pub.publicUrl, statut: 'conforme' }).eq('id', existing.id);
+        await supabase.from('licencies_documents').update({ url: pub.publicUrl, statut, date_expiration: expDate }).eq('id', existing.id);
       } else {
-        await supabase.from('licencies_documents').insert({ licencie_id: selectedLic.id, owner_id: selectedLic.owner_id, type, url: pub.publicUrl, statut: 'conforme' });
+        await supabase.from('licencies_documents').insert({ licencie_id: selectedLic.id, owner_id: selectedLic.owner_id, type, url: pub.publicUrl, statut, date_expiration: expDate });
       }
       await load();
       if (onRefresh) onRefresh();
@@ -710,24 +731,29 @@ function LicencieDocuments({ selectedLic, accent, onRefresh }) {
   return (
     <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:18, padding:16, marginBottom:20 }}>
       <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Mes documents</div>
-      <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Déposez les documents demandés par le club (photo, galerie ou fichier PDF).</div>
+      <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Déposez les documents demandés par le club (photo, galerie ou fichier PDF). Les documents marqués <span style={{ color:accent, fontWeight:700 }}>*</span> sont obligatoires.</div>
 
       {loading ? (
         <div style={{ color:'#64748b', fontSize:13, padding:'10px 0' }}>Chargement...</div>
-      ) : TYPES_DOCS_LIC.map(type => {
+      ) : types.length === 0 ? (
+        <div style={{ color:'#64748b', fontSize:13, padding:'10px 0' }}>Aucun document demandé par le club pour le moment.</div>
+      ) : types.map(typeCfg => {
+        const type = typeCfg.name;
         const doc = docs.find(d => d.type === type);
         const statut = doc?.statut || 'manquant';
         const st = DOC_STATUTS[statut] || DOC_STATUTS.manquant;
         const expSoon = doc?.date_expiration && new Date(doc.date_expiration) < new Date(Date.now() + 30*24*60*60*1000);
+        const readonly = typeCfg.licencie_readonly;
         return (
           <div key={type} style={{ padding:'12px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9' }}>{type}</div>
-                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9' }}>{type}{typeCfg.required && <span style={{ color:accent }}> *</span>}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3, flexWrap:'wrap' }}>
                   <DocStatusDot statut={statut} />
                   <span style={{ fontSize:12, color:st.color, fontWeight:600 }}>{st.label}</span>
                   {doc?.date_expiration && <span style={{ fontSize:11, color: expSoon ? '#f59e0b' : '#64748b' }}>· exp. {new Date(doc.date_expiration).toLocaleDateString('fr-FR')}</span>}
+                  {readonly && <span style={{ fontSize:11, color:'#64748b', display:'inline-flex', alignItems:'center', gap:3 }}><Lock size={10} /> Géré par le club</span>}
                 </div>
               </div>
               {doc?.url && (
@@ -736,10 +762,24 @@ function LicencieDocuments({ selectedLic, accent, onRefresh }) {
                 </a>
               )}
             </div>
-            <input ref={el => fileRefs.current[type] = el} type="file" accept="image/*,application/pdf" style={{ display:'none' }} onChange={e => upload(type, e.target.files[0])} />
-            <button onClick={() => fileRefs.current[type]?.click()} disabled={busyType===type} style={{ marginTop:10, width:'100%', padding:'10px', borderRadius:10, border:`1px dashed ${doc?.url ? 'rgba(255,255,255,0.15)' : accent+'66'}`, background: doc?.url ? 'transparent' : `${accent}10`, color: doc?.url ? '#94a3b8' : accent, cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
-              {busyType===type ? 'Envoi...' : doc?.url ? (<><Upload size={15} /> Remplacer</>) : (<><Upload size={15} /> Ajouter (photo / fichier)</>)}
-            </button>
+
+            {!readonly && (
+              <>
+                {typeCfg.has_expiry && (
+                  <div style={{ marginTop:10 }}>
+                    <label style={{ fontSize:11, color:'#94a3b8', fontWeight:600, display:'block', marginBottom:5 }}>Date de validité <span style={{ color:accent }}>*</span></label>
+                    <input type="date" value={expiryInputs[type] ?? (doc?.date_expiration || '')} onChange={e => setExpiryInputs(p => ({ ...p, [type]: e.target.value }))} style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box' }} />
+                  </div>
+                )}
+                <input ref={el => fileRefs.current[type] = el} type="file" accept="image/*,application/pdf" style={{ display:'none' }} onChange={e => upload(typeCfg, e.target.files[0])} />
+                <button onClick={() => fileRefs.current[type]?.click()} disabled={busyType===type} style={{ marginTop:10, width:'100%', padding:'10px', borderRadius:10, border:`1px dashed ${doc?.url ? 'rgba(255,255,255,0.15)' : accent+'66'}`, background: doc?.url ? 'transparent' : `${accent}10`, color: doc?.url ? '#94a3b8' : accent, cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+                  {busyType===type ? 'Envoi...' : doc?.url ? (<><Upload size={15} /> Remplacer</>) : (<><Upload size={15} /> Ajouter (photo / fichier)</>)}
+                </button>
+              </>
+            )}
+            {readonly && !doc?.url && (
+              <div style={{ marginTop:8, fontSize:12, color:'#64748b', fontStyle:'italic' }}>En attente du dépôt par le club.</div>
+            )}
           </div>
         );
       })}
