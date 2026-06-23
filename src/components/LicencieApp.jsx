@@ -217,7 +217,7 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
         .eq('licencie_id', selectedLic.id)
         .order('responded_at', { ascending:false })
         .limit(10);
-      setUpcomingEvents((evts||[]).filter(e => e.club_events && new Date(e.club_events.date) >= new Date()).slice(0,3));
+      setUpcomingEvents((evts||[]).filter(e => e.club_events && e.club_events.date >= new Date().toISOString().slice(0,10)).slice(0,3));
 
       // Stages invités
       const { data: stageInvites } = await supabase
@@ -369,8 +369,8 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
     load(); onRefresh();
   };
 
-  const pending = responses.filter(r => r.response === 'pending' && new Date(r.club_events?.date) >= new Date());
-  const upcoming = responses.filter(r => r.response !== 'pending' && new Date(r.club_events?.date) >= new Date());
+  const pending = responses.filter(r => r.response === 'pending' && r.club_events && r.club_events.date >= new Date().toISOString().slice(0,10));
+  const upcoming = responses.filter(r => r.response !== 'pending' && r.club_events && r.club_events.date >= new Date().toISOString().slice(0,10));
   const past = responses.filter(r => new Date(r.club_events?.date) < new Date());
 
 
