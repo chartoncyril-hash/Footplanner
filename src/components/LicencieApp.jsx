@@ -235,17 +235,18 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
     <div>
       {/* Carte licencié sélectionné */}
       {selectedLic && (
-        <div style={{ background:`linear-gradient(135deg, ${accent}15 0%, rgba(255,255,255,0.03) 100%)`, border:`1px solid ${accent}33`, borderRadius:16, padding:'18px 20px', marginBottom:20 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+        <div style={{ position:'relative', overflow:'hidden', background:`linear-gradient(135deg, ${accent}28 0%, rgba(255,255,255,0.03) 100%)`, border:`1px solid ${accent}40`, borderRadius:20, padding:'18px 20px', marginBottom:20 }}>
+          <div style={{ position:'absolute', right:-30, top:-30, width:130, height:130, borderRadius:'50%', background:`radial-gradient(circle, ${accent}33, transparent 70%)` }} />
+          <div style={{ display:'flex', alignItems:'center', gap:15, position:'relative' }}>
             {selectedLic.photo_url
-              ? <img src={selectedLic.photo_url} alt="" style={{ width:56, height:56, borderRadius:14, objectFit:'cover', border:`2px solid ${accent}44` }} />
-              : <div style={{ width:56, height:56, borderRadius:14, background:`${accent}20`, border:`2px solid ${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:accent }}>{selectedLic.first_name[0]}{selectedLic.last_name[0]}</div>
+              ? <img src={selectedLic.photo_url} alt="" style={{ width:60, height:60, borderRadius:16, objectFit:'cover', border:`2px solid ${accent}66` }} />
+              : <div style={{ width:60, height:60, borderRadius:16, background:`${accent}33`, border:`2px solid ${accent}66`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:21, fontWeight:900, color:accent }}>{selectedLic.first_name[0]}{selectedLic.last_name[0]}</div>
             }
             <div>
-              <div style={{ fontSize:18, fontWeight:900, color:'#f1f5f9' }}>{selectedLic.first_name} {selectedLic.last_name}</div>
-              <div style={{ display:'flex', gap:8, marginTop:4 }}>
-                {selectedLic.category && <span style={{ fontSize:11, fontWeight:700, color:accent, background:`${accent}15`, padding:'2px 8px', borderRadius:10 }}>{selectedLic.category}</span>}
-                {selectedLic.team && <span style={{ fontSize:11, color:'#64748b' }}>{selectedLic.team}</span>}
+              <div style={{ fontSize:19, fontWeight:900, color:'#f1f5f9', letterSpacing:'-0.3px' }}>{selectedLic.first_name} {selectedLic.last_name}</div>
+              <div style={{ display:'flex', gap:7, marginTop:6 }}>
+                {selectedLic.category && <span style={{ fontSize:11, fontWeight:700, color:accent, background:`${accent}22`, padding:'3px 9px', borderRadius:7 }}>{selectedLic.category}</span>}
+                {selectedLic.team && <span style={{ fontSize:11, fontWeight:700, color:'#94a3b8', background:'rgba(255,255,255,0.06)', padding:'3px 9px', borderRadius:7 }}>{selectedLic.team}</span>}
               </div>
             </div>
           </div>
@@ -282,8 +283,8 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
             const evt = er.club_events;
             const respColor = er.response==='yes'?'#34d399':er.response==='no'?'#fb7185':er.response==='maybe'?'#f59e0b':'#64748b';
             return (
-              <div key={er.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:8 }}>
-                <span style={{ display:'flex', flexShrink:0, color:EVENT_COLOR[evt.type]||'#94a3b8' }}><EventTypeIcon type={evt.type} size={20} /></span>
+              <div key={er.id} style={{ display:'flex', alignItems:'center', gap:13, padding:'13px 14px', borderRadius:15, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:11 }}>
+                <span style={{ display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, width:42, height:42, borderRadius:12, background:`${EVENT_COLOR[evt.type]||'#94a3b8'}22`, color:EVENT_COLOR[evt.type]||'#94a3b8' }}><EventTypeIcon type={evt.type} size={21} /></span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
                   <div style={{ fontSize:11, color:'#64748b', display:'flex', alignItems:'center', gap:4 }}><Calendar size={11} />{new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})}{evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}</div>
@@ -321,10 +322,10 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
       )}
 
       {upcomingEvents.length === 0 && stages.length === 0 && pendingEvents === 0 && (
-        <div style={{ textAlign:'center', padding:'40px 24px', color:'#334155' }}>
-          <div style={{ fontSize:40, marginBottom:12 }}>🌟</div>
-          <p style={{ fontSize:15, color:'#475569' }}>Tout est à jour !</p>
-          <p style={{ fontSize:13 }}>Aucune action en attente</p>
+        <div style={{ textAlign:'center', padding:'44px 24px' }}>
+          <div style={{ width:60, height:60, borderRadius:18, background:'rgba(52,211,153,0.12)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', color:'#34d399' }}><Check size={28} /></div>
+          <p style={{ fontSize:16, fontWeight:800, color:'#cbd5e1', margin:'0 0 4px' }}>Tout est à jour</p>
+          <p style={{ fontSize:13, color:'#64748b', margin:0 }}>Aucune action en attente</p>
         </div>
       )}
     </div>
