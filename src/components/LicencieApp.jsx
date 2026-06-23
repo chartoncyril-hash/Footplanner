@@ -768,7 +768,7 @@ function LicencieDocuments({ selectedLic, accent, onRefresh }) {
                 {typeCfg.has_expiry && (
                   <div style={{ marginTop:10 }}>
                     <label style={{ fontSize:11, color:'#94a3b8', fontWeight:600, display:'block', marginBottom:5 }}>Date de validité <span style={{ color:accent }}>*</span></label>
-                    <input type="date" value={expiryInputs[type] ?? (doc?.date_expiration || '')} onChange={e => setExpiryInputs(p => ({ ...p, [type]: e.target.value }))} style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box' }} />
+                    <input type="date" value={expiryInputs[type] ?? (doc?.date_expiration || '')} onChange={e => setExpiryInputs(p => ({ ...p, [type]: e.target.value }))} style={{ width:'100%', maxWidth:'100%', minWidth:0, padding:'9px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', boxSizing:'border-box', display:'block', WebkitAppearance:'none', appearance:'none' }} />
                   </div>
                 )}
                 <input ref={el => fileRefs.current[type] = el} type="file" accept="image/*,application/pdf" style={{ display:'none' }} onChange={e => upload(typeCfg, e.target.files[0])} />
