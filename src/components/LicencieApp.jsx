@@ -68,8 +68,10 @@ export function LicencieApp({ user, signOut }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const accent = clubProfile?.club_color || '#a3e635';
   const selectedLic = licencies.find(l => l.id === selectedLicId);
+  const KID_PALETTE = ['#22d3ee','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#fb923c','#2dd4bf'];
+  const kidColor = (id) => { if(!id) return null; let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return KID_PALETTE[h % KID_PALETTE.length]; };
+  const accent = (selectedLic ? kidColor(selectedLic.id) : null) || clubProfile?.club_color || '#a3e635';
 
   if (loading) return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
@@ -113,19 +115,30 @@ export function LicencieApp({ user, signOut }) {
             Bonjour {((Array.isArray(selectedLic?.legal_guardians) && selectedLic.legal_guardians[0]?.first_name?.trim()) || selectedLic?.first_name || familyProfile.first_name)} 👋
           </div>
         </div>
-        {/* Sélecteur enfant si plusieurs */}
-        {licencies.length > 1 && (
-          <select value={selectedLicId || ''} onChange={e => setSelectedLicId(e.target.value)}
-            style={{ padding:'6px 12px', borderRadius:8, border:`2px solid ${accent}`, background:'#1e293b', color:'#f1f5f9', fontSize:13, fontFamily:'inherit', cursor:'pointer', fontWeight:700 }}>
-            {licencies.map(l => (
-              <option key={l.id} value={l.id} style={{ background:'#1e293b' }}>{l.first_name} {l.last_name}</option>
-            ))}
-          </select>
-        )}
         <button onClick={signOut} style={{ background:'none', border:'none', color:'#475569', cursor:'pointer', fontSize:11, padding:'4px 8px', borderRadius:6, fontFamily:'inherit' }}>
           Déco.
         </button>
       </div>
+
+      {/* Switcher enfant (avatars colores) */}
+      {licencies.length > 1 && (
+        <div style={{ maxWidth:600, margin:'0 auto', display:'flex', gap:10, overflowX:'auto', padding:'14px 16px 6px', WebkitOverflowScrolling:'touch' }}>
+          {licencies.map(l => {
+            const c = kidColor(l.id);
+            const on = l.id === selectedLicId;
+            return (
+              <div key={l.id} onClick={()=>setSelectedLicId(l.id)} style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', width:60 }}>
+                <div style={{ width:54, height:54, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:17, color:'#fff', position:'relative', overflow:'hidden', border:`2px solid ${on?c:'transparent'}`, boxShadow:on?`0 0 0 4px ${c}33, 0 8px 18px -6px ${c}`:'none', background:on?c:'#334155', opacity:on?1:0.6, filter:on?'none':'saturate(0.7)', transition:'.2s' }}>
+                  {l.photo_url
+                    ? <img src={l.photo_url} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
+                    : `${(l.first_name[0]||'')}${(l.last_name[0]||'')}`}
+                </div>
+                <div style={{ fontSize:11, fontWeight:600, color:on?c:'#64748b', whiteSpace:'nowrap', maxWidth:60, overflow:'hidden', textOverflow:'ellipsis' }}>{l.first_name}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Contenu */}
       <div style={{ maxWidth:600, margin:'0 auto', padding:'20px 16px' }}>
