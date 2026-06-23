@@ -692,15 +692,7 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
     <div>
       <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>Mon profil</h3>
 
-      {licencies.length > 1 && (
-        <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
-          {licencies.map(l => (
-            <button key={l.id} onClick={() => setSelectedLicId(l.id)} style={{ padding:'6px 14px', borderRadius:20, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700, borderColor: selectedLic?.id===l.id ? accent : 'rgba(255,255,255,0.1)', background: selectedLic?.id===l.id ? `${accent}15` : 'transparent', color: selectedLic?.id===l.id ? accent : '#64748b' }}>
-              {l.first_name} {l.last_name}
-            </button>
-          ))}
-        </div>
-      )}
+      
 
       {selectedLic && (
         <>
