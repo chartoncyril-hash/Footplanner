@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     event_location, event_description,
     club_name, club_color, club_logo_url,
     response_url, survey_title,
-    type, cancellation_reason,
+    type, cancellation_reason, is_reminder,
   } = await req.json();
 
   const accent = club_color || '#f472b6';
@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
       <!-- Corps -->
       <div style="padding:28px;">
         <p style="font-size:16px;font-weight:600;color:#f1f5f9;margin:0 0 16px;">Bonjour ${participant_name} ! 👋</p>
+        ${is_reminder ? `<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">🔔</span><span style="font-size:13px;font-weight:700;color:#f59e0b;">Rappel — pense à confirmer ta présence</span></div>` : ''}
         <!-- Événement -->
         <div style="background:rgba(255,255,255,0.04);border:1px solid ${accent}33;border-radius:12px;padding:18px;margin-bottom:20px;">
           <div style="font-size:28px;margin-bottom:8px;">${emoji}</div>
@@ -114,7 +115,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       from: 'FootPlanner <contact@footplanner.fr>',
       to: email,
-      subject: `${emoji} ${event_title} — Confirme ta présence`,
+      subject: is_reminder ? `Rappel · ${event_title} — Confirme ta présence` : `${emoji} ${event_title} — Confirme ta présence`,
       html,
     }),
   });

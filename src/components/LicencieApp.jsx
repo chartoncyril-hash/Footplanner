@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { supabase } from '../lib/supabase';
-import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox, ArrowRight, Tent, ClipboardList, Trophy, Medal, Dumbbell, Pin } from 'lucide-react';
+import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox, ArrowRight, Tent, ClipboardList, Trophy, Medal, Dumbbell, Pin, Car, Minus, Plus } from 'lucide-react';
 import { ChatModule } from './chat/ChatModule';
 
 const FootballIcon = ({ size=20, color='currentColor' }) => (
@@ -427,10 +427,23 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
               ))}
             </div>
             {localResp === 'yes' && (
-              <label style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', borderRadius:8, background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.15)', cursor:'pointer', marginBottom:10 }}>
-                <input type="checkbox" checked={canDrive} onChange={e=>setCanDrive(e.target.checked)} style={{ accentColor:'#34d399' }} />
-                <span style={{ fontSize:13, color:'#94a3b8' }}>🚗 Je peux conduire ({seats} places)</span>
-              </label>
+              <div style={{ borderRadius:8, background:'rgba(52,211,153,0.06)', border:'1px solid rgba(52,211,153,0.15)', marginBottom:10, overflow:'hidden' }}>
+                <label style={{ display:'flex', alignItems:'center', gap:9, padding:'11px 14px', cursor:'pointer' }}>
+                  <input type="checkbox" checked={canDrive} onChange={e=>setCanDrive(e.target.checked)} style={{ accentColor:'#34d399', width:15, height:15 }} />
+                  <Car size={16} color="#34d399" />
+                  <span style={{ fontSize:13, color:'#cbd5e1', fontWeight:600 }}>Je peux conduire</span>
+                </label>
+                {canDrive && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', borderTop:'1px solid rgba(52,211,153,0.15)' }}>
+                    <span style={{ fontSize:13, color:'#94a3b8' }}>Places disponibles</span>
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                      <button type="button" onClick={()=>setSeats(n=>Math.max(1,n-1))} style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:'#cbd5e1', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><Minus size={15} /></button>
+                      <span style={{ fontSize:16, fontWeight:800, color:'#f1f5f9', minWidth:20, textAlign:'center' }}>{seats}</span>
+                      <button type="button" onClick={()=>setSeats(n=>Math.min(8,n+1))} style={{ width:30, height:30, borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:'#cbd5e1', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><Plus size={15} /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Message pour le coach..." style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', resize:'vertical', minHeight:60, boxSizing:'border-box' }} />
           </div>
