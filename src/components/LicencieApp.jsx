@@ -385,10 +385,9 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
     const [comment, setComment] = useState(er.comment || '');
     const [saving, setSaving] = useState(false);
 
-    const doSave = async (resp) => {
+    const doSave = async () => {
       setSaving(true);
-      setLocalResp(resp);
-      await updateResponse(er.id, resp, canDrive, seats, comment);
+      await updateResponse(er.id, localResp, canDrive, seats, comment);
       setSaving(false);
       setExpanded(false);
     };
@@ -421,7 +420,7 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
             <p style={{ fontSize:13, color:'#64748b', margin:'12px 0 10px' }}>Votre réponse :</p>
             <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
               {RESP_OPTS.map(opt => (
-                <button key={opt.val} onClick={() => doSave(opt.val)} disabled={saving} style={{ padding:'11px 16px', borderRadius:10, border:`2px solid ${localResp===opt.val?opt.color:'rgba(255,255,255,0.08)'}`, background:localResp===opt.val?opt.bg:'transparent', color:localResp===opt.val?opt.color:'#64748b', cursor:'pointer', fontFamily:'inherit', fontSize:14, fontWeight:700, transition:'all 0.15s' }}>
+                <button key={opt.val} onClick={() => setLocalResp(opt.val)} disabled={saving} style={{ padding:'11px 16px', borderRadius:10, border:`2px solid ${localResp===opt.val?opt.color:'rgba(255,255,255,0.08)'}`, background:localResp===opt.val?opt.bg:'transparent', color:localResp===opt.val?opt.color:'#64748b', cursor:'pointer', fontFamily:'inherit', fontSize:14, fontWeight:700, transition:'all 0.15s' }}>
                   {opt.label}
                 </button>
               ))}
@@ -445,7 +444,10 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
                 )}
               </div>
             )}
-            <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Message pour le coach..." style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', resize:'vertical', minHeight:60, boxSizing:'border-box' }} />
+            <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder="Message pour le coach..." style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', color:'#f1f5f9', fontSize:12, fontFamily:'inherit', resize:'vertical', minHeight:60, boxSizing:'border-box', marginBottom:12 }} />
+            <button onClick={doSave} disabled={saving || localResp==='pending'} style={{ width:'100%', padding:'13px', borderRadius:10, border:'none', background: (saving||localResp==='pending') ? 'rgba(255,255,255,0.08)' : accent, color: (saving||localResp==='pending') ? '#64748b' : '#0a0e1a', fontSize:14, fontWeight:800, cursor: (saving||localResp==='pending')?'default':'pointer', fontFamily:'inherit' }}>
+              {saving ? 'Enregistrement...' : 'Valider ma réponse'}
+            </button>
           </div>
         )}
       </div>
