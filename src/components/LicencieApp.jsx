@@ -73,18 +73,27 @@ export function LicencieApp({ user, signOut }) {
       .is('read_at', null);
     setUnreadCount(unread || 0);
 
-    // 5. Compter événements en attente de réponse
-    const { count: pending } = await supabase
-      .from('event_responses')
-      .select('*', { count:'exact', head:true })
-      .in('licencie_id', (licsData||[]).map(l=>l.id))
-      .eq('response', 'pending');
-    setPendingEvents(pending || 0);
+    // pendingEvents recalcule par enfant selectionne via useEffect dedie
 
     setLoading(false);
   }, [user.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Compteur "en attente" aligne sur l'onglet Evenements : enfant selectionne + evenements a venir uniquement
+  useEffect(() => {
+    if (!selectedLicId) { setPendingEvents(0); return; }
+    (async () => {
+      const todayStr = new Date().toISOString().slice(0,10);
+      const { data } = await supabase
+        .from('event_responses')
+        .select('id, response, club_events(date)')
+        .eq('licencie_id', selectedLicId)
+        .eq('response', 'pending');
+      const n = (data || []).filter(r => r.club_events && r.club_events.date >= todayStr).length;
+      setPendingEvents(n);
+    })();
+  }, [selectedLicId]);
 
   const selectedLic = licencies.find(l => l.id === selectedLicId);
   const KID_PALETTE = ['#22d3ee','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#fb923c','#2dd4bf'];
