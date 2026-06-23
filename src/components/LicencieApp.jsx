@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { supabase } from '../lib/supabase';
-import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox } from 'lucide-react';
+import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox, ArrowRight, Tent, ClipboardList, Trophy, Medal, Dumbbell, Pin } from 'lucide-react';
 import { ChatModule } from './chat/ChatModule';
 
 const FootballIcon = ({ size=20, color='currentColor' }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth="1.8">
-    <circle cx="12" cy="12" r="9.2"/>
-    <path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z" fill={color} stroke="none"/>
-    <path d="M12 2.8v4.4M4.3 8.6l3.9 1.6M19.7 8.6l-3.9 1.6M7.1 19.5l1.4-3.8M16.9 19.5l-1.4-3.8"/>
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round">
+    <circle cx="12" cy="12" r="9.5"/>
+    <path d="M12 7l3.5 2.6-1.35 4.2h-4.3L8.5 9.6z"/>
+    <path d="M12 2.5V7M15.5 9.6l5-1.5M14.15 13.8l3 4M9.85 13.8l-3 4M8.5 9.6l-5-1.5"/>
   </svg>
-);
+);;;
+
+const EVENT_ICONS = { training: Dumbbell, match: Trophy, tournament: Medal, stage: Tent, meeting: ClipboardList, other: Pin };
+const EVENT_COLOR = { training:'#34d399', match:'#f59e0b', tournament:'#f97316', stage:'#a78bfa', meeting:'#22d3ee', other:'#94a3b8' };
+const EventTypeIcon = ({ type, size=20 }) => { const I = EVENT_ICONS[type] || Pin; return <I size={size} />; };
+const RespIcon = ({ r, size=16 }) => {
+  if (r==='yes') return <Check size={size} />;
+  if (r==='no') return <X size={size} />;
+  if (r==='maybe') return <HelpCircle size={size} />;
+  return <Clock size={size} />;
+};
 
 // ============================================================
 // LicencieApp — Espace licencié / parent
@@ -211,7 +221,6 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
     })();
   }, [selectedLic]);
 
-  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
 
   return (
     <div>
@@ -237,22 +246,22 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
       {/* Alertes */}
       {pendingEvents > 0 && (
         <button onClick={() => onTabChange('events')} style={{ width:'100%', marginBottom:12, padding:'12px 16px', borderRadius:12, border:'1px solid rgba(245,158,11,0.3)', background:'rgba(245,158,11,0.08)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:20 }}>🔔</span>
+          <span style={{ display:'flex', flexShrink:0, color:'#f59e0b' }}><Bell size={20} /></span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:700, color:'#f59e0b' }}>{pendingEvents} réponse{pendingEvents>1?'s':''} en attente</div>
             <div style={{ fontSize:11, color:'#64748b' }}>Confirmez vos présences</div>
           </div>
-          <span style={{ color:'#f59e0b', fontSize:16 }}>→</span>
+          <span style={{ display:'flex', color:'#f59e0b' }}><ArrowRight size={18} /></span>
         </button>
       )}
       {unreadCount > 0 && (
         <button onClick={() => onTabChange('chat')} style={{ width:'100%', marginBottom:12, padding:'12px 16px', borderRadius:12, border:'1px solid rgba(251,113,133,0.3)', background:'rgba(251,113,133,0.08)', cursor:'pointer', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:20 }}>💬</span>
+          <span style={{ display:'flex', flexShrink:0, color:'#fb7185' }}><MessageCircle size={20} /></span>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:13, fontWeight:700, color:'#fb7185' }}>{unreadCount} message{unreadCount>1?'s':''} non lu{unreadCount>1?'s':''}</div>
             <div style={{ fontSize:11, color:'#64748b' }}>Du coach</div>
           </div>
-          <span style={{ color:'#fb7185', fontSize:16 }}>→</span>
+          <span style={{ display:'flex', color:'#fb7185' }}><ArrowRight size={18} /></span>
         </button>
       )}
 
@@ -262,17 +271,16 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
           <div style={{ fontSize:12, fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Prochains événements</div>
           {upcomingEvents.map(er => {
             const evt = er.club_events;
-            const emoji = EVENT_EMOJIS[evt.type] || '📌';
             const respColor = er.response==='yes'?'#34d399':er.response==='no'?'#fb7185':er.response==='maybe'?'#f59e0b':'#64748b';
             return (
               <div key={er.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', marginBottom:8 }}>
-                <span style={{ fontSize:20, flexShrink:0 }}>{emoji}</span>
+                <span style={{ display:'flex', flexShrink:0, color:EVENT_COLOR[evt.type]||'#94a3b8' }}><EventTypeIcon type={evt.type} size={20} /></span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
-                  <div style={{ fontSize:11, color:'#64748b' }}>📅 {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})}{evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}</div>
+                  <div style={{ fontSize:11, color:'#64748b', display:'flex', alignItems:'center', gap:4 }}><Calendar size={11} />{new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})}{evt.time_start?` · ${evt.time_start.slice(0,5)}`:''}</div>
                 </div>
-                <span style={{ fontSize:11, fontWeight:700, color:respColor }}>
-                  {er.response==='yes'?'✅':er.response==='no'?'❌':er.response==='maybe'?'❓':'⏳'}
+                <span style={{ display:'flex', color:respColor }}>
+                  <RespIcon r={er.response} size={18} />
                 </span>
               </div>
             );
@@ -288,10 +296,10 @@ function LicencieHome({ familyProfile, licencies, selectedLic, clubProfile, acce
             const stage = si.stages;
             return (
               <div key={si.id} style={{ padding:'12px 14px', borderRadius:10, background:'rgba(129,140,248,0.06)', border:'1px solid rgba(129,140,248,0.2)', marginBottom:8 }}>
-                <div style={{ fontSize:13, fontWeight:800, color:'#f1f5f9', marginBottom:4 }}>🏕️ {stage.name}</div>
+                <div style={{ fontSize:13, fontWeight:800, color:'#f1f5f9', marginBottom:4, display:'flex', alignItems:'center', gap:6 }}><Tent size={15} color="#a78bfa" />{stage.name}</div>
                 <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                  {stage.date_start && <span style={{ fontSize:11, color:'#64748b' }}>📅 {new Date(stage.date_start).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span>}
-                  {stage.location && <span style={{ fontSize:11, color:'#64748b' }}>📍 {stage.location}</span>}
+                  {stage.date_start && <span style={{ fontSize:11, color:'#64748b', display:'inline-flex', alignItems:'center', gap:4 }}><Calendar size={11} />{new Date(stage.date_start).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span>}
+                  {stage.location && <span style={{ fontSize:11, color:'#64748b', display:'inline-flex', alignItems:'center', gap:4 }}><MapPin size={11} />{stage.location}</span>}
                   {stage.price > 0 && <span style={{ fontSize:11, color:'#a78bfa', fontWeight:700 }}>{stage.price}€</span>}
                 </div>
                 <a href={`/?stage=${si.token}`} style={{ display:'inline-block', marginTop:8, padding:'5px 14px', borderRadius:8, background:'rgba(129,140,248,0.15)', color:'#a78bfa', fontSize:12, fontWeight:700, textDecoration:'none', border:'1px solid rgba(129,140,248,0.25)' }}>
@@ -356,12 +364,10 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
   const upcoming = responses.filter(r => r.response !== 'pending' && new Date(r.club_events?.date) >= new Date());
   const past = responses.filter(r => new Date(r.club_events?.date) < new Date());
 
-  const EVENT_EMOJIS = { training:'⚽', match:'🏆', tournament:'🥇', stage:'🏕️', meeting:'📋', other:'📌' };
 
   const EventCard = ({ er, showActions=true }) => {
     const evt = er.club_events;
     if (!evt) return null;
-    const emoji = EVENT_EMOJIS[evt.type] || '📌';
     const [expanded, setExpanded] = useState(false);
     const [localResp, setLocalResp] = useState(er.response);
     const [canDrive, setCanDrive] = useState(er.can_drive || false);
@@ -378,26 +384,26 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
     };
 
     const RESP_OPTS = [
-      { val:'yes',   label:'✅ Présent',   color:'#34d399', bg:'rgba(52,211,153,0.12)'  },
-      { val:'no',    label:'❌ Absent',    color:'#fb7185', bg:'rgba(251,113,133,0.12)' },
-      { val:'maybe', label:'❓ Peut-être', color:'#f59e0b', bg:'rgba(245,158,11,0.12)'  },
+      { val:'yes',   label:'Présent',   color:'#34d399', bg:'rgba(52,211,153,0.12)'  },
+      { val:'no',    label:'Absent',    color:'#fb7185', bg:'rgba(251,113,133,0.12)' },
+      { val:'maybe', label:'Peut-être', color:'#f59e0b', bg:'rgba(245,158,11,0.12)'  },
     ];
     const respColor = localResp==='yes'?'#34d399':localResp==='no'?'#fb7185':localResp==='maybe'?'#f59e0b':'#64748b';
 
     return (
       <div style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${localResp==='pending'?'rgba(245,158,11,0.3)':'rgba(255,255,255,0.08)'}`, background: localResp==='pending'?'rgba(245,158,11,0.04)':'rgba(255,255,255,0.02)', marginBottom:10 }}>
         <button onClick={() => showActions && setExpanded(!expanded)} style={{ width:'100%', padding:'12px 16px', background:'none', border:'none', cursor: showActions?'pointer':'default', textAlign:'left', fontFamily:'inherit', display:'flex', alignItems:'center', gap:12 }}>
-          <span style={{ fontSize:20 }}>{emoji}</span>
+          <span style={{ display:'flex', flexShrink:0, color:EVENT_COLOR[evt.type]||'#94a3b8' }}><EventTypeIcon type={evt.type} size={20} /></span>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{evt.title}</div>
-            <div style={{ fontSize:11, color:'#64748b' }}>
-              📅 {new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'})}
+            <div style={{ fontSize:11, color:'#64748b', display:'flex', alignItems:'center', gap:4 }}>
+              <Calendar size={11} />{new Date(evt.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'})}
               {evt.time_start ? ` · ${evt.time_start.slice(0,5)}` : ''}
-              {evt.location ? ` · 📍 ${evt.location}` : ''}
+              {evt.location ? ` · ${evt.location}` : ''}
             </div>
           </div>
-          <span style={{ fontSize:14, fontWeight:700, color:respColor }}>
-            {localResp==='yes'?'✅':localResp==='no'?'❌':localResp==='maybe'?'❓':'⏳'}
+          <span style={{ display:'flex', color:respColor }}>
+            <RespIcon r={localResp} size={18} />
           </span>
         </button>
         {expanded && showActions && (
@@ -427,12 +433,12 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
 
   return (
     <div>
-      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20 }}>📋 Événements</h3>
+      <h3 style={{ fontSize:18, fontWeight:900, color:'#f1f5f9', marginBottom:20, display:'flex', alignItems:'center', gap:8 }}><ClipboardList size={20} color={accent} />Événements</h3>
       <div style={{ display:'flex', gap:4, marginBottom:20, borderBottom:'1px solid rgba(255,255,255,0.08)', paddingBottom:0 }}>
         {[
-          { key:'presences', label:`⏳ En attente (${pending.length})` },
-          { key:'upcoming',  label:'📅 À venir' },
-          { key:'past',      label:'✓ Passés' },
+          { key:'presences', label:`En attente (${pending.length})` },
+          { key:'upcoming',  label:'À venir' },
+          { key:'past',      label:'Passés' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding:'8px 14px', border:'none', background:'none', cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700, color: activeTab===t.key ? accent : '#64748b', borderBottom: activeTab===t.key ? `2px solid ${accent}` : '2px solid transparent', marginBottom:-1 }}>{t.label}</button>
         ))}
@@ -440,7 +446,7 @@ function LicencieEvents({ familyProfile, licencies, selectedLic, accent, onRefre
 
       {activeTab === 'presences' && (
         pending.length === 0
-          ? <div style={{ textAlign:'center', padding:'40px 0', color:'#334155' }}>✅ Toutes vos présences sont confirmées !</div>
+          ? <div style={{ textAlign:'center', padding:'40px 0', color:'#475569', display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}><Check size={28} color="#34d399" />Toutes vos présences sont confirmées !</div>
           : pending.map(er => <EventCard key={er.id} er={er} showActions={true} />)
       )}
       {activeTab === 'upcoming' && (
@@ -710,7 +716,7 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
                 ? <img src={selectedLic.photo_url} alt="" style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:`2px solid ${accent}44` }} />
                 : <div style={{ width:72, height:72, borderRadius:16, background:`${accent}20`, border:`2px solid ${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, fontWeight:900, color:accent }}>{selectedLic.first_name[0]}{selectedLic.last_name[0]}</div>
               }
-              <div style={{ position:'absolute', bottom:-4, right:-4, width:22, height:22, borderRadius:'50%', background:accent, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11 }}>📷</div>
+              <div style={{ position:'absolute', bottom:-4, right:-4, width:22, height:22, borderRadius:'50%', background:accent, display:'flex', alignItems:'center', justifyContent:'center', color:'#0a0e1a' }}><Camera size={12} /></div>
               <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>uploadPhoto(e.target.files[0])} />
             </div>
             <div>
@@ -726,12 +732,12 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
           <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'16px', marginBottom:20 }}>
             <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Identité</div>
             {anyEditable
-              ? <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Complétez les informations manquantes. Les champs déjà renseignés par le club (🔒) sont verrouillés.</div>
+              ? <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Complétez les informations manquantes. Les champs déjà renseignés par le club sont verrouillés.</div>
               : <div style={{ height:10 }} />}
 
             {FIELD_DEFS.map(def => isLocked(def.key) ? (
               <div key={def.key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontSize:13, color:'#64748b' }}>🔒 {def.label}</span>
+                <span style={{ fontSize:13, color:'#64748b', display:'flex', alignItems:'center', gap:6 }}><Lock size={12} />{def.label}</span>
                 <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{fmtVal(def, selectedLic[def.key])}</span>
               </div>
             ) : (
@@ -747,7 +753,7 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
             ))}
 
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0' }}>
-              <span style={{ fontSize:13, color:'#64748b' }}>🔒 Numéro de licence</span>
+              <span style={{ fontSize:13, color:'#64748b', display:'flex', alignItems:'center', gap:6 }}><Lock size={12} />Numéro de licence</span>
               <span style={{ fontSize:13, color:'#f1f5f9', fontWeight:600 }}>{selectedLic.licence_number || '—'}</span>
             </div>
           </div>
@@ -761,7 +767,7 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
           </div>
 
           <div style={{ background:'rgba(251,113,133,0.04)', border:'1px solid rgba(251,113,133,0.15)', borderRadius:12, padding:'16px', marginBottom:20 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:'#fb7185', marginBottom:12 }}>🏥 Données médicales</div>
+            <div style={{ fontSize:13, fontWeight:800, color:'#fb7185', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}><HeartPulse size={17} />Données médicales</div>
 
             <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 14px', borderRadius:8, border:'1px solid rgba(251,113,133,0.2)', background:'rgba(251,113,133,0.06)', cursor:'pointer', marginBottom:14 }}>
               <input type="checkbox" checked={form.medical_consent} onChange={e => set('medical_consent', e.target.checked)} style={{ accentColor:'#fb7185', width:16, height:16, marginTop:1, flexShrink:0 }} />
