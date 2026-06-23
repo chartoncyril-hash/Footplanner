@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { supabase } from '../lib/supabase';
-import { Calendar, Bell, User, MessageCircle, Home } from 'lucide-react';
+import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox } from 'lucide-react';
 import { ChatModule } from './chat/ChatModule';
+
+const FootballIcon = ({ size=20, color='currentColor' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth="1.8">
+    <circle cx="12" cy="12" r="9.2"/>
+    <path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z" fill={color} stroke="none"/>
+    <path d="M12 2.8v4.4M4.3 8.6l3.9 1.6M19.7 8.6l-3.9 1.6M7.1 19.5l1.4-3.8M16.9 19.5l-1.4-3.8"/>
+  </svg>
+);
 
 // ============================================================
 // LicencieApp — Espace licencié / parent
@@ -75,7 +83,7 @@ export function LicencieApp({ user, signOut }) {
 
   if (loading) return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
-      <div style={{ fontSize:32 }}>⚽</div>
+      <div style={{ marginBottom:4 }}><FootballIcon size={36} color="#64748b" /></div>
       <div style={{ color:'#64748b', fontSize:14 }}>Chargement...</div>
     </div>
   );
@@ -83,7 +91,7 @@ export function LicencieApp({ user, signOut }) {
   if (!familyProfile) return (
     <div style={{ minHeight:'100vh', background:'#0a0e1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
       <div style={{ textAlign:'center', color:'#64748b', maxWidth:320 }}>
-        <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:16 }}><Lock size={38} color="#64748b" /></div>
         <h2 style={{ color:'#f1f5f9', fontSize:18, fontWeight:800, marginBottom:8 }}>Accès non autorisé</h2>
         <p style={{ fontSize:14, marginBottom:20 }}>Votre compte n'est pas lié à un espace licencié. Contactez votre club.</p>
         <button onClick={signOut} style={{ padding:'10px 24px', borderRadius:10, border:'none', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', fontFamily:'inherit', fontSize:14 }}>
@@ -107,7 +115,7 @@ export function LicencieApp({ user, signOut }) {
       <div style={{ background:`linear-gradient(135deg, ${accent}22 0%, #0a0e1a 60%)`, borderBottom:`1px solid ${accent}22`, padding:'14px 20px', display:'flex', alignItems:'center', gap:12, position:'sticky', top:0, zIndex:50, backdropFilter:'blur(10px)' }}>
         {clubProfile?.club_logo_url
           ? <img src={clubProfile.club_logo_url} alt="" style={{ width:36, height:36, borderRadius:10, objectFit:'cover', flexShrink:0 }} />
-          : <div style={{ width:36, height:36, borderRadius:10, background:`${accent}33`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>⚽</div>
+          : <div style={{ width:36, height:36, borderRadius:10, background:`${accent}33`, display:'flex', alignItems:'center', justifyContent:'center' }}><FootballIcon size={20} color={accent} /></div>
         }
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:14, fontWeight:800, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{clubProfile?.club_name || 'Mon club'}</div>
