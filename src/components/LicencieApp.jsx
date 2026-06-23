@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { EmergencyContactsSection, LegalGuardiansSection } from './LicencieContactsSection';
 import { supabase } from '../lib/supabase';
-import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox, ArrowRight, Tent, ClipboardList, Trophy, Medal, Dumbbell, Pin, Car, Minus, Plus } from 'lucide-react';
+import { Calendar, Bell, User, MessageCircle, Home, Lock, HeartPulse, Check, X, Clock, HelpCircle, MapPin, Camera, Inbox, ArrowRight, Tent, ClipboardList, Trophy, Medal, Dumbbell, Pin, Car, Minus, Plus, FileText, Image as ImageIcon, Upload } from 'lucide-react';
 import { ChatModule } from './chat/ChatModule';
 
 const FootballIcon = ({ size=20, color='currentColor' }) => (
@@ -633,6 +633,120 @@ function LicienciePlanning({ familyProfile, licencies, selectedLic, accent }) {
 // ============================================================
 // LICENCIE PROFIL — Fiche modifiable + RGPD
 // ============================================================
+const TYPES_DOCS_LIC = ["Licence", "Certificat médical", "Assurance", "Pièce d'identité", "Autorisation parentale"];
+const DOC_STATUTS = {
+  conforme:       { label:'Conforme',      color:'#34d399' },
+  expire_bientot: { label:'Expire bientôt', color:'#f59e0b' },
+  expire:         { label:'Expiré',        color:'#fb7185' },
+  manquant:       { label:'Manquant',      color:'#64748b' },
+};
+
+function DocStatusDot({ statut }) {
+  const c = (DOC_STATUTS[statut] || DOC_STATUTS.manquant).color;
+  return <span style={{ width:9, height:9, borderRadius:'50%', background:c, display:'inline-block', flexShrink:0 }} />;
+}
+
+function LicencieDocuments({ selectedLic, accent, onRefresh }) {
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busyType, setBusyType] = useState(null);
+  const fileRefs = React.useRef({});
+
+  const load = async () => {
+    if (!selectedLic) return;
+    setLoading(true);
+    const { data } = await supabase.from('licencies_documents').select('*').eq('licencie_id', selectedLic.id);
+    setDocs(data || []);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, [selectedLic?.id]);
+
+  const compressImage = (file) => new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1200;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) { if (w > h) { h = Math.round(h*max/w); w = max; } else { w = Math.round(w*max/h); h = max; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type:'image/jpeg' })), 'image/jpeg', 0.85);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  const upload = async (type, file) => {
+    if (!file || !selectedLic) return;
+    setBusyType(type);
+    try {
+      const compressed = await compressImage(file);
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const safeType = type.normalize('NFD').replace(/[^a-zA-Z0-9]/g, '_');
+      const finalPath = `licencie/${selectedLic.id}/${safeType}_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('licencies-docs').upload(finalPath, compressed, { upsert:true, contentType:compressed.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('licencies-docs').getPublicUrl(finalPath);
+
+      const existing = docs.find(d => d.type === type);
+      if (existing) {
+        await supabase.from('licencies_documents').update({ url: pub.publicUrl, statut: 'conforme' }).eq('id', existing.id);
+      } else {
+        await supabase.from('licencies_documents').insert({ licencie_id: selectedLic.id, owner_id: selectedLic.owner_id, type, url: pub.publicUrl, statut: 'conforme' });
+      }
+      await load();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('upload doc', err);
+      alert("Erreur lors de l'envoi du document.");
+    }
+    setBusyType(null);
+  };
+
+  const isPdf = (u) => u && /\.pdf/i.test(u);
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:18, padding:16, marginBottom:20 }}>
+      <div style={{ fontSize:11, fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>Mes documents</div>
+      <div style={{ fontSize:11, color:'#64748b', marginBottom:14, lineHeight:1.5 }}>Déposez les documents demandés par le club (photo, galerie ou fichier PDF).</div>
+
+      {loading ? (
+        <div style={{ color:'#64748b', fontSize:13, padding:'10px 0' }}>Chargement...</div>
+      ) : TYPES_DOCS_LIC.map(type => {
+        const doc = docs.find(d => d.type === type);
+        const statut = doc?.statut || 'manquant';
+        const st = DOC_STATUTS[statut] || DOC_STATUTS.manquant;
+        const expSoon = doc?.date_expiration && new Date(doc.date_expiration) < new Date(Date.now() + 30*24*60*60*1000);
+        return (
+          <div key={type} style={{ padding:'12px 0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9' }}>{type}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3 }}>
+                  <DocStatusDot statut={statut} />
+                  <span style={{ fontSize:12, color:st.color, fontWeight:600 }}>{st.label}</span>
+                  {doc?.date_expiration && <span style={{ fontSize:11, color: expSoon ? '#f59e0b' : '#64748b' }}>· exp. {new Date(doc.date_expiration).toLocaleDateString('fr-FR')}</span>}
+                </div>
+              </div>
+              {doc?.url && (
+                <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#94a3b8', textDecoration:'none', display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.04)', flexShrink:0 }}>
+                  {isPdf(doc.url) ? <FileText size={13} /> : <ImageIcon size={13} />} Voir
+                </a>
+              )}
+            </div>
+            <input ref={el => fileRefs.current[type] = el} type="file" accept="image/*,application/pdf" style={{ display:'none' }} onChange={e => upload(type, e.target.files[0])} />
+            <button onClick={() => fileRefs.current[type]?.click()} disabled={busyType===type} style={{ marginTop:10, width:'100%', padding:'10px', borderRadius:10, border:`1px dashed ${doc?.url ? 'rgba(255,255,255,0.15)' : accent+'66'}`, background: doc?.url ? 'transparent' : `${accent}10`, color: doc?.url ? '#94a3b8' : accent, cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+              {busyType===type ? 'Envoi...' : doc?.url ? (<><Upload size={15} /> Remplacer</>) : (<><Upload size={15} /> Ajouter (photo / fichier)</>)}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicId, accent, onRefresh }) {
   const blank = (lic) => ({
     first_name: lic?.first_name || '',
@@ -822,6 +936,8 @@ function LicencieProfil({ familyProfile, licencies, selectedLic, setSelectedLicI
               </div>
             )}
           </div>
+
+          <LicencieDocuments selectedLic={selectedLic} accent={accent} onRefresh={onRefresh} />
 
           {error && <div style={{ background:'rgba(251,113,133,0.1)', border:'1px solid rgba(251,113,133,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:'#fb7185' }}>{error}</div>}
 
