@@ -113,6 +113,13 @@ export default function App() {
 function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
   const [profileType, setProfileType] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [activeSpace, setActiveSpace] = React.useState(() => {
+    try { return localStorage.getItem('fp_active_space') || 'club'; } catch { return 'club'; }
+  });
+  const switchSpace = (sp) => {
+    setActiveSpace(sp);
+    try { localStorage.setItem('fp_active_space', sp); } catch {}
+  };
 
   React.useEffect(() => {
     // Accès QR spectateur : pas de détection de profil, on route direct en mode spectateur
@@ -234,7 +241,11 @@ function AppRouter({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 
   if (profileType === 'licencie') return <LicencieApp user={user} signOut={signOut} />;
-  if (profileType === 'both') return <SpaceSelector user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
+  if (profileType === 'both') {
+    return activeSpace === 'licencie'
+      ? <LicencieApp user={user} signOut={signOut} canSwitch onSwitchSpace={() => switchSpace('club')} />
+      : <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} canSwitch onSwitchSpace={() => switchSpace('licencie')} />;
+  }
   return <AuthenticatedApp user={user} signOut={signOut} isPresentationMode={isPresentationMode} spectatorCode={spectatorCode} />;
 }
 
@@ -267,7 +278,7 @@ function SpaceSelector({ user, signOut, isPresentationMode, spectatorCode }) {
   );
 }
 
-function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) {
+function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, canSwitch, onSwitchSpace }) {
   const isDesktop = useIsDesktop();
   const clubContext = useClubContext(user);
   // Pour un membre d'équipe, on charge le profil du club owner
@@ -589,6 +600,14 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode }) 
               <div style={{ fontSize:9, color:'#64748b', letterSpacing:1 }}>ORGANISATEUR</div>
             </div>
           </div>
+          {canSwitch && (
+            <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(34,211,238,0.08)', display:'flex', justifyContent:'center' }}>
+              <div style={{ display:'inline-flex', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, padding:3, gap:2 }}>
+                <button onClick={onSwitchSpace} style={{ padding:'5px 14px', borderRadius:8, fontSize:12, fontWeight:700, background:'transparent', color:'#94a3b8', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Licencié</button>
+                <span style={{ padding:'5px 14px', borderRadius:8, fontSize:12, fontWeight:700, background:'#a3e635', color:'#0a0e1a' }}>Club</span>
+              </div>
+            </div>
+          )}
           {/* Nav items */}
           <div style={{ padding:'4px 8px', flex:1 }}>
             {SIDEBAR_ITEMS.map(item => {
