@@ -26,7 +26,7 @@ const RespIcon = ({ r, size=16 }) => {
 // LicencieApp — Espace licencié / parent
 // ============================================================
 
-export function LicencieApp({ user, signOut }) {
+export function LicencieApp({ user, signOut, canSwitch, onSwitchSpace }) {
   const [familyProfile, setFamilyProfile] = useState(null);
   const [licencies, setLicencies] = useState([]);
   const [selectedLicId, setSelectedLicId] = useState(null);
@@ -147,6 +147,15 @@ export function LicencieApp({ user, signOut }) {
         </button>
       </div>
 
+      {/* Switch de vue Licencie / Club */}
+      {canSwitch && (
+        <div style={{ maxWidth:600, margin:'0 auto', padding:'10px 16px 0', display:'flex', justifyContent:'center' }}>
+          <div style={{ display:'inline-flex', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, padding:3, gap:2 }}>
+            <span style={{ padding:'5px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:(accent||'#a3e635'), color:'#0a0e1a' }}>Licencié</span>
+            <button onClick={onSwitchSpace} style={{ padding:'5px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'transparent', color:'#94a3b8', border:'none', cursor:'pointer', fontFamily:'inherit' }}>Club</button>
+          </div>
+        </div>
+      )}
       {/* Switcher enfant (avatars colores) */}
       {licencies.length > 1 && (
         <div style={{ maxWidth:600, margin:'0 auto', display:'flex', gap:10, overflowX:'auto', padding:'14px 16px 6px', WebkitOverflowScrolling:'touch' }}>
