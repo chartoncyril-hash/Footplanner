@@ -233,6 +233,20 @@ export function TeamView() {
 function MemberWizard({ member, profile, onClose, onSaved }) {
   const isEdit = !!member;
   const [saving, setSaving] = useState(false);
+  const [allTeams, setAllTeams] = useState([]);
+  const [teamIds, setTeamIds] = useState([]);
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: teams } = await supabase.from('club_teams').select('id, category, name').eq('owner_id', user.id).order('category').order('name');
+      setAllTeams(teams || []);
+      if (member?.id) {
+        const { data: tm } = await supabase.from('team_members').select('club_team_id').eq('member_id', member.id);
+        setTeamIds((tm || []).map(x => x.club_team_id));
+      }
+    })();
+  }, [member?.id]);
+  const toggleTeam = (id) => setTeamIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const [form, setForm] = useState({
     email: member?.email || '',
     first_name: member?.first_name || '',
@@ -242,6 +256,13 @@ function MemberWizard({ member, profile, onClose, onSaved }) {
   });
 
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
+
+  const syncTeams = async (memberId, ownerId) => {
+    await supabase.from('team_members').delete().eq('member_id', memberId);
+    if (teamIds.length > 0) {
+      await supabase.from('team_members').insert(teamIds.map(tid => ({ owner_id: ownerId, member_id: memberId, club_team_id: tid })));
+    }
+  };
 
   const handleRoleChange = (role) => {
     set('role', role);
@@ -264,6 +285,7 @@ function MemberWizard({ member, profile, onClose, onSaved }) {
         role: form.role,
         permissions: form.permissions,
       }).eq('id', member.id);
+      await syncTeams(member.id, user.id);
     } else {
       const { data: newMember } = await supabase.from('club_members').insert({
         club_owner_id: user.id,
@@ -273,7 +295,8 @@ function MemberWizard({ member, profile, onClose, onSaved }) {
         role: form.role,
         permissions: form.permissions,
         status: 'invited',
-      }).select('invite_token').single();
+      }).select('id, invite_token').single();
+      if (newMember?.id) await syncTeams(newMember.id, user.id);
 
       // Envoyer email d'invitation
       if (newMember?.invite_token) {
@@ -343,6 +366,24 @@ function MemberWizard({ member, profile, onClose, onSaved }) {
               ))}
             </div>
           </div>
+
+          {/* Equipes rattachees */}
+          {allTeams.length > 0 && (
+            <div>
+              <label style={S.lbl}>Équipes rattachées</label>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {allTeams.map(t => {
+                  const on = teamIds.includes(t.id);
+                  return (
+                    <button key={t.id} type="button" onClick={() => toggleTeam(t.id)} style={{ padding:'8px 14px', borderRadius:10, border:'1px solid', cursor:'pointer', fontFamily:'inherit', fontSize:13, fontWeight:700, borderColor: on ? '#a3e635' : 'rgba(255,255,255,0.1)', background: on ? 'rgba(163,230,53,0.12)' : 'rgba(255,255,255,0.02)', color: on ? '#a3e635' : '#94a3b8' }}>
+                      {t.category} · {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:11, color:'#475569', marginTop:6 }}>Le membre sera rattaché aux équipes sélectionnées.</div>
+            </div>
+          )}
 
           {/* Permissions modules */}
           <div>
