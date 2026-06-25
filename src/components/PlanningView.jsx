@@ -46,6 +46,104 @@ function inRange(day, start, end) {
   return d >= s && d <= e;
 }
 
+function PlanningMobileView({ events, loading, onSelectEvent }) {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(null);
+
+  const getWS = (offset=0) => {
+    const d = new Date();
+    const day = d.getDay();
+    d.setDate(d.getDate() - (day===0?6:day-1) + offset*7);
+    d.setHours(0,0,0,0);
+    return d;
+  };
+  const ws = getWS(weekOffset);
+  const we = addDays(ws, 6);
+  const wsStr = ws.toISOString().slice(0,10);
+  const weStr = we.toISOString().slice(0,10);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0,10);
+  const weekDays = Array.from({length:7}, (_,i)=>addDays(ws,i));
+  const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+
+  const evtsForDay = (dStr) => events.filter(e => {
+    const start = e.date, end = e.date_end || e.date;
+    return dStr >= start && dStr <= end;
+  }).sort((a,b)=>(a.time_start||'').localeCompare(b.time_start||''));
+
+  const inWeek = todayStr >= wsStr && todayStr <= weStr;
+  const effectiveDay = (selectedDay && selectedDay >= wsStr && selectedDay <= weStr) ? selectedDay : (inWeek ? todayStr : wsStr);
+  const dayEvents = evtsForDay(effectiveDay);
+  const effDateObj = new Date(effectiveDay + 'T00:00:00');
+
+  const navBtn = { width:34, height:34, borderRadius:10, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', color:'#94a3b8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' };
+  const accent = '#22d3ee';
+
+  return (
+    <div style={{ paddingBottom:40 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+        <h2 style={{ fontSize:24, fontWeight:900, color:'#f1f5f9', margin:0, flex:1, letterSpacing:'-0.5px' }}>Planning</h2>
+        <button onClick={()=>{setWeekOffset(w=>w-1); setSelectedDay(null);}} style={navBtn}><ChevronLeft size={16}/></button>
+        <button onClick={()=>{setWeekOffset(0); setSelectedDay(null);}} style={{ padding:'0 14px', height:34, borderRadius:10, border:`1px solid ${accent}55`, background:`${accent}15`, color:accent, cursor:'pointer', fontFamily:'inherit', fontSize:12, fontWeight:700 }}>Auj.</button>
+        <button onClick={()=>{setWeekOffset(w=>w+1); setSelectedDay(null);}} style={navBtn}><ChevronRight size={16}/></button>
+      </div>
+      <div style={{ fontSize:13, color:'#64748b', fontWeight:600, marginBottom:14 }}>
+        {ws.toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})} — {we.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}
+      </div>
+
+      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:22 }}>
+        {weekDays.map((day,i)=>{
+          const dStr = day.toISOString().slice(0,10);
+          const isActive = dStr===effectiveDay;
+          const dayEvts = evtsForDay(dStr);
+          return (
+            <div key={i} onClick={()=>setSelectedDay(dStr)} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:7, flex:1, cursor:'pointer' }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.5px', color:'#475569', textTransform:'uppercase' }}>{DAYS[i]}</div>
+              <div style={{ width:34, height:34, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:14, color:isActive?'#0a0e1a':'#94a3b8', background:isActive?accent:'transparent', border:isActive?'none':'1px solid rgba(255,255,255,0.08)', boxShadow:isActive?`0 6px 14px -5px ${accent}`:'none', transition:'.15s' }}>{day.getDate()}</div>
+              <div style={{ display:'flex', gap:3, height:6 }}>
+                {dayEvts.slice(0,3).map(e=>(<i key={e.id} style={{ width:5, height:5, borderRadius:'50%', background:(TYPES[e.type]||TYPES.other).color, display:'block' }} />))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ display:'flex', alignItems:'center', gap:8, margin:'4px 2px 13px', fontSize:14, fontWeight:800, color:'#94a3b8' }}>
+        {cap(effDateObj.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}))}
+        <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.07)' }} />
+      </div>
+
+      {loading ? (
+        <div style={{ color:'#64748b', textAlign:'center', padding:24 }}>Chargement...</div>
+      ) : dayEvents.length===0 ? (
+        <div style={{ textAlign:'center', padding:'34px 20px' }}>
+          <div style={{ width:56, height:56, borderRadius:16, background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+            <Calendar size={26} color="#475569" />
+          </div>
+          <p style={{ fontSize:14, fontWeight:600, color:'#64748b', margin:0 }}>Aucune activité ce jour</p>
+        </div>
+      ) : dayEvents.map(e=>{
+        const t = TYPES[e.type]||TYPES.other;
+        return (
+          <div key={e.id} onClick={()=>onSelectEvent && onSelectEvent(e)} style={{ display:'flex', alignItems:'center', gap:13, borderRadius:15, padding:'13px 14px', marginBottom:11, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderLeft:`3px solid ${t.color}`, cursor:'pointer' }}>
+            <div style={{ width:48, textAlign:'center', flexShrink:0 }}>
+              <div style={{ fontWeight:800, fontSize:15, color:'#f1f5f9' }}>{e.time_start?e.time_start.slice(0,5):'--'}</div>
+              {e.time_end && <div style={{ fontSize:10, color:'#475569' }}>{e.time_end.slice(0,5)}</div>}
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{e.title}</div>
+              <div style={{ fontSize:11, color:'#64748b', marginTop:2, display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                <span style={{ color:t.color, fontWeight:600 }}>{t.emoji} {t.label}</span>
+                {e.location && <span>· {e.location}</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PlanningView({ myTournaments }) {
   const [view, setView] = useState('week');
   const [current, setCurrent] = useState(new Date());
@@ -54,6 +152,8 @@ export function PlanningView({ myTournaments }) {
   const [selected, setSelected] = useState(null);
   const [filterType, setFilterType] = useState('');
   const printRef = useRef();
+  const [isMobile, setIsMobile] = useState(typeof window!=='undefined' ? window.innerWidth < 768 : false);
+  useEffect(() => { const h=()=>setIsMobile(window.innerWidth<768); window.addEventListener('resize',h); return ()=>window.removeEventListener('resize',h); }, []);
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -108,6 +208,8 @@ export function PlanningView({ myTournaments }) {
   const titleStr = view==='week'
     ? `${weekDays[0].getDate()} ${MONTHS[weekDays[0].getMonth()].slice(0,3)} — ${weekDays[6].getDate()} ${MONTHS[weekDays[6].getMonth()].slice(0,3)} ${weekDays[6].getFullYear()}`
     : `${MONTHS[current.getMonth()]} ${current.getFullYear()}`;
+
+  if (isMobile) return <PlanningMobileView events={filtered} loading={loading} onSelectEvent={setSelected} />;
 
   return (
     <>
