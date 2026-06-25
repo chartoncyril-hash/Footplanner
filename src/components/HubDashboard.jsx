@@ -668,8 +668,8 @@ function TodayPlanning({ myTournaments, appColor, onNavigate }) {
           <CalendarDays size={14} color={'#22d3ee'} />
           Aujourd'hui
         </div>
-        <button onClick={onNavigate} style={{ fontSize:11, color:'#22d3ee', background:'none', border:'none', cursor:'pointer', textDecoration:'underline', fontFamily:'inherit' }}>
-          Voir le planning →
+        <button onClick={onNavigate} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:12, fontWeight:600, fontFamily:'inherit', display:'flex', alignItems:'center', gap:3 }}>
+          Ouvrir <ArrowRight size={12} />
         </button>
       </div>
       <div style={{ fontSize:12, color:'#475569', marginBottom:12, fontWeight:600 }}>{todayStr}</div>
