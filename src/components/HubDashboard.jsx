@@ -390,29 +390,8 @@ export function HubDashboard({ profile, clubContext, myTournaments, onEnterModul
       <div style={S.content}>
         {/* WIDGETS APERÇU — 2 colonnes */}
         <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16, marginBottom:24 }}>
-          {/* Colonne 1 — Tournois en cours */}
-          <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'18px 20px' }}>
-            <div style={{ ...S.sectionTitle, marginBottom:12 }}>
-              <Clock size={14} color={appColor} />
-              Tournois en cours
-            </div>
-            {activeTournaments.length === 0 ? (
-              <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'20px 0' }}>Aucun tournoi en cours</div>
-            ) : activeTournaments.map(t => (
-              <div key={t.id} onClick={() => onEnterModule('tournaments', t.id)}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, cursor:'pointer', marginBottom:6, background:'rgba(255,255,255,0.03)', border:`1px solid ${appColor}22`, transition:'all 0.15s' }}
-                onMouseEnter={e=>{e.currentTarget.style.background=`${appColor}12`}}
-                onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)'}}
-              >
-                <div style={{ width:8, height:8, borderRadius:'50%', background:appColor, flexShrink:0 }} />
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{t.name}</div>
-                  <div style={{ fontSize:11, color:'#64748b' }}>{t.categories?.length > 0 ? `${t.categories.length} catégorie${t.categories.length>1?'s':''}` : 'Tournoi'}</div>
-                </div>
-                <ArrowRight size={14} color={appColor} />
-              </div>
-            ))}
-          </div>
+          {/* Colonne 1 — Messagerie */}
+          <CommunicationWidget appColor={appColor} onNavigate={() => onEnterModule('communication')} />
 
           {/* Colonne 2 — Planning du jour */}
           <TodayPlanning myTournaments={myTournaments} appColor={appColor} onNavigate={() => onEnterModule('planning')} />
@@ -536,6 +515,109 @@ const S = {
   statLabel: { fontSize: 12, color: '#64748b', fontWeight: 600, marginTop: 4 },
 };
 // ── TODAY PLANNING ──────────────────────────────────────────
+function CommunicationWidget({ appColor, onNavigate }) {
+  const [convs, setConvs] = React.useState([]);
+  const [unreadTotal, setUnreadTotal] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
+        const ownerId = await getEffectiveOwnerId();
+        if (!ownerId) { setLoading(false); return; }
+        const readerKey = "usr_" + user.id;
+
+        const { data: conversations } = await supabase
+          .from("conversations").select("*")
+          .eq("club_owner_id", ownerId).order("created_at");
+        if (!conversations || !conversations.length) { setConvs([]); setLoading(false); return; }
+
+        const ids = conversations.map(c => c.id);
+        const [{ data: msgs }, { data: reads }] = await Promise.all([
+          supabase.from("conv_messages").select("conversation_id, created_at, content, sender_name")
+            .in("conversation_id", ids).order("created_at", { ascending: false }).limit(300),
+          supabase.from("conv_reads").select("conversation_id, last_read_at")
+            .eq("reader_key", readerKey).in("conversation_id", ids),
+        ]);
+
+        const lastRead = {};
+        (reads || []).forEach(r => { lastRead[r.conversation_id] = r.last_read_at; });
+
+        const lastMsgByConv = {};
+        const unreadByConv = {};
+        (msgs || []).forEach(m => {
+          if (!lastMsgByConv[m.conversation_id]) lastMsgByConv[m.conversation_id] = m;
+          const lr = lastRead[m.conversation_id];
+          if (!lr || new Date(m.created_at) > new Date(lr))
+            unreadByConv[m.conversation_id] = (unreadByConv[m.conversation_id] || 0) + 1;
+        });
+
+        const enriched = conversations
+          .map(c => ({ ...c, lastMsg: lastMsgByConv[c.id], unread: unreadByConv[c.id] || 0 }))
+          .filter(c => c.lastMsg)
+          .sort((a, b) => new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at))
+          .slice(0, 4);
+
+        setConvs(enriched);
+        setUnreadTotal(Object.values(unreadByConv).reduce((s, n) => s + n, 0));
+      } catch (e) { console.error("comm widget", e); }
+      setLoading(false);
+    })();
+  }, []);
+
+  const fmt = (d) => {
+    const dt = new Date(d), now = new Date();
+    const sameDay = dt.toDateString() === now.toDateString();
+    return sameDay ? dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                   : dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  };
+
+  return (
+    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:14, padding:'18px 20px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, fontWeight:800, color:'#cbd5e1', textTransform:'uppercase', letterSpacing:1 }}>
+          <MessageSquare size={14} color="#f472b6" />
+          Messagerie
+          {unreadTotal > 0 && (
+            <span style={{ minWidth:18, height:18, padding:'0 5px', borderRadius:9, background:'#ef4444', color:'#fff', fontSize:11, fontWeight:800, display:'inline-flex', alignItems:'center', justifyContent:'center', letterSpacing:0 }}>
+              {unreadTotal > 99 ? '99+' : unreadTotal}
+            </span>
+          )}
+        </div>
+        <button onClick={onNavigate} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:12, fontWeight:600, fontFamily:'inherit', display:'flex', alignItems:'center', gap:3 }}>
+          Ouvrir <ArrowRight size={12} />
+        </button>
+      </div>
+      {loading ? (
+        <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'20px 0' }}>Chargement...</div>
+      ) : convs.length === 0 ? (
+        <div style={{ color:'#334155', fontSize:13, textAlign:'center', padding:'20px 0' }}>Aucun message</div>
+      ) : convs.map(c => (
+        <div key={c.id} onClick={onNavigate}
+          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, cursor:'pointer', marginBottom:6, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(244,114,182,0.15)', transition:'all 0.15s' }}
+          onMouseEnter={e=>{e.currentTarget.style.background='rgba(244,114,182,0.08)'}}
+          onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.03)'}}
+        >
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#f1f5f9', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{c.name || 'Conversation'}</div>
+              <span style={{ fontSize:10, color:'#475569', flexShrink:0 }}>{fmt(c.lastMsg.created_at)}</span>
+            </div>
+            <div style={{ fontSize:11, color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginTop:2 }}>
+              {c.lastMsg.sender_name ? `${c.lastMsg.sender_name}: ` : ''}{c.lastMsg.content}
+            </div>
+          </div>
+          {c.unread > 0 && (
+            <span style={{ minWidth:18, height:18, padding:'0 5px', borderRadius:9, background:'#ef4444', color:'#fff', fontSize:11, fontWeight:800, display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{c.unread}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TodayPlanning({ myTournaments, appColor, onNavigate }) {
   const [events, setEvents] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
