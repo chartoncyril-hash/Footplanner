@@ -209,7 +209,12 @@ export function PlanningView({ myTournaments }) {
     ? `${weekDays[0].getDate()} ${MONTHS[weekDays[0].getMonth()].slice(0,3)} — ${weekDays[6].getDate()} ${MONTHS[weekDays[6].getMonth()].slice(0,3)} ${weekDays[6].getFullYear()}`
     : `${MONTHS[current.getMonth()]} ${current.getFullYear()}`;
 
-  if (isMobile) return <PlanningMobileView events={filtered} loading={loading} onSelectEvent={setSelected} />;
+  if (isMobile) return (
+    <>
+      <PlanningMobileView events={filtered} loading={loading} onSelectEvent={setSelected} />
+      {selected && <EventPopup event={selected} onClose={()=>setSelected(null)}/>}
+    </>
+  );
 
   return (
     <>
