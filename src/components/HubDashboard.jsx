@@ -24,6 +24,40 @@ import { getEffectiveOwnerId } from "../lib/effectiveUser";
 // ============================================================
 
 const MODULES = [
+  // Ligne 1
+  {
+    id: 'licencies',
+    label: 'Licenciés & Équipes',
+    icon: ClipboardList,
+    color: '#34d399',
+    desc: 'Gérez vos licenciés, documents, conformité et équipes.',
+    available: true,
+  },
+  {
+    id: 'communication',
+    label: 'Communication',
+    icon: MessageSquare,
+    color: '#f472b6',
+    desc: 'Événements, présences, sondages et messagerie du club.',
+    available: true,
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    icon: CalendarDays,
+    color: '#22d3ee',
+    desc: 'Vue agenda du club — événements, tournois et stages.',
+    available: true,
+  },
+  {
+    id: 'sponsors',
+    label: 'Sponsors & Partenaires',
+    icon: Handshake,
+    color: '#facc15',
+    desc: 'Gérez vos partenaires commerciaux et suivez vos contrats.',
+    available: true,
+  },
+  // Ligne 2
   {
     id: 'tournaments',
     label: 'Gestion de tournois',
@@ -49,14 +83,6 @@ const MODULES = [
     available: true,
   },
   {
-    id: 'licencies',
-    label: 'Licenciés & Équipes',
-    icon: ClipboardList,
-    color: '#34d399',
-    desc: 'Gérez vos licenciés, documents, conformité et équipes.',
-    available: true,
-  },
-  {
     id: 'compositions',
     label: 'Compositions & Tactique',
     icon: Shirt,
@@ -64,22 +90,7 @@ const MODULES = [
     desc: "Créez vos compositions d'équipe et plans tactiques.",
     available: true,
   },
-  {
-    id: 'benevoles',
-    label: 'Bénévoles & Staff',
-    icon: Heart,
-    color: '#fb7185',
-    desc: 'Planifiez et coordonnez vos bénévoles sur tous les postes.',
-    available: false,
-  },
-  {
-    id: 'sponsors',
-    label: 'Sponsors & Partenaires',
-    icon: Handshake,
-    color: '#facc15',
-    desc: 'Gérez vos partenaires commerciaux et suivez vos contrats.',
-    available: true,
-  },
+  // Ligne 3
   {
     id: 'stages',
     label: 'Stages & Vacances',
@@ -89,20 +100,12 @@ const MODULES = [
     available: true,
   },
   {
-    id: 'planning',
-    label: 'Planning',
-    icon: CalendarDays,
-    color: '#22d3ee',
-    desc: 'Vue agenda du club — événements, tournois et stages.',
-    available: true,
-  },
-  {
-    id: 'communication',
-    label: 'Communication',
-    icon: MessageSquare,
-    color: '#f472b6',
-    desc: 'Événements, présences, sondages et messagerie du club.',
-    available: true,
+    id: 'benevoles',
+    label: 'Bénévoles & Staff',
+    icon: Heart,
+    color: '#fb7185',
+    desc: 'Planifiez et coordonnez vos bénévoles sur tous les postes.',
+    available: false,
   },
   {
     id: 'medias',
