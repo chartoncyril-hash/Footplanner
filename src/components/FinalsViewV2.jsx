@@ -23,12 +23,17 @@ export function FinalsViewV2({ knockoutMatches, teams, matches, standings }) {
 }
 
 function LeagueSection({ title, icon, accent, matches, teams, allMatches, standings }) {
-  const ranking = matches.filter(m => m.phase === 'ranking');
-  const final = matches.filter(m => m.phase === 'final');
-  const thirdPlace = matches.filter(m => m.phase === '3rd');
+  // Les matchs de phase finale ont phase='knockout' et sont distingues par knockout_round
+  // (ex: "Demi-finales", "Finale", "Match pour la 3e place"). On gere aussi l'ancien schema
+  // (phase 'ranking'/'final'/'3rd') par compatibilite.
+  const isFinalRound = (m) => m.phase === 'final' || /finale/i.test(m.knockout_round || '') && !/demi|quart|8|16|3e|3 ?place/i.test(m.knockout_round || '');
+  const isThird = (m) => m.phase === '3rd' || /3e place|3 ?place|petite finale/i.test(m.knockout_round || '');
+  const final = matches.filter(m => isFinalRound(m) && !isThird(m));
+  const thirdPlace = matches.filter(m => isThird(m));
+  const others = matches.filter(m => !isFinalRound(m) && !isThird(m));
   const groups = {};
-  ranking.forEach(m => {
-    const key = m.knockout_round || m.knockoutRound || 'Poule de classement';
+  others.forEach(m => {
+    const key = m.knockout_round || m.knockoutRound || 'Phase finale';
     if (!groups[key]) groups[key] = [];
     groups[key].push(m);
   });
