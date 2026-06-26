@@ -53,7 +53,15 @@ export function TeamsLibraryPicker(props) {
     return teamsLibrary.filter((t) => normalize(t.name).includes(q));
   }, [query, teamsLibrary]);
 
-  const totalSelected = Object.values(selections).reduce((s, n) => s + n, 0);
+  const totalSelected = Object.values(selections).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0);
+  const MAX_RANK = 5;
+  const toggleRank = (libId, rank) => {
+    setSelections((prev) => {
+      const current = Array.isArray(prev[libId]) ? prev[libId] : [];
+      const next = current.includes(rank) ? current.filter((r) => r !== rank) : [...current, rank].sort((a,b)=>a-b);
+      return { ...prev, [libId]: next };
+    });
+  };
 
   const updateCount = (libId, delta) => {
     setSelections((prev) => {
@@ -81,22 +89,18 @@ export function TeamsLibraryPicker(props) {
     setSubmitting(true);
     try {
       const imports = [];
-      Object.entries(selections).forEach(([libId, count]) => {
+      Object.entries(selections).forEach(([libId, ranks]) => {
         const lib = teamsLibrary.find((t) => (t.libraryId || t.id) === libId);
-        if (!lib) return;
+        if (!lib || !Array.isArray(ranks)) return;
         const existingRanks = ranksInCategory[normalize(lib.name)] || [];
-        let rank = 1;
-        for (let i = 0; i < count; i++) {
-          while (existingRanks.includes(rank)) rank++;
-          if (rank > 3) break;
+        ranks.forEach((rank) => {
+          if (existingRanks.includes(rank)) return; // securite : ne pas recreer un rang deja engage
           imports.push({
             libraryId: lib.libraryId || lib.id,
             libraryItem: lib,
             level: rank,
           });
-          existingRanks.push(rank);
-          rank++;
-        }
+        });
       });
       await onConfirm(imports);
       setSubmitting(false);
@@ -299,7 +303,8 @@ export function TeamsLibraryPicker(props) {
               )}
               {filtered.map((lib) => {
                 const libId = lib.libraryId || lib.id;
-                const count = selections[libId] || 0;
+                const selectedRanks = Array.isArray(selections[libId]) ? selections[libId] : [];
+                const count = selectedRanks.length;
                 const existingRanks =
                   ranksInCategory[normalize(lib.name)] || [];
                 const alreadyInCategory = existingRanks.length > 0;
@@ -368,65 +373,46 @@ export function TeamsLibraryPicker(props) {
                         </div>
                       )}
                     </div>
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 4 }}
-                    >
-                      <button
-                        onClick={() => updateCount(libId, -1)}
-                        disabled={count === 0}
-                        style={{
-                          width: 26,
-                          height: 26,
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 6,
-                          color: count === 0 ? "#475569" : "#94a3b8",
-                          fontSize: 14,
-                          fontWeight: 800,
-                          cursor: count === 0 ? "not-allowed" : "pointer",
-                          padding: 0,
-                          lineHeight: 1,
-                        }}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        min="0"
-                        max="3"
-                        value={count}
-                        onChange={(e) => setCount(libId, e.target.value)}
-                        style={{
-                          width: 36,
-                          height: 26,
-                          background: "#0f172a",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 6,
-                          color: "#f1f5f9",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          textAlign: "center",
-                          outline: "none",
-                        }}
-                      />
-                      <button
-                        onClick={() => updateCount(libId, 1)}
-                        style={{
-                          width: 26,
-                          height: 26,
-                          background: "rgba(34,211,238,0.15)",
-                          border: "1px solid rgba(34,211,238,0.4)",
-                          borderRadius: 6,
-                          color: "#a3e635",
-                          fontSize: 14,
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          padding: 0,
-                          lineHeight: 1,
-                        }}
-                      >
-                        +
-                      </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      {[1, 2, 3, 4, 5].map((rank) => {
+                        const isEngaged = existingRanks.includes(rank);
+                        const isSelected = selectedRanks.includes(rank);
+                        return (
+                          <button
+                            key={rank}
+                            onClick={() => !isEngaged && toggleRank(libId, rank)}
+                            disabled={isEngaged}
+                            title={isEngaged ? "Équipe " + rank + " déjà engagée" : "Équipe " + rank}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 800,
+                              cursor: isEngaged ? "not-allowed" : "pointer",
+                              padding: 0,
+                              lineHeight: 1,
+                              background: isEngaged
+                                ? "rgba(255,255,255,0.02)"
+                                : isSelected
+                                ? "#a3e635"
+                                : "rgba(255,255,255,0.05)",
+                              border: isEngaged
+                                ? "1px solid rgba(255,255,255,0.05)"
+                                : isSelected
+                                ? "1px solid #a3e635"
+                                : "1px solid rgba(255,255,255,0.12)",
+                              color: isEngaged
+                                ? "#334155"
+                                : isSelected
+                                ? "#0a0e1a"
+                                : "#94a3b8",
+                            }}
+                          >
+                            {rank}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
