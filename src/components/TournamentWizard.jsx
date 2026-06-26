@@ -10,6 +10,41 @@ const STEPS = [
   { id: 'recap',    label: 'Recap',      icon: Check },
 ];
 
+// ============================================================
+// PHASE FINALE — couche de presentation unifiee
+// 5 types lisibles <-> 3 variables techniques (knockoutFormat / finalsMode / finalsEngine)
+// ============================================================
+const FINALS_TYPES = [
+  { id: 'standard',  label: 'Finale standard',  desc: '1er A vs 2e B, 1er B vs 2e A — le croisement classique entre poules.' },
+  { id: 'crossed',   label: 'Finale croisée',   desc: '1er A vs 2e A, 1er B vs 2e B — chaque poule garde ses équipes.' },
+  { id: 'cup_one',   label: 'Europa-Champions · une seule coupe', desc: 'Tous les qualifiés dans un seul tableau final.' },
+  { id: 'cup_elim',  label: 'Europa-Champions · élimination',     desc: 'Deux coupes : Champions (haut) et Europa (bas). Certaines équipes s\'arrêtent.' },
+  { id: 'cup_all',   label: 'Europa-Champions · tout le monde joue', desc: 'Trois coupes (Champions / Europa / Consolante). Aucune équipe éliminée.' },
+];
+
+// type unifie -> variables techniques (au save)
+function finalsTypeToVars(type) {
+  switch (type) {
+    case 'standard': return { knockoutFormat: 'standard', finalsMode: 'champions_europa', finalsEngine: 'legacy' };
+    case 'crossed':  return { knockoutFormat: 'crossed',  finalsMode: 'champions_europa', finalsEngine: 'legacy' };
+    case 'cup_one':  return { knockoutFormat: 'multicup',  finalsMode: 'single',           finalsEngine: 'v2' };
+    case 'cup_elim': return { knockoutFormat: 'multicup',  finalsMode: 'champions_europa', finalsEngine: 'v2' };
+    case 'cup_all':  return { knockoutFormat: 'multicup',  finalsMode: 'everyone',         finalsEngine: 'v2' };
+    default:         return { knockoutFormat: 'standard', finalsMode: 'champions_europa', finalsEngine: 'legacy' };
+  }
+}
+
+// variables techniques -> type unifie (a l'edition d'un tournoi existant)
+function varsToFinalsType(knockoutFormat, finalsMode) {
+  if (knockoutFormat === 'crossed') return 'crossed';
+  if (knockoutFormat === 'multicup') {
+    if (finalsMode === 'single')   return 'cup_one';
+    if (finalsMode === 'everyone') return 'cup_all';
+    return 'cup_elim';
+  }
+  return 'standard';
+}
+
 export function TournamentWizard(props) {
   const onClose = props.onClose;
   const onCreate = props.onCreate;
@@ -35,6 +70,7 @@ export function TournamentWizard(props) {
         hasConsolation: t.hasConsolation === true,
         knockoutFields: Array.isArray(t.knockoutFields) ? t.knockoutFields : null,
         knockoutFormat: t.knockoutFormat || 'standard',
+        finalsType: varsToFinalsType(t.knockoutFormat || 'standard', t.finalsMode || 'champions_europa'),
         qualifiedPerPool: t.knockoutFromTopN || 2,
         finalsMode: t.finalsMode || 'champions_europa',
         categories: Array.isArray(t.categories) ? t.categories : [],
@@ -59,6 +95,7 @@ export function TournamentWizard(props) {
       hasThirdPlace: true,
       knockoutFields: null,
       knockoutFormat: 'standard',
+      finalsType: 'standard',
       qualifiedPerPool: 2,
       finalsMode: 'champions_europa',
       categories: [],
@@ -142,11 +179,11 @@ export function TournamentWizard(props) {
         hasKnockout: data.hasKnockout,
         hasConsolation: data.hasKnockout && data.knockoutFormat !== 'multicup' && data.hasConsolation,
         knockoutFields: data.hasKnockout ? data.knockoutFields : null,
-        knockoutFormat: data.hasKnockout ? data.knockoutFormat : 'standard',
-        finalsMode: data.hasKnockout ? data.finalsMode : 'champions_europa',
+        knockoutFormat: data.hasKnockout ? finalsTypeToVars(data.finalsType).knockoutFormat : 'standard',
+        finalsMode: data.hasKnockout ? finalsTypeToVars(data.finalsType).finalsMode : 'champions_europa',
         knockoutFromTopN: data.hasKnockout ? data.qualifiedPerPool : 0,
         // Active automatiquement le moteur v2 quand l'organisateur choisit Champions/Europa (multi-cup).
-        finalsEngine: data.hasKnockout && data.knockoutFormat === 'multicup' ? 'v2' : 'legacy',
+        finalsEngine: data.hasKnockout ? finalsTypeToVars(data.finalsType).finalsEngine : 'legacy',
         categories: data.categories,
         endDate: data.endDate || null,
         startTime: data.startTime || '09:00',
@@ -485,20 +522,14 @@ export function TournamentWizard(props) {
                 </Field>
               )}
               {data.hasKnockout && (
-                <Field label="Format de la phase finale">
+                <Field label="Type de phase finale">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {[
-                      { v: 'standard', l: 'Standard', d: '1er A vs 2e B / 1er B vs 2e A (croisement classique)' },
-                      { v: 'crossed', l: 'Croisé', d: '1er A vs 2e A / 1er B vs 2e B (chaque poule garde ses équipes)' },
-                      { v: 'multicup', l: 'Champions / Europa League', d: 'Deux coupes parallèles avec finales distinctes. Gère automatiquement tous les nombres d\'équipes.' },
-                    ].map(opt => {
-                      const isActive = data.knockoutFormat === opt.v;
-                      // Multi-cup désactivé si moins de 16 équipes au total (on l'estime à partir du nombre de poules visées)
-                      // Pour simplifier : on ne désactive pas dans le wizard (à la création on ne sait pas combien d'équipes)
+                    {FINALS_TYPES.map(opt => {
+                      const isActive = (data.finalsType || 'standard') === opt.id;
                       return (
                         <button
-                          key={opt.v}
-                          onClick={() => update({ knockoutFormat: opt.v })}
+                          key={opt.id}
+                          onClick={() => update({ finalsType: opt.id })}
                           style={{
                             padding: '10px 12px',
                             background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
@@ -511,9 +542,9 @@ export function TournamentWizard(props) {
                             textAlign: 'left',
                           }}
                         >
-                          <div style={{ marginBottom: 2 }}>{opt.l}</div>
+                          <div style={{ marginBottom: 2 }}>{opt.label}</div>
                           <div style={{ fontSize: 10, fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>
-                            {opt.d}
+                            {opt.desc}
                           </div>
                         </button>
                       );
@@ -521,42 +552,7 @@ export function TournamentWizard(props) {
                   </div>
                 </Field>
               )}
-              {data.hasKnockout && data.knockoutFormat === 'multicup' && (
-                <Field label="Mode Champions / Europa">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {[
-                      { v: 'single', l: 'Une seule coupe', d: 'Les qualifiés jouent une phase finale unique.' },
-                      { v: 'champions_europa', l: 'Champions & Europa', d: 'Deux coupes par niveau : moitié haute en Champions, moitié basse en Europa.' },
-                      { v: 'everyone', l: 'Tout le monde joue', d: 'Trois coupes (Champions / Europa / Consolante). Aucune équipe éliminée.' },
-                    ].map(opt => {
-                      const isActive = (data.finalsMode || 'champions_europa') === opt.v;
-                      return (
-                        <button
-                          key={opt.v}
-                          onClick={() => update({ finalsMode: opt.v })}
-                          style={{
-                            padding: '10px 12px',
-                            background: isActive ? 'rgba(34,211,238,0.12)' : 'transparent',
-                            border: isActive ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: 7,
-                            color: isActive ? '#a3e635' : '#94a3b8',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <div style={{ marginBottom: 2 }}>{opt.l}</div>
-                          <div style={{ fontSize: 10, fontWeight: 500, color: '#64748b', lineHeight: 1.4 }}>
-                            {opt.d}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Field>
-              )}
-              {data.hasKnockout && data.finalsMode !== 'everyone' && (
+              {data.hasKnockout && data.finalsType !== 'cup_all' && (
                 <Field label="Qualifies par poule">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {[
