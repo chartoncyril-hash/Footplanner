@@ -7,7 +7,7 @@ import {
 import { PageHeader } from './MatchCards';
 import { FieldText, FieldRow } from './form/Fields';
 import {
-  BonusToggle, RankingByCategory, CategoryDurations, KnockoutToggle,
+  BonusToggle, RankingByCategory, CategoryDurations,
   FieldsEditor, ScoringInput, AnnouncementsManager, SponsorsManager,
 } from './SettingsParts';
 import { useAnnouncements, useSponsors } from '../hooks/useTournamentSecondary';
