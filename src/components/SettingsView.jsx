@@ -340,23 +340,7 @@ export function SettingsView({
       </SettingCard>
       
       {/* === FORMAT (PHASE FINALE) === */}
-      <SettingCard title="FORMAT DU TOURNOI" icon={Trophy} color="#f59e0b">
-        <KnockoutToggle
-          enabled={tournament.hasKnockout}
-          onToggle={(v) => safeUpdate({ hasKnockout: v })}
-          topN={tournament.knockoutFromTopN || 2}
-          onTopN={(v) => safeUpdate({ knockoutFromTopN: v })}
-          hasThirdPlace={tournament.hasThirdPlace !== false}
-          onThirdPlace={(v) => safeUpdate({ hasThirdPlace: v })}
-          hasConsolation={tournament.hasConsolation === true}
-          onConsolation={(v) => safeUpdate({ hasConsolation: v })}
-          knockoutFormat={tournament.knockoutFormat || 'standard'}
-          onKnockoutFormat={(v) => safeUpdate({ knockoutFormat: v })}
-          knockoutFields={tournament.knockoutFields}
-          onKnockoutFields={(v) => safeUpdate({ knockoutFields: v })}
-          tournamentFields={Array.isArray(tournament.fields) ? tournament.fields : []}
-        />
-      </SettingCard>
+      {/* FORMAT DU TOURNOI retire des reglages : le format se decide uniquement dans le wizard de creation/edition (evite le doublon et l'incoherence) */}
 
       {/* === BARÈME === */}
       <SettingCard title="BARÈME DE POINTS" icon={Award} color="#818cf8">
