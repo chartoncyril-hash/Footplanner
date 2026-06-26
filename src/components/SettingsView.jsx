@@ -23,8 +23,13 @@ const ALL_CATEGORIES = ['U7', 'U9', 'U11', 'U13', 'U15', 'U17', 'Senior'];
 export function SettingsView({
   tournament, role, setView,
   closeTournament, signOut, updateTournament,
-  askConfirm, closeConfirm,
+  askConfirm, closeConfirm, matches,
 }) {
+  // Le calendrier est-il genere ? (au moins un match programme)
+  const scheduleGenerated = Array.isArray(matches) && matches.some(m => m.status === 'scheduled' || m.status === 'played' || m.status === 'live');
+  const structuralWarning = scheduleGenerated
+    ? "Le calendrier est déjà généré. Modifier ce réglage n'affectera pas les matchs existants — régénérez le calendrier (onglet Format) pour appliquer les changements."
+    : null;
   const [copied, setCopied] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
@@ -238,7 +243,7 @@ export function SettingsView({
 
 
       {/* === CATÉGORIES === */}
-      <SettingCard title="CATÉGORIES DU TOURNOI" icon={Calendar} color="#818cf8">
+      <SettingCard title="CATÉGORIES DU TOURNOI" icon={Calendar} color="#818cf8" warning={structuralWarning}>
         {Array.isArray(tournament.categories) && tournament.categories.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
             {tournament.categories.map(cat => (
@@ -291,7 +296,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === DURÉES PAR CATÉGORIE === */}
-      <SettingCard title="DURÉE DES MATCHS" icon={Calendar} color="#a3e635">
+      <SettingCard title="DURÉE DES MATCHS" icon={Calendar} color="#a3e635" warning={structuralWarning}>
         <CategoryDurations
           durations={tournament.categoryDurations || {}}
           categories={tournament.categories || []}
@@ -306,7 +311,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === TERRAINS === */}
-      <SettingCard title="TERRAINS DISPONIBLES" icon={MapPin} color="#34d399">
+      <SettingCard title="TERRAINS DISPONIBLES" icon={MapPin} color="#34d399" warning={structuralWarning}>
         <FieldsEditor
           fields={tournament.fields || ['T1', 'T2', 'T3', 'T4']}
           onChange={(v) => safeUpdate({ fields: v })}
@@ -458,7 +463,7 @@ export function SettingsView({
 // ============================================================
 // SettingCard — wrapper visuel d'une section de réglages
 // ============================================================
-function SettingCard({ title, icon: Icon, color, children }) {
+function SettingCard({ title, icon: Icon, color, children, warning }) {
   return (
     <section style={styles.section}>
       <div style={{ ...styles.sectionHeader, marginBottom: 8 }}>
@@ -469,6 +474,12 @@ function SettingCard({ title, icon: Icon, color, children }) {
           <span style={styles.sectionTitle}>{title}</span>
         </div>
       </div>
+      {warning && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '9px 11px', marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8 }}>
+          <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
+          <span style={{ fontSize: 11, color: '#fbbf24', lineHeight: 1.5 }}>{warning}</span>
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {children}
       </div>
