@@ -13,6 +13,10 @@ export function FormatView(props) {
   const activeCategory = props.activeCategory;
   const updateTeam = props.updateTeam;
   const standings = props.standings || {};
+  const generateSchedule = props.generateSchedule;
+  const askConfirm = props.askConfirm;
+  const closeConfirm = props.closeConfirm;
+  const setView = props.setView;
   const teams = filterTeamsByCategory(allTeams, activeCategory);
   // Filtrer les matchs par catégorie active
   const matches = activeCategory 
@@ -24,6 +28,42 @@ export function FormatView(props) {
   const [draggedTeam, setDraggedTeam] = React.useState(null);
   const [dragOverPool, setDragOverPool] = React.useState(null);
   const [extraPools, setExtraPools] = React.useState([]);
+  const [genLoading, setGenLoading] = React.useState(false);
+
+  const handleGenerateCalendar = () => {
+    const teamsToUse = activeCategory ? teams.filter(t => t.category === activeCategory) : teams;
+    const scheduledCount = matches.filter(m => m.status === 'scheduled').length;
+    const playedCount = matches.filter(m => m.status !== 'scheduled' && !isKnockoutPhase(m)).length;
+    if (teamsToUse.length < 2) {
+      askConfirm && askConfirm({ title: 'Pas assez d\'équipes', message: 'Il faut au moins 2 équipes pour générer le calendrier.', confirmLabel: 'OK', onConfirm: () => closeConfirm && closeConfirm() });
+      return;
+    }
+    let message;
+    if (scheduledCount > 0) {
+      message = 'Le calendrier contient déjà ' + scheduledCount + ' match' + (scheduledCount>1?'s':'') + ' programmé' + (scheduledCount>1?'s':'') + '. La génération va les remplacer.' + (playedCount>0 ? ' Les ' + playedCount + ' match' + (playedCount>1?'s':'') + ' déjà joués seront conservés.' : '');
+    } else {
+      message = 'Toutes les rencontres de poules' + (tournament && tournament.hasKnockout ? ' + phase finale' : '') + ' seront créées automatiquement.';
+    }
+    askConfirm && askConfirm({
+      title: scheduledCount > 0 ? 'Régénérer le calendrier ?' : 'Générer le calendrier ?',
+      message,
+      confirmLabel: scheduledCount > 0 ? 'Régénérer' : 'Générer',
+      danger: scheduledCount > 0,
+      onConfirm: async () => {
+        closeConfirm && closeConfirm();
+        if (genLoading) return;
+        setGenLoading(true);
+        try {
+          await generateSchedule(tournament, teamsToUse, activeCategory);
+          setView && setView('schedule');
+        } catch (e) {
+          console.error('Generation calendrier echouee', e);
+        } finally {
+          setGenLoading(false);
+        }
+      },
+    });
+  };
 
   // Compte les équipes par poule pour info
   const teamsByPool = teams.reduce((acc, t) => {
@@ -345,6 +385,41 @@ export function FormatView(props) {
               }}
             >
               + NOUVELLE POULE
+            </button>
+          )}
+
+          {/* Bouton Generer le calendrier — le pont vers le planning */}
+          {pools.length > 0 && generateSchedule && (
+            <button
+              onClick={handleGenerateCalendar}
+              disabled={genLoading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                marginTop: 14,
+                background: matches.filter(m => !isKnockoutPhase(m)).length > 0 ? 'rgba(255,255,255,0.04)' : '#a3e635',
+                border: matches.filter(m => !isKnockoutPhase(m)).length > 0 ? '1px solid rgba(163,230,53,0.3)' : 'none',
+                borderRadius: 12,
+                color: matches.filter(m => !isKnockoutPhase(m)).length > 0 ? '#a3e635' : '#0a0e1a',
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                cursor: genLoading ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {genLoading ? 'Génération…' : (matches.filter(m => !isKnockoutPhase(m)).length > 0 ? '↻ Régénérer le calendrier' : '⚡ Générer le calendrier')}
+            </button>
+          )}
+          {matches.filter(m => !isKnockoutPhase(m)).length > 0 && setView && (
+            <button
+              onClick={() => setView('schedule')}
+              style={{ width: '100%', padding: '9px', marginTop: 8, background: 'none', border: 'none', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Voir le calendrier ({matches.filter(m => !isKnockoutPhase(m)).length} matchs) →
             </button>
           )}
         </div>
