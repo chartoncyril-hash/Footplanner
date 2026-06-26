@@ -373,7 +373,9 @@ export function TeamsLibraryPicker(props) {
                         </div>
                       )}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5 }}>Équipe</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                       {[1, 2, 3, 4, 5].map((rank) => {
                         const isEngaged = existingRanks.includes(rank);
                         const isSelected = selectedRanks.includes(rank);
@@ -413,6 +415,7 @@ export function TeamsLibraryPicker(props) {
                           </button>
                         );
                       })}
+                      </div>
                     </div>
                   </div>
                 );
