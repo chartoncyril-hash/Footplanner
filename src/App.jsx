@@ -676,6 +676,8 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, ca
             setHubView('licencies');
           } else if (moduleId === 'compositions') {
             setHubView('compositions');
+          } else if (moduleId === 'finance') {
+            setHubView('finance');
           }
         }}
         onCreateTournament={() => {
