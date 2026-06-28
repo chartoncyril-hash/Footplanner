@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import {
   Trophy, Monitor, Heart, BarChart2, ClipboardCheck, ClipboardList,
   CircleUser, Shirt, Handshake,
-  Tent, MessageSquare, CalendarDays, Users2, Image, ArrowRight, Clock, Plus, User
+  Tent, MessageSquare, CalendarDays, Users2, Image, ArrowRight, Clock, Plus, User, Wallet
 } from 'lucide-react';
 import { AccountView } from './AccountView';
 import { RegistrationManager } from './RegistrationManager';
@@ -15,6 +15,7 @@ import { TeamView } from './TeamView';
 import { SettingsHubView } from './SettingsHubView';
 import { LicenciesView } from './LicenciesView';
 import { CompositionsView } from './CompositionsView';
+import { FinanceHubView } from './FinanceHubView';
 import { CheckInView } from './CheckInView';
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
 
@@ -58,6 +59,14 @@ const MODULES = [
     available: true,
   },
   // Ligne 2
+  {
+    id: 'finance',
+    label: 'Finance & Budget',
+    icon: Wallet,
+    color: '#22c55e',
+    desc: 'Trésorerie, recettes, dépenses et pilotage financier du club.',
+    available: true,
+  },
   {
     id: 'tournaments',
     label: 'Gestion de tournois',
@@ -281,6 +290,16 @@ export function HubDashboard({ profile, clubContext, myTournaments, onEnterModul
               ← Retour au dashboard
             </button>
             <LicenciesView />
+          </div>
+        );
+      }
+      if (hubView === 'finance') {
+        return (
+          <div style={{maxWidth:1200, margin:'0 auto', padding:'32px 24px'}}>
+            <button onClick={onHubViewBack} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#94a3b8',cursor:'pointer',fontSize:13,fontWeight:600,marginBottom:24,marginTop:8}}>
+              ← Retour au dashboard
+            </button>
+            <FinanceHubView />
           </div>
         );
       }
