@@ -296,7 +296,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === DURÉES PAR CATÉGORIE === */}
-      <SettingCard title="DURÉE DES MATCHS" icon={Calendar} color="#a3e635" warning={structuralWarning}>
+      <SettingCard title="DURÉES PAR CATÉGORIE (AVANCÉ)" icon={Calendar} color="#a3e635" warning={structuralWarning} hint="La durée globale se règle dans le wizard. Ici, tu peux affiner une durée différente par catégorie.">
         <CategoryDurations
           durations={tournament.categoryDurations || {}}
           categories={tournament.categories || []}
@@ -311,7 +311,7 @@ export function SettingsView({
       </SettingCard>
 
       {/* === TERRAINS === */}
-      <SettingCard title="TERRAINS DISPONIBLES" icon={MapPin} color="#34d399" warning={structuralWarning}>
+      <SettingCard title="PERSONNALISER LES TERRAINS (AVANCÉ)" icon={MapPin} color="#34d399" warning={structuralWarning} hint="Le nombre de terrains se règle dans le wizard. Ici, tu peux les renommer (ex: Terrain Honneur) ou en ajouter.">
         <FieldsEditor
           fields={tournament.fields || ['T1', 'T2', 'T3', 'T4']}
           onChange={(v) => safeUpdate({ fields: v })}
@@ -463,10 +463,10 @@ export function SettingsView({
 // ============================================================
 // SettingCard — wrapper visuel d'une section de réglages
 // ============================================================
-function SettingCard({ title, icon: Icon, color, children, warning }) {
+function SettingCard({ title, icon: Icon, color, children, warning, hint }) {
   return (
     <section style={styles.section}>
-      <div style={{ ...styles.sectionHeader, marginBottom: 8 }}>
+      <div style={{ ...styles.sectionHeader, marginBottom: hint ? 4 : 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ ...styles.sectionIconBox, background: color + '15', borderColor: color + '40' }}>
             <Icon size={13} color={color} strokeWidth={2.5} />
@@ -474,6 +474,9 @@ function SettingCard({ title, icon: Icon, color, children, warning }) {
           <span style={styles.sectionTitle}>{title}</span>
         </div>
       </div>
+      {hint && (
+        <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.5, margin: '0 0 10px 0' }}>{hint}</p>
+      )}
       {warning && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '9px 11px', marginBottom: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8 }}>
           <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
