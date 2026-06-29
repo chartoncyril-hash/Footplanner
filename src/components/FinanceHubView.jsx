@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wallet, TrendingUp, TrendingDown, Plus, Trash2, Check, X,
-  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2, Tag,
+  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2, Tag, Paperclip,
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import {
   listTransactions, createTransaction, updateTransaction, deleteTransaction,
   listCategories, computeBalance, listAllSponsorPayments,
@@ -186,6 +187,11 @@ export function FinanceHubView() {
               <button onClick={() => !t.virtual && cycleStatus(t)} title={t.virtual ? 'Géré dans la fiche sponsor' : 'Cliquer pour changer le statut'} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, border: 'none', cursor: t.virtual ? 'default' : 'pointer' }}>
                 {st.label}
               </button>
+              {t.receiptUrl && (
+                <a href={t.receiptUrl} target="_blank" rel="noreferrer" title="Voir le justificatif" style={{ display: 'inline-flex', color: '#34d399' }}>
+                  <Paperclip size={14} />
+                </a>
+              )}
               <span style={{ fontSize: 15, fontWeight: 800, color: t.direction === 'in' ? '#22c55e' : '#ef4444', whiteSpace: 'nowrap' }}>
                 {t.direction === 'in' ? '+' : '−'}{fmt(t.amount)}
               </span>
@@ -265,10 +271,12 @@ function TransactionForm({ direction, editing, categories, onClose, onSave }) {
   const [paymentMethod, setPaymentMethod] = useState(editing?.paymentMethod || 'virement');
   const [description, setDescription] = useState(editing?.description || '');
   const [status, setStatus] = useState(editing?.status || 'réalisé');
+  const [receiptUrl, setReceiptUrl] = useState(editing?.receiptUrl || '');
+  const [uploading, setUploading] = useState(false);
 
   const submit = () => {
     if (!amount || parseFloat(amount) <= 0) { alert('Indique un montant.'); return; }
-    onSave({ date, direction, amount: parseFloat(amount), category, paymentMethod, description, status });
+    onSave({ date, direction, amount: parseFloat(amount), category, paymentMethod, description, status, receiptUrl: receiptUrl || null });
   };
 
   const accent = direction === 'in' ? '#22c55e' : '#ef4444';
@@ -321,7 +329,11 @@ function TransactionForm({ direction, editing, categories, onClose, onSave }) {
               ))}
             </div>
           </div>
-          <button onClick={submit} style={{ ...btn(accent), justifyContent: 'center', marginTop: 4 }}>
+          <div>
+            <label style={lblS}>Justificatif (facture, reçu)</label>
+            <ReceiptUpload value={receiptUrl} uploading={uploading} setUploading={setUploading} onUploaded={setReceiptUrl} onClear={() => setReceiptUrl('')} />
+          </div>
+          <button onClick={submit} disabled={uploading} style={{ ...btn(accent), justifyContent: 'center', marginTop: 4, opacity: uploading ? 0.6 : 1 }}>
             <Check size={16} /> {editing ? 'Enregistrer' : 'Ajouter'}
           </button>
         </div>
@@ -385,6 +397,71 @@ function CategoryManager({ categories, onClose, onChanged }) {
           {col('DÉPENSES', depenses, '#ef4444')}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ReceiptUpload({ value, uploading, setUploading, onUploaded, onClear }) {
+  const inputRef = React.useRef();
+  const isImage = value && /\.(jpg|jpeg|png|gif|webp)/i.test(value);
+  const isPdf = value && /\.pdf/i.test(value);
+
+  const compressImage = (file) => new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1400;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+      const path = 'receipt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      const { error: upErr } = await supabase.storage.from('finance-receipts').upload(path, compressed, { upsert: true, contentType: compressed.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('finance-receipts').getPublicUrl(path);
+      onUploaded(data.publicUrl);
+    } catch (err) {
+      console.error('Upload justificatif echoue', err);
+      alert('Erreur lors de l\'upload du justificatif.');
+    }
+    setUploading(false);
+  };
+
+  if (value) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
+        {isImage
+          ? <img src={value} alt="justificatif" style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
+          : <div style={{ width: 44, height: 44, borderRadius: 6, background: 'rgba(251,113,133,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{isPdf ? '📄' : '📁'}</div>}
+        <a href={value} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: 12, color: '#34d399', textDecoration: 'none' }}>Voir le justificatif</a>
+        <button type="button" onClick={onClear} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fb7185', fontSize: 16 }} title="Retirer">×</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <input ref={inputRef} type="file" accept="image/*,application/pdf" onChange={handleFile} style={{ display: 'none' }} />
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.02)', color: '#94a3b8', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <Paperclip size={14} /> {uploading ? 'Envoi…' : 'Joindre une facture / un reçu'}
+      </button>
     </div>
   );
 }

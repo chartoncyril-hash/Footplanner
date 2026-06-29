@@ -20,6 +20,7 @@ function txFromDb(r) {
     account: r.account,
     sourceType: r.source_type,
     sourceId: r.source_id,
+    receiptUrl: r.receipt_url,
     createdAt: r.created_at,
   };
 }
@@ -37,6 +38,7 @@ function txToDb(t, ownerId) {
   if (t.account !== undefined) out.account = t.account;
   if (t.sourceType !== undefined) out.source_type = t.sourceType;
   if (t.sourceId !== undefined) out.source_id = t.sourceId;
+  if (t.receiptUrl !== undefined) out.receipt_url = t.receiptUrl;
   return out;
 }
 
