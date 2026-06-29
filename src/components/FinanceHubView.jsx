@@ -475,10 +475,12 @@ function ReceiptPreview({ url }) {
         <Eye size={16} />
       </a>
       {hover && (
-        <span style={{ position: 'absolute', bottom: '130%', right: 0, zIndex: 50, width: 520, height: 680, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.5)', overflow: 'hidden', display: 'block' }}>
-          {isPdf
-            ? <iframe src={url + '#toolbar=0&navpanes=0'} title="justificatif" style={{ width: '100%', height: '100%', border: 'none' }} />
-            : <img src={url} alt="justificatif" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />}
+        <span style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }}>
+          <span style={{ width: 'min(85vw, 620px)', height: 'min(85vh, 820px)', background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflow: 'hidden', display: 'block' }}>
+            {isPdf
+              ? <iframe src={url + '#toolbar=0&navpanes=0'} title="justificatif" style={{ width: '100%', height: '100%', border: 'none' }} />
+              : <img src={url} alt="justificatif" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />}
+          </span>
         </span>
       )}
     </span>
