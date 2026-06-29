@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, ClipboardList, Monitor, Handshake, Users, GitBranch, Settings, Sparkles, Tent, MessageSquare, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Trophy, ClipboardList, Monitor, Handshake, Users, GitBranch, Settings, Sparkles, Tent, MessageSquare, CalendarDays, Wallet } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import { useAuth } from './hooks/useAuth';
@@ -565,6 +565,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, ca
       { id: 'communication', icon: 'MessageSquare',   label: 'Communication',    color: '#f472b6', perm: 'communication' },
       { id: 'scoreboard',    icon: 'Monitor',         label: 'Table de marque',  color: '#34d399', perm: 'scoreboard' },
       { id: 'sponsors',      icon: 'Handshake',       label: 'Sponsors',         color: '#f59e0b', perm: 'sponsors' },
+      { id: 'finance',       icon: 'Wallet',          label: 'Finance & Budget', color: '#22c55e', perm: 'finance' },
       { id: 'licencies',     icon: 'Users',           label: 'Licenciés',        color: '#fb7185', perm: 'licencies' },
       { id: 'compositions',  icon: 'GitBranch',       label: 'Compositions',     color: '#818cf8', perm: 'compositions' },
       { id: 'inscriptions',  icon: 'ClipboardList',   label: 'Inscriptions',     color: '#818cf8', perm: 'inscriptions' },
@@ -628,6 +629,7 @@ function AuthenticatedApp({ user, signOut, isPresentationMode, spectatorCode, ca
                     {item.id==='communication' && <MessageSquare size={16} />}
                     {item.id==='scoreboard' && <Monitor size={16} />}
                     {item.id==='sponsors' && <Handshake size={16} />}
+                    {item.id==='finance' && <Wallet size={16} />}
                     {item.id==='licencies' && <Users size={16} />}
                     {item.id==='compositions' && <GitBranch size={16} />}
                   </span>
