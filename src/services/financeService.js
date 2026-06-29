@@ -165,6 +165,50 @@ function payFromDb(r) {
   };
 }
 
+// Plan de categories standard club amateur
+export const DEFAULT_CATEGORIES = [
+  { name: 'Cotisations', direction: 'in', color: '#22c55e' },
+  { name: 'Sponsors & partenariats', direction: 'in', color: '#84cc16' },
+  { name: 'Subventions', direction: 'in', color: '#10b981' },
+  { name: 'Buvette', direction: 'in', color: '#14b8a6' },
+  { name: 'Manifestations', direction: 'in', color: '#06b6d4' },
+  { name: 'Boutique', direction: 'in', color: '#0ea5e9' },
+  { name: 'Dons', direction: 'in', color: '#3b82f6' },
+  { name: 'Autres recettes', direction: 'in', color: '#64748b' },
+  { name: 'Équipements & matériel', direction: 'out', color: '#ef4444' },
+  { name: 'Arbitrage', direction: 'out', color: '#f97316' },
+  { name: 'Engagements & licences', direction: 'out', color: '#f59e0b' },
+  { name: 'Déplacements', direction: 'out', color: '#eab308' },
+  { name: 'Stages & formations', direction: 'out', color: '#a855f7' },
+  { name: 'Frais médicaux', direction: 'out', color: '#ec4899' },
+  { name: 'Assurances', direction: 'out', color: '#d946ef' },
+  { name: 'Frais de structure', direction: 'out', color: '#8b5cf6' },
+  { name: 'Manifestations (dépenses)', direction: 'out', color: '#6366f1' },
+  { name: 'Autres dépenses', direction: 'out', color: '#64748b' },
+];
+
+// Cree le plan standard si le club n'a aucune categorie (init auto a la 1ere ouverture)
+export async function ensureDefaultCategories() {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
+  const existing = await listCategories();
+  if (existing.length > 0) return existing;
+  const rows = DEFAULT_CATEGORIES.map((c, i) => ({ owner_id: ownerId, name: c.name, direction: c.direction, sort_order: i, color: c.color }));
+  const { error } = await supabase.from('finance_categories').insert(rows);
+  if (error) { console.error('Init categories echouee', error); return existing; }
+  return await listCategories();
+}
+
+export async function updateCategory(id, patch) {
+  const out = {};
+  if (patch.name !== undefined) out.name = patch.name;
+  if (patch.color !== undefined) out.color = patch.color;
+  if (patch.sortOrder !== undefined) out.sort_order = patch.sortOrder;
+  const { data, error } = await supabase.from('finance_categories').update(out).eq('id', id).select().single();
+  if (error) throw error;
+  return { id: data.id, ownerId: data.owner_id, name: data.name, direction: data.direction, sortOrder: data.sort_order, active: data.active, color: data.color };
+}
+
 export async function listSponsorPayments(sponsorId) {
   const { data, error } = await supabase
     .from('sponsor_payments')

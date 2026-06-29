@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wallet, TrendingUp, TrendingDown, Plus, Trash2, Check, X,
-  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2,
+  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2, Tag,
 } from 'lucide-react';
 import {
   listTransactions, createTransaction, updateTransaction, deleteTransaction,
   listCategories, computeBalance, listAllSponsorPayments,
+  ensureDefaultCategories, createCategory, updateCategory, deleteCategory,
 } from '../services/financeService';
 
 const STATUS_META = {
@@ -22,6 +23,7 @@ export function FinanceHubView() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showCats, setShowCats] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formDir, setFormDir] = useState('in');
   // Filtres
@@ -32,7 +34,7 @@ export function FinanceHubView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tx, cats, sponsorPays] = await Promise.all([listTransactions(), listCategories(), listAllSponsorPayments()]);
+      const [tx, cats, sponsorPays] = await Promise.all([listTransactions(), ensureDefaultCategories(), listAllSponsorPayments()]);
       // Echeances sponsors -> recettes virtuelles (miroir, non editables ici)
       const sponsorTx = (sponsorPays || []).map(sp => ({
         id: 'sponsor_' + sp.id,
@@ -144,6 +146,9 @@ export function FinanceHubView() {
         <button onClick={() => openCreate('out')} style={btn('#ef4444')}>
           <ArrowUpCircle size={16} /> Dépense
         </button>
+        <button onClick={() => setShowCats(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#94a3b8', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <Tag size={16} /> Catégories
+        </button>
       </div>
 
       {/* Filtres */}
@@ -211,6 +216,13 @@ export function FinanceHubView() {
       )}
 
       {/* Formulaire (modal) */}
+      {showCats && (
+        <CategoryManager
+          categories={categories}
+          onClose={() => setShowCats(false)}
+          onChanged={load}
+        />
+      )}
       {showForm && (
         <TransactionForm
           direction={formDir}
@@ -312,6 +324,65 @@ function TransactionForm({ direction, editing, categories, onClose, onSave }) {
           <button onClick={submit} style={{ ...btn(accent), justifyContent: 'center', marginTop: 4 }}>
             <Check size={16} /> {editing ? 'Enregistrer' : 'Ajouter'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoryManager({ categories, onClose, onChanged }) {
+  const [newName, setNewName] = React.useState('');
+  const [newDir, setNewDir] = React.useState('in');
+  const recettes = categories.filter(c => c.direction === 'in');
+  const depenses = categories.filter(c => c.direction === 'out');
+
+  const add = async () => {
+    if (!newName.trim()) return;
+    try { await createCategory({ name: newName.trim(), direction: newDir, sortOrder: 99 }); setNewName(''); await onChanged(); }
+    catch (e) { console.error(e); alert('Erreur (catégorie déjà existante ?)'); }
+  };
+  const remove = async (c) => {
+    if (!confirm('Masquer la catégorie "' + c.name + '" ? Les mouvements existants la gardent.')) return;
+    try { await deleteCategory(c.id); await onChanged(); } catch (e) { console.error(e); }
+  };
+  const rename = async (c) => {
+    const name = prompt('Renommer la catégorie :', c.name);
+    if (!name || !name.trim() || name === c.name) return;
+    try { await updateCategory(c.id, { name: name.trim() }); await onChanged(); } catch (e) { console.error(e); }
+  };
+
+  const col = (title, list, accent) => (
+    <div style={{ flex: 1, minWidth: 200 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: accent, marginBottom: 8 }}>{title}</div>
+      {list.map(c => (
+        <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <span style={{ width: 8, height: 8, borderRadius: 4, background: c.color, flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: 13, color: '#cbd5e1' }}>{c.name}</span>
+          <button onClick={() => rename(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 12, padding: '0 4px' }} title="Renommer">✎</button>
+          <button onClick={() => remove(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fb7185', fontSize: 15, padding: '0 4px' }} title="Masquer">×</button>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 560, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 22, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#f1f5f9' }}>Gérer les catégories</h2>
+          <button onClick={onClose} style={iconBtn}><X size={18} color="#94a3b8" /></button>
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
+          <select value={newDir} onChange={(e) => setNewDir(e.target.value)} style={{ padding: '9px 11px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#cbd5e1', fontSize: 13, fontFamily: 'inherit' }}>
+            <option value="in">Recette</option>
+            <option value="out">Dépense</option>
+          </select>
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="Nouvelle catégorie…" style={{ flex: 1, minWidth: 140, padding: '9px 11px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 13, fontFamily: 'inherit' }} />
+          <button onClick={add} style={btn('#a3e635')}>Ajouter</button>
+        </div>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          {col('RECETTES', recettes, '#22c55e')}
+          {col('DÉPENSES', depenses, '#ef4444')}
         </div>
       </div>
     </div>
