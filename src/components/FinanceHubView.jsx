@@ -475,7 +475,7 @@ function ReceiptPreview({ url }) {
         <Eye size={16} />
       </a>
       {hover && (
-        <span style={{ position: 'absolute', bottom: '130%', right: 0, zIndex: 50, width: 280, height: 360, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.5)', overflow: 'hidden', display: 'block' }}>
+        <span style={{ position: 'absolute', bottom: '130%', right: 0, zIndex: 50, width: 520, height: 680, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.5)', overflow: 'hidden', display: 'block' }}>
           {isPdf
             ? <iframe src={url + '#toolbar=0&navpanes=0'} title="justificatif" style={{ width: '100%', height: '100%', border: 'none' }} />
             : <img src={url} alt="justificatif" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />}
