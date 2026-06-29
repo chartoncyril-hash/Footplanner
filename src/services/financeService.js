@@ -148,3 +148,74 @@ export function computeBalance(transactions) {
     projectedBalance: (inReal + inPrev) - (outReal + outPrev), // solde projeté
   };
 }
+
+// ============================================================
+// ÉCHÉANCES SPONSORS (sponsor_payments)
+// ============================================================
+function payFromDb(r) {
+  return {
+    id: r.id,
+    ownerId: r.owner_id,
+    sponsorId: r.sponsor_id,
+    amount: parseFloat(r.amount) || 0,
+    dueDate: r.due_date,
+    paidAt: r.paid_at,
+    label: r.label,
+    createdAt: r.created_at,
+  };
+}
+
+export async function listSponsorPayments(sponsorId) {
+  const { data, error } = await supabase
+    .from('sponsor_payments')
+    .select('*')
+    .eq('sponsor_id', sponsorId)
+    .order('due_date', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(payFromDb);
+}
+
+export async function createSponsorPayment(p) {
+  const ownerId = await getEffectiveOwnerId();
+  const { data, error } = await supabase
+    .from('sponsor_payments')
+    .insert({ owner_id: ownerId, sponsor_id: p.sponsorId, amount: Math.abs(parseFloat(p.amount) || 0), due_date: p.dueDate || null, paid_at: p.paidAt || null, label: p.label || null })
+    .select()
+    .single();
+  if (error) throw error;
+  return payFromDb(data);
+}
+
+export async function updateSponsorPayment(id, patch) {
+  const out = {};
+  if (patch.amount !== undefined) out.amount = Math.abs(parseFloat(patch.amount) || 0);
+  if (patch.dueDate !== undefined) out.due_date = patch.dueDate || null;
+  if (patch.paidAt !== undefined) out.paid_at = patch.paidAt || null;
+  if (patch.label !== undefined) out.label = patch.label || null;
+  const { data, error } = await supabase
+    .from('sponsor_payments')
+    .update(out)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return payFromDb(data);
+}
+
+export async function deleteSponsorPayment(id) {
+  const { error } = await supabase.from('sponsor_payments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Toutes les échéances du club (pour la trésorerie)
+export async function listAllSponsorPayments() {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
+  const { data, error } = await supabase
+    .from('sponsor_payments')
+    .select('*, sponsor_library(name, status)')
+    .eq('owner_id', ownerId)
+    .order('due_date', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(r => ({ ...payFromDb(r), sponsorName: r.sponsor_library?.name, sponsorStatus: r.sponsor_library?.status }));
+}

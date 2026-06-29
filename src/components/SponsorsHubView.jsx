@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { getEffectiveOwnerId } from "../lib/effectiveUser";
+import { SponsorPayments } from "./SponsorPayments";
 
 // ── SPONSOR UPLOAD BUTTON ────────────────────────────────────
 function SponsorUploadButton({ value, accept, bucket, path, compress, onUploaded, onClear, label }) {
@@ -674,6 +675,9 @@ function SponsorForm({ initial, settings, onSave, onCancel }) {
           />
         </div>
       ))}
+      {initial?.id && (
+        <SponsorPayments sponsorId={initial.id} contractAmount={form.contract_amount} />
+      )}
       <div style={{ marginBottom: 16 }}>
         <label style={S.label}>Notes</label>
         <textarea
