@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   listTransactions, createTransaction, updateTransaction, deleteTransaction,
-  listCategories, computeBalance,
+  listCategories, computeBalance, listAllSponsorPayments,
 } from '../services/financeService';
 
 const STATUS_META = {
@@ -32,8 +32,22 @@ export function FinanceHubView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tx, cats] = await Promise.all([listTransactions(), listCategories()]);
-      setTransactions(tx);
+      const [tx, cats, sponsorPays] = await Promise.all([listTransactions(), listCategories(), listAllSponsorPayments()]);
+      // Echeances sponsors -> recettes virtuelles (miroir, non editables ici)
+      const sponsorTx = (sponsorPays || []).map(sp => ({
+        id: 'sponsor_' + sp.id,
+        virtual: true,
+        direction: 'in',
+        amount: sp.amount,
+        category: 'Sponsors & partenariats',
+        paymentMethod: 'virement',
+        description: (sp.sponsorName || 'Sponsor') + (sp.label ? ' — ' + sp.label : ''),
+        date: sp.paidAt || sp.dueDate || new Date().toISOString().slice(0,10),
+        status: sp.paidAt ? 'réalisé' : 'prévu',
+        sourceType: 'sponsor',
+        sourceId: sp.sponsorId,
+      }));
+      setTransactions([...tx, ...sponsorTx]);
       setCategories(cats);
     } catch (e) {
       console.error('Chargement finance échoué', e);
@@ -164,15 +178,15 @@ export function FinanceHubView() {
                   <span style={{ fontSize: 11, color: '#64748b' }}>· {t.paymentMethod}</span>
                 </div>
               </div>
-              <button onClick={() => cycleStatus(t)} title="Cliquer pour changer le statut" style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => !t.virtual && cycleStatus(t)} title={t.virtual ? 'Géré dans la fiche sponsor' : 'Cliquer pour changer le statut'} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, border: 'none', cursor: t.virtual ? 'default' : 'pointer' }}>
                 {st.label}
               </button>
               <span style={{ fontSize: 15, fontWeight: 800, color: t.direction === 'in' ? '#22c55e' : '#ef4444', whiteSpace: 'nowrap' }}>
                 {t.direction === 'in' ? '+' : '−'}{fmt(t.amount)}
               </span>
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => openEdit(t)} style={iconBtn} title="Modifier"><Pencil size={14} color="#94a3b8" /></button>
-                <button onClick={() => handleDelete(t.id)} style={iconBtn} title="Supprimer"><Trash2 size={14} color="#fb7185" /></button>
+                {!t.virtual && <button onClick={() => openEdit(t)} style={iconBtn} title="Modifier"><Pencil size={14} color="#94a3b8" /></button>}
+                {!t.virtual && <button onClick={() => handleDelete(t.id)} style={iconBtn} title="Supprimer"><Trash2 size={14} color="#fb7185" /></button>}
               </div>
             </div>
           );
