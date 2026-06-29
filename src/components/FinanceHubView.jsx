@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wallet, TrendingUp, TrendingDown, Plus, Trash2, Check, X,
-  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2, Tag, Paperclip,
+  Pencil, Filter, ArrowDownCircle, ArrowUpCircle, Link2, Tag, Paperclip, Eye,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
@@ -187,11 +187,7 @@ export function FinanceHubView() {
               <button onClick={() => !t.virtual && cycleStatus(t)} title={t.virtual ? 'Géré dans la fiche sponsor' : 'Cliquer pour changer le statut'} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, border: 'none', cursor: t.virtual ? 'default' : 'pointer' }}>
                 {st.label}
               </button>
-              {t.receiptUrl && (
-                <a href={t.receiptUrl} target="_blank" rel="noreferrer" title="Voir le justificatif" style={{ display: 'inline-flex', color: '#34d399' }}>
-                  <Paperclip size={14} />
-                </a>
-              )}
+              {t.receiptUrl && <ReceiptPreview url={t.receiptUrl} />}
               <span style={{ fontSize: 15, fontWeight: 800, color: t.direction === 'in' ? '#22c55e' : '#ef4444', whiteSpace: 'nowrap' }}>
                 {t.direction === 'in' ? '+' : '−'}{fmt(t.amount)}
               </span>
@@ -463,6 +459,29 @@ function ReceiptUpload({ value, uploading, setUploading, onUploaded, onClear }) 
         <Paperclip size={14} /> {uploading ? 'Envoi…' : 'Joindre une facture / un reçu'}
       </button>
     </div>
+  );
+}
+
+function ReceiptPreview({ url }) {
+  const [hover, setHover] = React.useState(false);
+  const isPdf = /\.pdf/i.test(url);
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <a href={url} target="_blank" rel="noreferrer" title="Voir le justificatif" style={{ display: 'inline-flex', color: '#34d399', cursor: 'pointer' }}>
+        <Eye size={16} />
+      </a>
+      {hover && (
+        <span style={{ position: 'absolute', bottom: '130%', right: 0, zIndex: 50, width: 280, height: 360, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.5)', overflow: 'hidden', display: 'block' }}>
+          {isPdf
+            ? <iframe src={url + '#toolbar=0&navpanes=0'} title="justificatif" style={{ width: '100%', height: '100%', border: 'none' }} />
+            : <img src={url} alt="justificatif" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }} />}
+        </span>
+      )}
+    </span>
   );
 }
 
