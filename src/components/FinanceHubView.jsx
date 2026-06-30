@@ -9,6 +9,7 @@ import {
   listCategories, computeBalance, listAllSponsorPayments,
   ensureDefaultCategories, createCategory, updateCategory, deleteCategory,
   listProjects, createProject, listClubTeams,
+  listBudgets, createBudget, updateBudget, deleteBudget, computeBudgetReal,
 } from '../services/financeService';
 
 const STATUS_META = {
@@ -25,6 +26,8 @@ export function FinanceHubView() {
   const [categories, setCategories] = useState([]);
   const [teams, setTeams] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [tab, setTab] = useState('tresorerie');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showCats, setShowCats] = useState(false);
@@ -38,9 +41,10 @@ export function FinanceHubView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tx, cats, sponsorPays, tms, projs] = await Promise.all([listTransactions(), ensureDefaultCategories(), listAllSponsorPayments(), listClubTeams(), listProjects()]);
+      const [tx, cats, sponsorPays, tms, projs, buds] = await Promise.all([listTransactions(), ensureDefaultCategories(), listAllSponsorPayments(), listClubTeams(), listProjects(), listBudgets()]);
       setTeams(tms);
       setProjects(projs);
+      setBudgets(buds);
       // Echeances sponsors -> recettes virtuelles (miroir, non editables ici)
       const sponsorTx = (sponsorPays || []).map(sp => ({
         id: 'sponsor_' + sp.id,
@@ -135,6 +139,14 @@ export function FinanceHubView() {
         </div>
       </div>
 
+      {/* Bascule Trésorerie / Budgets */}
+      <div style={{ display: 'flex', gap: 4, padding: 4, background: 'rgba(255,255,255,0.03)', borderRadius: 12, width: 'fit-content' }}>
+        {[['tresorerie', 'Trésorerie'], ['budgets', 'Budgets']].map(([k, l]) => (
+          <button key={k} onClick={() => setTab(k)} style={{ padding: '8px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'inherit', background: tab === k ? '#22c55e' : 'transparent', color: tab === k ? '#0a0e1a' : '#94a3b8' }}>{l}</button>
+        ))}
+      </div>
+
+      {tab === 'tresorerie' && (<>
       {/* Cartes de stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         <StatCard label="Solde réel" value={fmt(agg.balance)} color={agg.balance >= 0 ? '#22c55e' : '#ef4444'} big icon={Wallet} />
@@ -220,6 +232,19 @@ export function FinanceHubView() {
             ))}
           </div>
         </div>
+      )}
+
+      </>)}
+
+      {tab === 'budgets' && (
+        <BudgetsTab
+          budgets={budgets}
+          transactions={transactions}
+          categories={categories}
+          teams={teams}
+          projects={projects}
+          onReload={load}
+        />
       )}
 
       {/* Formulaire (modal) */}
@@ -520,6 +545,182 @@ function ReceiptPreview({ url }) {
     </span>
   );
 }
+
+
+function BudgetsTab({ budgets, transactions, categories, teams, projects, onReload }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [editing, setEditing] = React.useState(null);
+
+  const openCreate = () => { setEditing(null); setShowForm(true); };
+  const openEdit = (b) => { setEditing(b); setShowForm(true); };
+
+  const handleSave = async (payload) => {
+    try {
+      if (editing) await updateBudget(editing.id, payload);
+      else await createBudget(payload);
+      setShowForm(false); setEditing(null);
+      await onReload();
+    } catch (e) { console.error(e); alert('Erreur lors de la sauvegarde du budget.'); }
+  };
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer ce budget ?')) return;
+    try { await deleteBudget(id); await onReload(); } catch (e) { console.error(e); }
+  };
+
+  const teamLabel = (id) => teams.find(t => t.id === id)?.label;
+  const projectLabel = (id) => projects.find(p => p.id === id)?.name;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Définis tes enveloppes prévisionnelles et suis leur consommation.</p>
+        <button onClick={openCreate} style={btn('#22c55e')}><Plus size={16} /> Budget</button>
+      </div>
+
+      {budgets.length === 0 && (
+        <div style={{ padding: 32, textAlign: 'center', color: '#64748b', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 12 }}>
+          Aucun budget. Crée une enveloppe (ex: "Équipement saison", "Budget U15", "Tournoi de Noël").
+        </div>
+      )}
+
+      {budgets.map(b => {
+        const real = computeBudgetReal(b, transactions);
+        const planned = b.amountPlanned || 0;
+        const pct = planned > 0 ? Math.round((real / planned) * 100) : 0;
+        const remaining = planned - real;
+        const barColor = pct >= 100 ? '#ef4444' : (pct >= 80 ? '#f59e0b' : '#22c55e');
+        const crit = [b.category, teamLabel(b.teamId), projectLabel(b.projectId)].filter(Boolean).join(' · ') || 'Tout le club';
+        return (
+          <div key={b.id} style={{ padding: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9' }}>{b.name}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{crit}{b.periodLabel ? ' · ' + b.periodLabel : ''}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => openEdit(b)} style={iconBtn} title="Modifier"><Pencil size={14} color="#94a3b8" /></button>
+                <button onClick={() => handleDelete(b.id)} style={iconBtn} title="Supprimer"><Trash2 size={14} color="#fb7185" /></button>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: '#cbd5e1' }}>{fmt(real)} <span style={{ color: '#64748b' }}>/ {fmt(planned)}</span></span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: barColor }}>
+                {pct}%{remaining < 0 ? ` · dépassé de ${fmt(-remaining)}` : ` · reste ${fmt(remaining)}`}
+              </span>
+            </div>
+            <div style={{ height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: Math.min(pct, 100) + '%', background: barColor, borderRadius: 6, transition: 'width 0.3s' }} />
+            </div>
+            {pct >= 80 && (
+              <div style={{ marginTop: 8, fontSize: 11, color: barColor, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {pct >= 100 ? '⚠️ Budget dépassé' : '⚠️ Bientôt atteint (' + pct + '%)'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {showForm && (
+        <BudgetForm
+          editing={editing}
+          categories={categories}
+          teams={teams}
+          projects={projects}
+          onClose={() => { setShowForm(false); setEditing(null); }}
+          onSave={handleSave}
+        />
+      )}
+    </div>
+  );
+}
+
+function BudgetForm({ editing, categories, teams, projects, onClose, onSave }) {
+  const [name, setName] = React.useState(editing?.name || '');
+  const [amountPlanned, setAmountPlanned] = React.useState(editing?.amountPlanned || '');
+  const [periodLabel, setPeriodLabel] = React.useState(editing?.periodLabel || '');
+  const [category, setCategory] = React.useState(editing?.category || '');
+  const [teamId, setTeamId] = React.useState(editing?.teamId || '');
+  const [projectId, setProjectId] = React.useState(editing?.projectId || '');
+  const [periodStart, setPeriodStart] = React.useState(editing?.periodStart || '');
+  const [periodEnd, setPeriodEnd] = React.useState(editing?.periodEnd || '');
+
+  const submit = () => {
+    if (!name.trim()) { alert('Donne un nom au budget.'); return; }
+    if (!amountPlanned || parseFloat(amountPlanned) <= 0) { alert('Indique un montant prévu.'); return; }
+    onSave({ name: name.trim(), amountPlanned: parseFloat(amountPlanned), periodLabel, category: category || null, teamId: teamId || null, projectId: projectId || null, periodStart: periodStart || null, periodEnd: periodEnd || null });
+  };
+
+  const inputS = { width: '100%', padding: '10px 12px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f5f9', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const lblS = { fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 4, display: 'block' };
+  const depCats = categories.filter(c => c.direction === 'out');
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 460, background: '#0a0e1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 22, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#22c55e' }}>{editing ? 'Modifier le budget' : 'Nouveau budget'}</h2>
+          <button onClick={onClose} style={iconBtn}><X size={18} color="#94a3b8" /></button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={lblS}>Nom du budget *</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Équipement saison, Budget U15…" style={inputS} autoFocus />
+          </div>
+          <div>
+            <label style={lblS}>Montant prévu (€) *</label>
+            <input type="number" min="0" step="0.01" value={amountPlanned} onChange={(e) => setAmountPlanned(e.target.value)} style={{ ...inputS, fontSize: 18, fontWeight: 800, color: '#22c55e' }} />
+          </div>
+          <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', marginBottom: 8 }}>RATTACHEMENT (laisse vide = tout le club)</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <label style={lblS}>Catégorie</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} style={inputS}>
+                  <option value="">— Toutes —</option>
+                  {depCats.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={lblS}>Équipe</label>
+                  <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={inputS}>
+                    <option value="">— Toutes —</option>
+                    {teams.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={lblS}>Projet</label>
+                  <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={inputS}>
+                    <option value="">— Aucun —</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label style={lblS}>Libellé période (optionnel)</label>
+            <input type="text" value={periodLabel} onChange={(e) => setPeriodLabel(e.target.value)} placeholder="Ex: Saison 2025-2026" style={inputS} />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label style={lblS}>Début (optionnel)</label>
+              <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} style={inputS} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={lblS}>Fin (optionnel)</label>
+              <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} style={inputS} />
+            </div>
+          </div>
+          <button onClick={submit} style={{ ...btn('#22c55e'), justifyContent: 'center', marginTop: 4 }}>
+            <Check size={16} /> {editing ? 'Enregistrer' : 'Créer le budget'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 const btn = (color) => ({ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', background: color, border: 'none', borderRadius: 10, color: '#0a0e1a', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' });
 const iconBtn = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, cursor: 'pointer' };

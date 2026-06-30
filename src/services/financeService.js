@@ -315,3 +315,91 @@ export async function listClubTeams() {
   if (error) throw error;
   return (data || []).map(t => ({ id: t.id, category: t.category, name: t.name, number: t.number, label: [t.category, t.name].filter(Boolean).join(' ') }));
 }
+
+
+// ============================================================
+// BUDGETS PRÉVISIONNELS (finance_budgets)
+// ============================================================
+function budgetFromDb(r) {
+  return {
+    id: r.id,
+    ownerId: r.owner_id,
+    name: r.name,
+    amountPlanned: parseFloat(r.amount_planned) || 0,
+    periodLabel: r.period_label,
+    periodStart: r.period_start,
+    periodEnd: r.period_end,
+    category: r.category,
+    teamId: r.team_id,
+    projectId: r.project_id,
+  };
+}
+
+export async function listBudgets() {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
+  const { data, error } = await supabase
+    .from('finance_budgets')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(budgetFromDb);
+}
+
+export async function createBudget(b) {
+  const ownerId = await getEffectiveOwnerId();
+  const { data, error } = await supabase
+    .from('finance_budgets')
+    .insert({
+      owner_id: ownerId,
+      name: b.name,
+      amount_planned: Math.abs(parseFloat(b.amountPlanned) || 0),
+      period_label: b.periodLabel || null,
+      period_start: b.periodStart || null,
+      period_end: b.periodEnd || null,
+      category: b.category || null,
+      team_id: b.teamId || null,
+      project_id: b.projectId || null,
+    })
+    .select().single();
+  if (error) throw error;
+  return budgetFromDb(data);
+}
+
+export async function updateBudget(id, patch) {
+  const out = {};
+  if (patch.name !== undefined) out.name = patch.name;
+  if (patch.amountPlanned !== undefined) out.amount_planned = Math.abs(parseFloat(patch.amountPlanned) || 0);
+  if (patch.periodLabel !== undefined) out.period_label = patch.periodLabel || null;
+  if (patch.periodStart !== undefined) out.period_start = patch.periodStart || null;
+  if (patch.periodEnd !== undefined) out.period_end = patch.periodEnd || null;
+  if (patch.category !== undefined) out.category = patch.category || null;
+  if (patch.teamId !== undefined) out.team_id = patch.teamId || null;
+  if (patch.projectId !== undefined) out.project_id = patch.projectId || null;
+  const { data, error } = await supabase.from('finance_budgets').update(out).eq('id', id).select().single();
+  if (error) throw error;
+  return budgetFromDb(data);
+}
+
+export async function deleteBudget(id) {
+  const { error } = await supabase.from('finance_budgets').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Calcule le reel consomme d'un budget a partir des mouvements (depenses realisees)
+// Reel = somme des mouvements 'out' realises/rapproches qui matchent les criteres du budget
+export function computeBudgetReal(budget, transactions) {
+  return transactions
+    .filter(t => {
+      if (t.direction !== 'out') return false;
+      if (t.status === 'prévu') return false; // seulement le realise
+      if (budget.category && t.category !== budget.category) return false;
+      if (budget.teamId && t.teamId !== budget.teamId) return false;
+      if (budget.projectId && t.projectId !== budget.projectId) return false;
+      if (budget.periodStart && t.date < budget.periodStart) return false;
+      if (budget.periodEnd && t.date > budget.periodEnd) return false;
+      return true;
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+}
