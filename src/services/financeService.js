@@ -21,6 +21,8 @@ function txFromDb(r) {
     sourceType: r.source_type,
     sourceId: r.source_id,
     receiptUrl: r.receipt_url,
+    teamId: r.team_id,
+    projectId: r.project_id,
     createdAt: r.created_at,
   };
 }
@@ -39,6 +41,8 @@ function txToDb(t, ownerId) {
   if (t.sourceType !== undefined) out.source_type = t.sourceType;
   if (t.sourceId !== undefined) out.source_id = t.sourceId;
   if (t.receiptUrl !== undefined) out.receipt_url = t.receiptUrl;
+  if (t.teamId !== undefined) out.team_id = t.teamId || null;
+  if (t.projectId !== undefined) out.project_id = t.projectId || null;
   return out;
 }
 
@@ -264,4 +268,50 @@ export async function listAllSponsorPayments() {
     .order('due_date', { ascending: true });
   if (error) throw error;
   return (data || []).map(r => ({ ...payFromDb(r), sponsorName: r.sponsor_library?.name, sponsorStatus: r.sponsor_library?.status }));
+}
+
+
+// ============================================================
+// PROJETS ANALYTIQUES (finance_projects) + ÉQUIPES (club_teams)
+// ============================================================
+export async function listProjects() {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
+  const { data, error } = await supabase
+    .from('finance_projects')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('active', true)
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(r => ({ id: r.id, ownerId: r.owner_id, name: r.name, active: r.active }));
+}
+
+export async function createProject(name) {
+  const ownerId = await getEffectiveOwnerId();
+  const { data, error } = await supabase
+    .from('finance_projects')
+    .insert({ owner_id: ownerId, name })
+    .select()
+    .single();
+  if (error) throw error;
+  return { id: data.id, ownerId: data.owner_id, name: data.name, active: data.active };
+}
+
+export async function deleteProject(id) {
+  const { error } = await supabase.from('finance_projects').update({ active: false }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function listClubTeams() {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
+  const { data, error } = await supabase
+    .from('club_teams')
+    .select('id, category, name, number')
+    .eq('owner_id', ownerId)
+    .order('category', { ascending: true })
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(t => ({ id: t.id, category: t.category, name: t.name, number: t.number, label: [t.category, t.name].filter(Boolean).join(' ') }));
 }

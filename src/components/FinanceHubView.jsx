@@ -8,6 +8,7 @@ import {
   listTransactions, createTransaction, updateTransaction, deleteTransaction,
   listCategories, computeBalance, listAllSponsorPayments,
   ensureDefaultCategories, createCategory, updateCategory, deleteCategory,
+  listProjects, createProject, listClubTeams,
 } from '../services/financeService';
 
 const STATUS_META = {
@@ -22,6 +23,8 @@ const fmt = (n) => (n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 0, 
 export function FinanceHubView() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showCats, setShowCats] = useState(false);
@@ -35,7 +38,9 @@ export function FinanceHubView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tx, cats, sponsorPays] = await Promise.all([listTransactions(), ensureDefaultCategories(), listAllSponsorPayments()]);
+      const [tx, cats, sponsorPays, tms, projs] = await Promise.all([listTransactions(), ensureDefaultCategories(), listAllSponsorPayments(), listClubTeams(), listProjects()]);
+      setTeams(tms);
+      setProjects(projs);
       // Echeances sponsors -> recettes virtuelles (miroir, non editables ici)
       const sponsorTx = (sponsorPays || []).map(sp => ({
         id: 'sponsor_' + sp.id,
@@ -230,6 +235,9 @@ export function FinanceHubView() {
           direction={formDir}
           editing={editing}
           categories={categories.filter(c => c.direction === formDir)}
+          teams={teams}
+          projects={projects}
+          onProjectCreated={async (name) => { const pr = await createProject(name); setProjects(await listProjects()); return pr; }}
           onClose={() => { setShowForm(false); setEditing(null); }}
           onSave={handleSave}
         />
@@ -260,7 +268,7 @@ function Select({ value, onChange, options }) {
   );
 }
 
-function TransactionForm({ direction, editing, categories, onClose, onSave }) {
+function TransactionForm({ direction, editing, categories, teams = [], projects = [], onProjectCreated, onClose, onSave }) {
   const [date, setDate] = useState(editing?.date || new Date().toISOString().slice(0, 10));
   const [amount, setAmount] = useState(editing?.amount || '');
   const [category, setCategory] = useState(editing?.category || (categories[0]?.name || ''));
@@ -269,10 +277,12 @@ function TransactionForm({ direction, editing, categories, onClose, onSave }) {
   const [status, setStatus] = useState(editing?.status || 'réalisé');
   const [receiptUrl, setReceiptUrl] = useState(editing?.receiptUrl || '');
   const [uploading, setUploading] = useState(false);
+  const [teamId, setTeamId] = useState(editing?.teamId || '');
+  const [projectId, setProjectId] = useState(editing?.projectId || '');
 
   const submit = () => {
     if (!amount || parseFloat(amount) <= 0) { alert('Indique un montant.'); return; }
-    onSave({ date, direction, amount: parseFloat(amount), category, paymentMethod, description, status, receiptUrl: receiptUrl || null });
+    onSave({ date, direction, amount: parseFloat(amount), category, paymentMethod, description, status, receiptUrl: receiptUrl || null, teamId: teamId || null, projectId: projectId || null });
   };
 
   const accent = direction === 'in' ? '#22c55e' : '#ef4444';
@@ -323,6 +333,30 @@ function TransactionForm({ direction, editing, categories, onClose, onSave }) {
                   {m.label}
                 </button>
               ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label style={lblS}>Affecter à une équipe</label>
+              <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={inputS}>
+                <option value="">— Club (global) —</option>
+                {teams.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={lblS}>Projet</label>
+              <select value={projectId} onChange={(e) => {
+                if (e.target.value === '__new__') {
+                  const name = prompt('Nom du nouveau projet (ex: Tournoi de Noël) :');
+                  if (name && name.trim() && onProjectCreated) {
+                    onProjectCreated(name.trim()).then(pr => pr && setProjectId(pr.id));
+                  }
+                } else { setProjectId(e.target.value); }
+              }} style={inputS}>
+                <option value="">— Aucun —</option>
+                {projects.map(pr => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
+                <option value="__new__">+ Nouveau projet…</option>
+              </select>
             </div>
           </div>
           <div>
